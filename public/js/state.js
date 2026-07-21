@@ -1,0 +1,33 @@
+// Shared app state — single mutable object instead of scattered globals.
+// Other modules import `state` and read/write its fields directly.
+
+export const state = {
+  currentUserId: null,
+  currentUserName: '',
+  currentUserRole: 'member',     // 'member' | 'reviewer'
+  currentUserProjectRole: 'operator', // 'operator' | 'viewer'
+  currentMode: null,             // 'operation' | 'simulation'
+  currentProjectCode: null,
+  currentDeviceRole: null,       // 'vessel' | 'office'
+  isDirty: false,
+
+  currentReportData: {
+    diveLogs: [], maintenanceLogs: [], hseReports: [], standbyLogs: [], faultLogs: [],
+    checklists: { mobilization: {}, startup: {}, preOp: {}, postOp: {}, shutdown: {}, demob: {} },
+    finalSetup: null,
+  },
+
+  preOpData: null,
+  activeChecklistType: 'mobilization',
+
+  autoSaveTimer: null,
+};
+
+export function getDeviceId() {
+  let id = localStorage.getItem('mcs_device_id');
+  if (!id) {
+    id = 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('mcs_device_id', id);
+  }
+  return id;
+}
