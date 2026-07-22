@@ -13,7 +13,7 @@ function isApprover() {
   return state.currentUserProjectRole === 'approver' || APPROVER_IDS.includes(String(state.currentUserId));
 }
 
-async function submitSimForApproval() {
+export async function submitSimForApproval() {
   if (!simState.projectData.code) {
     showToast('Save the simulation with a project code first.', 'warn');
     return;
