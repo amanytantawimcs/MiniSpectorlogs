@@ -176,9 +176,9 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
   const simResult = await client.query(
     `INSERT INTO simulations (
        project_id, project_code, scope_id, scope_name, report_date,
-       sensors, rov_sensors, sysarch, issues, thrusters, packing_list,
+       sensors, rov_sensors, sysarch, issues, thrusters,
        approval_status, approval_history
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      ON CONFLICT (project_id) DO UPDATE SET
        project_code = EXCLUDED.project_code,
        scope_id = EXCLUDED.scope_id,
@@ -189,14 +189,13 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
        sysarch = EXCLUDED.sysarch,
        issues = EXCLUDED.issues,
        thrusters = EXCLUDED.thrusters,
-       packing_list = EXCLUDED.packing_list,
        approval_status = EXCLUDED.approval_status,
        approval_history = EXCLUDED.approval_history
      RETURNING id`,
     [
       projectId, project_code, d.scopeId || null, d.scopeName || '', d.reportDate || null,
       JSON.stringify(d.sensors || []), JSON.stringify(d.rovSensors || {}), JSON.stringify(d.sysarch || {}),
-      JSON.stringify(d.issues || []), JSON.stringify(d.thrusters || []), JSON.stringify(d.packingList || []),
+      JSON.stringify(d.issues || []), JSON.stringify(d.thrusters || []),
       d.approvalStatus || 'draft', JSON.stringify(d.approvalHistory || []),
     ]
   );
@@ -290,7 +289,7 @@ async function buildSimulationData(project) {
     return {
       type: 'simulation', reportDate: '', projectName: project.project_name || '', projectCode: project.project_code || '',
       projectScope: project.scope || '', scopeId: null, scopeName: '', rovs: [], sensors: [], rovSensors: {},
-      sysarch: {}, issues: [], thrusters: [], packingList: [], approvalStatus: 'draft', approvalHistory: [],
+      sysarch: {}, issues: [], thrusters: [], approvalStatus: 'draft', approvalHistory: [],
     };
   }
   const rovRows = await pool.query('SELECT * FROM simulation_rovs WHERE simulation_id = $1 ORDER BY rov_number', [sim.id]);
@@ -308,14 +307,18 @@ async function buildSimulationData(project) {
     sysarch: sim.sysarch || {},
     issues: sim.issues || [],
     thrusters: sim.thrusters || [],
-    packingList: sim.packing_list || [],
     approvalStatus: sim.approval_status || 'draft',
     approvalHistory: sim.approval_history || [],
   };
 }
 
+async function lockSimulation(projectId) {
+  await pool.query('UPDATE projects SET is_sim_locked = true WHERE id = $1', [projectId]);
+  await pool.query('UPDATE simulations SET pushed_at = now() WHERE project_id = $1', [projectId]);
+}
+
 module.exports = {
   parseDur, fmtDur, deriveActiveMinispector, getProjectRowByCode,
   upsertOperationProject, upsertSimulationProject,
-  buildOperationData, buildSimulationData,
+  buildOperationData, buildSimulationData, lockSimulation,
 };

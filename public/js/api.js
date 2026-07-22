@@ -56,6 +56,11 @@ export const api = {
     return { success: true, project: r.data.project };
   },
 
+  lockSimulation: async (projectCode) => {
+    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/lock-simulation', { method: 'POST' });
+    return { success: r.ok };
+  },
+
   listProjects: async (filters = {}) => {
     const qs = filters.mode ? ('?mode=' + encodeURIComponent(filters.mode)) : '';
     const r = await request('/projects' + qs);

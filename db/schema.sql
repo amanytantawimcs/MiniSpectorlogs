@@ -197,10 +197,9 @@ CREATE TABLE simulations (
 
   sensors           JSONB NOT NULL DEFAULT '[]',
   rov_sensors       JSONB NOT NULL DEFAULT '{}',   -- keyed by rovNumber
-  sysarch           JSONB NOT NULL DEFAULT '{}',   -- machines/equipment/simStatus/deliverables/systemIPs
+  sysarch           JSONB NOT NULL DEFAULT '{}',   -- machines/equipment/simStatus/deliverables/systemIPs (equipment doubles as the packing list)
   issues            JSONB NOT NULL DEFAULT '[]',
   thrusters         JSONB NOT NULL DEFAULT '[]',
-  packing_list      JSONB NOT NULL DEFAULT '[]',
 
   approval_status   TEXT NOT NULL DEFAULT 'draft',
   approval_history  JSONB NOT NULL DEFAULT '[]',

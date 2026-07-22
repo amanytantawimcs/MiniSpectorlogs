@@ -2,7 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const {
   getProjectRowByCode, upsertOperationProject, upsertSimulationProject,
-  buildOperationData, buildSimulationData,
+  buildOperationData, buildSimulationData, lockSimulation,
 } = require('../lib/projectData');
 
 const router = express.Router();
@@ -11,8 +11,9 @@ router.post('/', async (req, res) => {
   const { project_code, mode, created_by, project_name, data } = req.body || {};
   if (!project_code) return res.status(400).json({ success: false, error: 'project_code required' });
 
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await client.query('BEGIN');
     const row = mode === 'simulation'
       ? await upsertSimulationProject(client, { project_code, project_name, created_by, data })
@@ -20,15 +21,27 @@ router.post('/', async (req, res) => {
     await client.query('COMMIT');
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {
-    await client.query('ROLLBACK');
+    if (client) await client.query('ROLLBACK');
     res.status(500).json({ success: false, error: e.message });
   } finally {
-    client.release();
+    if (client) client.release();
   }
 });
 
 router.get('/', async (req, res) => {
   const { mode } = req.query;
+  if (mode === 'simulation') {
+    // Includes approval fields so the Approvals tab can list/filter without a second round trip.
+    const { rows } = await pool.query(
+      `SELECT p.id, p.project_code, p.project_name, p.mode, p.created_by, p.updated_at, p.is_sim_locked,
+              s.approval_status, s.approval_history
+       FROM projects p
+       LEFT JOIN simulations s ON s.project_id = p.id
+       WHERE p.mode = 'simulation'
+       ORDER BY p.updated_at DESC`
+    );
+    return res.json({ success: true, projects: rows });
+  }
   const { rows } = mode
     ? await pool.query('SELECT id, project_code, project_name, mode, created_by, updated_at, is_sim_locked FROM projects WHERE mode = $1 ORDER BY updated_at DESC', [mode])
     : await pool.query('SELECT id, project_code, project_name, mode, created_by, updated_at, is_sim_locked FROM projects ORDER BY updated_at DESC');
@@ -47,9 +60,19 @@ router.get('/:code', async (req, res) => {
       created_by: project.created_by,
       project_name: project.project_name,
       updated_at: project.updated_at,
+      is_sim_locked: project.is_sim_locked,
       data,
     },
   });
+});
+
+// Marks a simulation as pushed to operation — persists across reloads (projects.is_sim_locked),
+// unlike the old app's client-only lock flag which reset on every page refresh.
+router.post('/:code/lock-simulation', async (req, res) => {
+  const project = await getProjectRowByCode(req.params.code);
+  if (!project) return res.status(404).json({ success: false, error: 'Not found' });
+  await lockSimulation(project.id);
+  res.json({ success: true });
 });
 
 router.get('/:code/members', async (req, res) => {

@@ -3,6 +3,9 @@ import { state, getDeviceId } from './state.js';
 import { showToast } from './ui.js';
 import { enterDashboard, showTab } from './navigation.js';
 import { startProjectAutoSave } from './projectDetails.js';
+import { initSimROVGrid } from './simulation/setup.js';
+import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
+import { populateUI } from './projectData.js';
 
 function modeShowStep(id) {
   ['mode-step1', 'mode-step2-new', 'mode-step2-join'].forEach(s =>
@@ -32,7 +35,7 @@ function enterOpMode(userName) {
   startProjectAutoSave();
 }
 
-function enterSimMode(userName) {
+function enterSimMode(userName, existingProject) {
   state.currentMode = 'simulation';
   state.currentUserName = userName;
   document.getElementById('mode-screen').classList.add('hidden');
@@ -41,9 +44,16 @@ function enterSimMode(userName) {
   document.getElementById('nav-simulation-section').classList.remove('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
   enterDashboard();
+
+  const contentArea = document.getElementById('main-content-area');
+  if (contentArea) { contentArea.style.padding = '0'; contentArea.style.overflow = 'hidden'; contentArea.style.position = 'relative'; }
+
   const simNavItem = document.querySelector('#nav-simulation-section .nav-item');
   if (simNavItem) showTab('simulation', simNavItem);
-  showToast('Simulation module lands in a later update — you can still explore Operation mode.', 'info');
+
+  if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
+  else initSimROVGrid();
+  startSimAutoSave();
 }
 
 async function handleJoin(userName) {
@@ -88,11 +98,10 @@ async function handleJoin(userName) {
     const project = result.project;
 
     if (project.mode === 'simulation') {
-      enterSimMode(userName);
+      enterSimMode(userName, project);
     } else {
       enterOpMode(userName);
-      // Project Details module (phase 4) reads state.currentProjectCode and
-      // populates the form; population itself lands with that module.
+      populateUI(project.data);
     }
     saveSessionMeta(code, 'office', userName);
   } catch (e) {

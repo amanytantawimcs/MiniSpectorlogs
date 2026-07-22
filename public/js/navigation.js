@@ -27,15 +27,17 @@ export function enterDashboard() {
 
 // Modules not built yet in this phase — wired as harmless stubs so the
 // ported markup's inline onclick handlers don't throw. Each becomes a real
-// implementation in its own phase (checklists, simulation, dashboard, ...).
+// implementation in its own phase (checklists, dashboard, export, ...).
 const pendingFeatures = {
-  renderPreOpTab: 'Packing List & Equipment',
+  renderPreOpTab: 'Pre-Op',
   renderFinalSetupTab: 'Final Setup',
   renderChecklistsTab: 'Checklists',
   renderInfographics: 'Infographics & Analysis',
-  initSimROVGrid: 'Simulation',
-  showSimSetupTab: 'Simulation',
   renderApprovalsTab: 'Approvals',
+  pushToOperation: 'Push to Operation',
+  saveSimulationJSON: 'Save as JSON',
+  exportSimulationExcel: 'Excel export',
+  exportSimulationWord: 'Word export',
 };
 
 export function installNavigationStubs() {
