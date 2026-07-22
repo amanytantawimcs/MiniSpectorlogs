@@ -116,10 +116,43 @@ function showModeScreen(userName) {
   document.getElementById('btn-join-confirm').onclick = () => handleJoin(userName);
 }
 
+function setLoginPasscodeMode(hasPasscode) {
+  const label = document.getElementById('login-pin-label');
+  const confirmWrap = document.getElementById('login-pin-confirm-wrap');
+  const hint = document.getElementById('login-pin-hint');
+  if (hasPasscode) {
+    label.firstChild.textContent = 'Passcode ';
+    confirmWrap.classList.add('hidden');
+    hint.classList.add('hidden');
+  } else {
+    label.firstChild.textContent = 'Set a Passcode ';
+    confirmWrap.classList.remove('hidden');
+    hint.classList.remove('hidden');
+  }
+}
+
 export function installAuth() {
+  const idInput = document.getElementById('login-id-input');
+  let lookupCache = { id: null, result: null };
+
+  const lookupUser = async (userId) => {
+    if (lookupCache.id === userId && lookupCache.result) return lookupCache.result;
+    const result = await api.getUserName(userId);
+    lookupCache = { id: userId, result };
+    return result;
+  };
+
+  idInput.addEventListener('blur', async () => {
+    const userId = idInput.value.trim();
+    if (!userId) return;
+    const result = await lookupUser(userId);
+    if (result.success) setLoginPasscodeMode(result.hasPasscode);
+  });
+
   document.getElementById('btn-login').addEventListener('click', async () => {
-    const userId = document.getElementById('login-id-input').value.trim();
-    const pinInput = document.getElementById('login-pin-input').value.trim();
+    const userId = idInput.value.trim();
+    const pin = document.getElementById('login-pin-input').value.trim();
+    const pinConfirm = document.getElementById('login-pin-confirm-input').value.trim();
     const errEl = document.getElementById('login-error');
     errEl.classList.add('hidden');
 
@@ -130,23 +163,44 @@ export function installAuth() {
     }
 
     try {
-      const result = await api.getUserName(userId);
+      const result = await lookupUser(userId);
       if (!result.success) {
         errEl.innerText = 'User ID not found.';
         errEl.classList.remove('hidden');
         return;
       }
+      setLoginPasscodeMode(result.hasPasscode);
 
-      const storedPin = localStorage.getItem(`pin_${userId}`);
-      if (storedPin) {
-        if (pinInput !== storedPin) {
-          errEl.innerText = 'Incorrect PIN. Please try again.';
+      if (result.hasPasscode) {
+        if (!pin) {
+          errEl.innerText = 'Enter your passcode.';
           errEl.classList.remove('hidden');
           return;
         }
-      } else if (pinInput) {
-        localStorage.setItem(`pin_${userId}`, pinInput);
-        showToast('PIN set successfully.', 'success');
+        const verify = await api.verifyPasscode(userId, pin);
+        if (!verify.success) {
+          errEl.innerText = verify.error || 'Incorrect passcode.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+      } else {
+        if (!/^\d{4,6}$/.test(pin)) {
+          errEl.innerText = 'Choose a 4-6 digit passcode.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        if (pin !== pinConfirm) {
+          errEl.innerText = 'Passcodes do not match.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        const setResult = await api.setPasscode(userId, pin);
+        if (!setResult.success) {
+          errEl.innerText = setResult.error || 'Could not set passcode. Try again.';
+          errEl.classList.remove('hidden');
+          return;
+        }
+        showToast('Passcode set. Use it to log in next time.', 'success');
       }
 
       state.currentUserId = userId;

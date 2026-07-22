@@ -19,7 +19,28 @@ export const api = {
   getUserName: async (userId) => {
     const r = await request('/users/' + encodeURIComponent(userId));
     if (!r.ok) return { success: false };
-    return { success: true, name: r.data.name, role: r.data.role };
+    return { success: true, name: r.data.name, role: r.data.role, hasPasscode: r.data.hasPasscode };
+  },
+
+  setPasscode: async (userId, passcode) => {
+    const r = await request('/users/' + encodeURIComponent(userId) + '/passcode', {
+      method: 'POST', body: JSON.stringify({ passcode }),
+    });
+    return { success: r.ok, error: r.data.error };
+  },
+
+  verifyPasscode: async (userId, passcode) => {
+    const r = await request('/users/' + encodeURIComponent(userId) + '/verify-passcode', {
+      method: 'POST', body: JSON.stringify({ passcode }),
+    });
+    return { success: r.ok, error: r.data.error };
+  },
+
+  resetPasscode: async (userId, adminUsername, adminPasswordHash) => {
+    const r = await request('/users/' + encodeURIComponent(userId) + '/reset-passcode', {
+      method: 'POST', body: JSON.stringify({ adminUsername, adminPasswordHash }),
+    });
+    return { success: r.ok, error: r.data.error };
   },
 
   pushProject: async (payload) => {

@@ -25,3 +25,13 @@ export function showToast(message, type = 'info') {
 export function notImplemented(feature) {
   showToast(`${feature} — coming in a later update.`, 'info');
 }
+
+export function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}

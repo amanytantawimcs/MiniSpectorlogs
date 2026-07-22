@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../db');
+const { verifyAdminCredentials } = require('../lib/adminAuth');
 
 const router = express.Router();
 
@@ -10,8 +11,8 @@ router.get('/exists', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { username, passwordHash } = req.body || {};
-  const { rows } = await pool.query('SELECT id FROM admins WHERE username = $1 AND password_hash = $2', [username, passwordHash]);
-  if (!rows[0]) return res.status(401).json({ success: false, error: 'Invalid credentials' });
+  const ok = await verifyAdminCredentials(pool, username, passwordHash);
+  if (!ok) return res.status(401).json({ success: false, error: 'Invalid credentials' });
   res.json({ success: true });
 });
 

@@ -20,10 +20,12 @@ $$ LANGUAGE plpgsql;
 -- ============================================================
 
 CREATE TABLE users (
-  id         TEXT PRIMARY KEY,              -- app's numeric-string IDs, e.g. '101'
-  name       TEXT NOT NULL,
-  role       TEXT NOT NULL DEFAULT 'engineer' CHECK (role IN ('engineer', 'manager')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  id             TEXT PRIMARY KEY,              -- app's numeric-string IDs, e.g. '101'
+  name           TEXT NOT NULL,
+  role           TEXT NOT NULL DEFAULT 'engineer' CHECK (role IN ('engineer', 'manager')),
+  passcode_hash  TEXT,                          -- scrypt hash; NULL means no passcode set yet (first login sets one)
+  passcode_salt  TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE admins (
