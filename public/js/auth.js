@@ -5,6 +5,7 @@ import { enterDashboard, showTab } from './navigation.js';
 import { startProjectAutoSave } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
+import { updateApprovalBadge } from './simulation/approvals.js';
 import { populateUI } from './projectData.js';
 
 function modeShowStep(id) {
@@ -54,6 +55,7 @@ function enterSimMode(userName, existingProject) {
   if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
   else initSimROVGrid();
   startSimAutoSave();
+  updateApprovalBadge();
 }
 
 async function handleJoin(userName) {
