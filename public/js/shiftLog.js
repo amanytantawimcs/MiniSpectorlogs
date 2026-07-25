@@ -6,6 +6,7 @@
 import { escapeHtml } from './ui.js';
 import { state } from './state.js';
 import { ROLE_COLORS_MAP, getInitials } from './projectDetails.js';
+import { renderInfographics } from './dashboard.js';
 
 const WEATHER_OPTIONS = ['Clear / Sunny', 'Partly Cloudy', 'Overcast', 'Hazy', 'Fog / Mist', 'Light Rain / Drizzle', 'Heavy Rain', 'Thunderstorms', 'Squalls / High Winds'];
 const VISIBILITY_OPTIONS = ['Excellent (> 10m)', 'Good (5 - 10m)', 'Moderate (3 - 5m)', 'Poor (1 - 3m)', 'Very Poor (< 1m)', 'No Visibility'];
@@ -93,6 +94,7 @@ export function saveShiftModal(index) {
   else state.currentReportData.shiftLogs[index] = newEntry;
   state.isDirty = true;
   renderShiftLog();
+  renderInfographics();
 }
 
 export function removeShift(i) {
@@ -100,6 +102,7 @@ export function removeShift(i) {
   state.currentReportData.shiftLogs.splice(i, 1);
   state.isDirty = true;
   renderShiftLog();
+  renderInfographics();
 }
 
 export function renderShiftLog() {

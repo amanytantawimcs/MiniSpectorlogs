@@ -10,6 +10,7 @@ import { installPreOp } from './preOp.js';
 import { installFinalSetup } from './finalSetup.js';
 import { installLogs } from './logs.js';
 import { installChecklists } from './checklists.js';
+import { installDashboard } from './dashboard.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -24,4 +25,5 @@ document.addEventListener('DOMContentLoaded', () => {
   installFinalSetup();
   installLogs();
   installChecklists();
+  installDashboard();
 });

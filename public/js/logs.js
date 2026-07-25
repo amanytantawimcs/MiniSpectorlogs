@@ -6,6 +6,7 @@ import { escapeHtml, showToast } from './ui.js';
 import { state } from './state.js';
 import { LOG_CONFIGS } from './logConfigs.js';
 import { openShiftModal, saveShiftModal, removeShift, renderShiftLog } from './shiftLog.js';
+import { renderInfographics } from './dashboard.js';
 
 let modalSection = null;
 let modalIndex = -1;
@@ -148,6 +149,7 @@ function saveModal() {
 
   state.isDirty = true;
   renderGrids();
+  renderInfographics();
   closeModal();
 }
 
@@ -158,6 +160,52 @@ function removeLog(section, index) {
   state.currentReportData[section].splice(index, 1);
   state.isDirty = true;
   renderGrids();
+  renderInfographics();
+}
+
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+function openStandbySelector() {
+  const el = document.getElementById('standby-selector-modal');
+  if (el) el.style.display = 'flex';
+}
+
+function closeStandbySelector() {
+  const el = document.getElementById('standby-selector-modal');
+  if (el) el.style.display = 'none';
+}
+
+function triggerQuickStandby(category) {
+  if (state.currentUserRole === 'reviewer') return;
+  const now = new Date();
+  const count = state.currentReportData.standbyLogs.length + 1;
+  state.currentReportData.standbyLogs.push({
+    id: 'SB' + pad2(count),
+    date: now.toISOString().split('T')[0],
+    startTime: now.toTimeString().substring(0, 5),
+    endDate: '', endTime: '', duration: 'In Progress',
+    category, desc: '', by: '',
+  });
+  state.isDirty = true;
+  renderGrids();
+  renderInfographics();
+  closeStandbySelector();
+}
+
+function triggerQuickDive() {
+  if (state.currentUserRole === 'reviewer') return;
+  const now = new Date();
+  const count = state.currentReportData.diveLogs.length + 1;
+  state.currentReportData.diveLogs.push({
+    num: 'DL' + pad2(count),
+    date: now.toISOString().split('T')[0],
+    startTime: now.toTimeString().substring(0, 5),
+    endDate: '', endTime: '', depth: '', duration: 'In Progress',
+    purpose: '', area: '', issues: '', client: '', notes: '',
+  });
+  state.isDirty = true;
+  renderGrids();
+  renderInfographics();
 }
 
 function emptyState(msg) { return `<p class="text-gray-500 italic text-center py-8">${msg}</p>`; }
@@ -217,6 +265,10 @@ export function installLogs() {
   window.openModal = openModal;
   window.closeModal = closeModal;
   window.removeLog = removeLog;
+  window.openStandbySelector = openStandbySelector;
+  window.closeStandbySelector = closeStandbySelector;
+  window.triggerQuickStandby = triggerQuickStandby;
+  window.triggerQuickDive = triggerQuickDive;
   window.__renderLogs = () => { renderGrids(); renderShiftLog(); };
   document.getElementById('modal-save-btn')?.addEventListener('click', saveModal);
 }

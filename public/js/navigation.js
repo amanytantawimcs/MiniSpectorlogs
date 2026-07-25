@@ -29,7 +29,6 @@ export function enterDashboard() {
 // ported markup's inline onclick handlers don't throw. Each becomes a real
 // implementation in its own phase (checklists, dashboard, export, ...).
 const pendingFeatures = {
-  renderInfographics: 'Infographics & Analysis',
   saveSimulationJSON: 'Save as JSON',
   exportSimulationExcel: 'Excel export',
   exportSimulationWord: 'Word export',
