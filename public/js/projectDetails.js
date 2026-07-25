@@ -3,13 +3,13 @@ import { showToast } from './ui.js';
 import { api } from './api.js';
 import { collectAllData, populateUI } from './projectData.js';
 
-const ROLE_COLORS_MAP = {
+export const ROLE_COLORS_MAP = {
   'ROV Supervisor': '#f39124', 'ROV Operator': '#459fd9', 'ROV Technician': '#10b981',
   'CSWIP 3.4U Ispector': '#8b5cf6', 'PRC Engineer': '#f59e0b', 'Inspection Engineer': '#ef4444',
 };
 const CREW_ROLES = ['ROV Supervisor', 'ROV Operator', 'ROV Technician', 'CSWIP 3.4U Ispector', 'PRC Engineer', 'Inspection Engineer'];
 
-function getInitials(n) {
+export function getInitials(n) {
   const w = n.trim().split(' ').filter(Boolean);
   return w.length >= 2 ? (w[0][0] + w[w.length - 1][0]).toUpperCase() : (n.trim().substring(0, 2).toUpperCase() || '?');
 }

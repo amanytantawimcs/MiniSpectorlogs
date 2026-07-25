@@ -197,4 +197,6 @@ export function populateUI(data) {
   }
 
   state.preOpData = data.preOperationData || null;
+
+  if (window.__renderLogs) window.__renderLogs();
 }
