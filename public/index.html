@@ -584,7 +584,7 @@
 
     <!-- ── Mobilization ───────────────────────────────── -->
     <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Mobilization</div>
-    <div onclick="activeChecklistType='mobilization'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-mob">
+    <div onclick="setChecklistType('mobilization'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-mob">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Mobilization</span>
@@ -594,7 +594,7 @@
 
     <!-- ── Setup ──────────────────────────────────────── -->
     <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Setup</div>
-    <div onclick="activeChecklistType='startup'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-startup">
+    <div onclick="setChecklistType('startup'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-startup">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Start-Up</span>
@@ -605,7 +605,7 @@
     <!-- ── Operations ────────────────────────────────── -->
     <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Operations</div>
 
-    <div onclick="activeChecklistType='preOp'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-preop">
+    <div onclick="setChecklistType('preOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-preop">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Pre-Op Checklist</span>
@@ -619,7 +619,7 @@
     <div onclick="showTab('fault', this)" class="nav-item">Technical / Faults</div>
     <div onclick="showTab('hse', this)" class="nav-item">HSE Report</div>
 
-    <div onclick="activeChecklistType='postOp'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-postop">
+    <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-postop">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Post-Op Checklist</span>
@@ -630,7 +630,7 @@
     <!-- ── Close-Out ──────────────────────────────────── -->
     <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Close-Out</div>
     <div onclick="showTab('lars', this)" class="nav-item">LARS Status</div>
-    <div onclick="activeChecklistType='shutdown'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-shutdown">
+    <div onclick="setChecklistType('shutdown'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-shutdown">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Shutdown</span>
@@ -640,7 +640,7 @@
 
     <!-- ── Demobilization ─────────────────────────────── -->
     <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Demobilization</div>
-    <div onclick="activeChecklistType='demob'; showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-demob">
+    <div onclick="setChecklistType('demob'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-demob">
         <div class="flex items-center gap-2">
             <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Demobilization</span>

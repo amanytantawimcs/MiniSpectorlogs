@@ -19,6 +19,7 @@ export const state = {
 
   preOpData: null,
   activeChecklistType: 'mobilization',
+  activeChecklistDiveKeys: { preOp: '1', postOp: '1' },
 
   autoSaveTimer: null,
 };

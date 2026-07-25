@@ -9,6 +9,7 @@ import { installSensorTable } from './sensorTable.js';
 import { installPreOp } from './preOp.js';
 import { installFinalSetup } from './finalSetup.js';
 import { installLogs } from './logs.js';
+import { installChecklists } from './checklists.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -22,4 +23,5 @@ document.addEventListener('DOMContentLoaded', () => {
   installPreOp();
   installFinalSetup();
   installLogs();
+  installChecklists();
 });
