@@ -1,5 +1,3 @@
-import { notImplemented } from './ui.js';
-
 // Ported as-is from the old renderer.js — same behavior.
 export function showTab(tabName, navElement) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -25,18 +23,6 @@ export function enterDashboard() {
   document.getElementById('app-container').classList.remove('hidden');
 }
 
-// Modules not built yet in this phase — wired as harmless stubs so the
-// ported markup's inline onclick handlers don't throw. Each becomes a real
-// implementation in its own phase (checklists, dashboard, export, ...).
-const pendingFeatures = {
-  saveSimulationJSON: 'Save as JSON',
-  exportSimulationExcel: 'Excel export',
-  exportSimulationWord: 'Word export',
-};
-
 export function installNavigationStubs() {
   window.showTab = showTab;
-  for (const [fnName, label] of Object.entries(pendingFeatures)) {
-    window[fnName] = () => notImplemented(label);
-  }
 }

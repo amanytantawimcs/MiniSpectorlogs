@@ -11,6 +11,7 @@ import { installFinalSetup } from './finalSetup.js';
 import { installLogs } from './logs.js';
 import { installChecklists } from './checklists.js';
 import { installDashboard } from './dashboard.js';
+import { installExport } from './export.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -26,4 +27,5 @@ document.addEventListener('DOMContentLoaded', () => {
   installLogs();
   installChecklists();
   installDashboard();
+  installExport();
 });

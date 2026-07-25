@@ -17,6 +17,7 @@ app.get('/api/health', async (req, res) => {
 app.use('/api/users', require('./routes/users'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/projects', require('./routes/projects'));
+app.use('/api/export', require('./routes/export'));
 app.use('/api', require('./routes/sync'));
 
 // Frontend and API share one origin — no CORS needed.
