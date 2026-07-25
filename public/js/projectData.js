@@ -3,6 +3,7 @@
 // yet in this phase (their DOM elements just aren't present, and every
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
+import { restoreSensorTables } from './sensorTable.js';
 
 const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
@@ -196,7 +197,14 @@ export function populateUI(data) {
     (data.crew || []).forEach(c => window.__addCrewRow(c.name, c.role, c.shift, c.signOn, c.signOff));
   }
 
+  restoreSensorTables(data.cameraSystems, data.otherSensors);
+
   state.preOpData = data.preOperationData || null;
+  if (state.preOpData) {
+    document.getElementById('nav-preop-item')?.classList.remove('hidden');
+    document.getElementById('nav-finalsetup-item')?.classList.remove('hidden');
+    if (window.__renderProjectSimInfo) window.__renderProjectSimInfo();
+  }
 
   if (window.__renderLogs) window.__renderLogs();
   if (window.__refreshChecklists) window.__refreshChecklists();

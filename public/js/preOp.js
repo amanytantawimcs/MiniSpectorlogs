@@ -9,7 +9,7 @@ import { api } from './api.js';
 import { state } from './state.js';
 import { enterDashboard, showTab } from './navigation.js';
 import { startProjectAutoSave } from './projectDetails.js';
-import { addSensorRow } from './sensorTable.js';
+import { addSensorRow, showSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
 import { OPERATION_SCOPES, PREOP_CHECKLIST } from './simulation/config.js';
 
@@ -94,6 +94,7 @@ export async function pushToOperation() {
   const sensorBody = document.getElementById('sensorBody');
   if (camBody) camBody.innerHTML = '';
   if (sensorBody) sensorBody.innerHTML = '';
+  showSensorTables();
   state.preOpData.sensors.forEach(s => {
     const isCam = s.name.toLowerCase().includes('camera') || s.name.toLowerCase().includes('light');
     addSensorRow(isCam ? 'camLightBody' : 'sensorBody', {
@@ -114,7 +115,7 @@ export async function pushToOperation() {
   simState.locked = true;
 }
 
-function renderProjectSimInfo() {
+export function renderProjectSimInfo() {
   if (!state.preOpData) return;
   const badge = document.getElementById('project-sim-badge');
   const roster = document.getElementById('project-rov-roster');
@@ -344,4 +345,5 @@ function confirmAndLockPreOp() {
 export function installPreOp() {
   window.renderPreOpTab = renderPreOpTab;
   window.pushToOperation = pushToOperation;
+  window.__renderProjectSimInfo = renderProjectSimInfo;
 }

@@ -3,6 +3,17 @@
 // row-model/row-cal/row-notes classes) matches what collectAllData()'s
 // scrapeTable() in projectData.js already expects — this is the write side.
 
+import { showToast } from './ui.js';
+
+const DEFAULT_CAMERA_ITEMS = ['Rear Fixed Camera', 'PRC Camera', 'PTZ Camera', 'GVI Camera', 'Front Light', 'Rear Light', 'External Light'];
+const DEFAULT_SENSOR_ITEMS = ['Depth Sensor', 'Heading / AHRS', 'Humidity Sensor', 'Temperature Sensor', 'Leak Sensor'];
+
+export function showSensorTables() {
+  document.getElementById('sensor-empty-state')?.classList.add('hidden');
+  const content = document.getElementById('sensor-content');
+  if (content) { content.classList.remove('hidden'); content.classList.add('flex'); }
+}
+
 export function addSensorRow(tbodyId, data = {}) {
   const container = document.getElementById(tbodyId);
   if (!container) return;
@@ -36,11 +47,59 @@ export function addSensorRow(tbodyId, data = {}) {
 }
 
 function resetSensorTab() {
-  if (!confirm('Clear all camera and sensor rows?')) return;
+  if (!confirm('Clear all camera and sensor rows and return to setup?')) return;
   ['camLightBody', 'sensorBody'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+  document.getElementById('sensor-content')?.classList.add('hidden');
+  document.getElementById('sensor-empty-state')?.classList.remove('hidden');
+}
+
+function loadDefaultSensors() {
+  showSensorTables();
+  DEFAULT_CAMERA_ITEMS.forEach(name => addSensorRow('camLightBody', { name, status: 'Fault' }));
+  DEFAULT_SENSOR_ITEMS.forEach(name => addSensorRow('sensorBody', { name, status: 'Fault' }));
+}
+
+function importPackingJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const cam = parsed.cameraSystems || [];
+      const sens = parsed.otherSensors || [];
+      if (!cam.length && !sens.length) { showToast('No recognizable camera/sensor data in that file.', 'warn'); return; }
+      showSensorTables();
+      cam.forEach(i => addSensorRow('camLightBody', i));
+      sens.forEach(i => addSensorRow('sensorBody', i));
+      showToast('Packing list imported.', 'success');
+    } catch (e) {
+      showToast('Could not read that file as JSON.', 'error');
+    }
+  };
+  input.click();
+}
+
+export function restoreSensorTables(cameraSystems, otherSensors) {
+  const hasCam = cameraSystems && cameraSystems.length > 0;
+  const hasSens = otherSensors && otherSensors.length > 0;
+  document.getElementById('camLightBody').innerHTML = '';
+  document.getElementById('sensorBody').innerHTML = '';
+  if (hasCam || hasSens) {
+    showSensorTables();
+    (cameraSystems || []).forEach(i => addSensorRow('camLightBody', i));
+    (otherSensors || []).forEach(i => addSensorRow('sensorBody', i));
+  } else {
+    document.getElementById('sensor-content')?.classList.add('hidden');
+    document.getElementById('sensor-empty-state')?.classList.remove('hidden');
+  }
 }
 
 export function installSensorTable() {
   window.addSensorRow = addSensorRow;
   window.resetSensorTab = resetSensorTab;
+  window.loadDefaultSensors = loadDefaultSensors;
+  window.importPackingJSON = importPackingJSON;
 }

@@ -23,6 +23,18 @@ export function enterDashboard() {
   document.getElementById('app-container').classList.remove('hidden');
 }
 
+function openSupport() {
+  const el = document.getElementById('support-modal');
+  if (el) el.style.display = 'flex';
+}
+
+function closeSupport() {
+  const el = document.getElementById('support-modal');
+  if (el) el.style.display = 'none';
+}
+
 export function installNavigationStubs() {
   window.showTab = showTab;
+  window.openSupport = openSupport;
+  window.closeSupport = closeSupport;
 }
