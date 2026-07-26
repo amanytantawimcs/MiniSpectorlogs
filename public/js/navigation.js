@@ -1,3 +1,6 @@
+import { state } from './state.js';
+import { APPROVER_IDS } from './simulation/config.js';
+
 // Ported as-is from the old renderer.js — same behavior.
 export function showTab(tabName, navElement) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -21,6 +24,10 @@ export function enterDashboard() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('session-screen')?.classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
+
+  // Same two IDs as the simulation approver gate — see APPROVER_IDS in simulation/config.js.
+  const isPrivileged = APPROVER_IDS.includes(String(state.currentUserId));
+  document.getElementById('nav-projects-overview-section')?.classList.toggle('hidden', !isPrivileged);
 }
 
 function openSupport() {

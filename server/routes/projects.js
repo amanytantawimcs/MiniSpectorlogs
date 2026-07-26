@@ -48,6 +48,26 @@ router.get('/', async (req, res) => {
   res.json({ success: true, projects: rows });
 });
 
+// Same two privileged User IDs as the simulation approver gate
+// (APPROVER_IDS in public/js/simulation/config.js) — keep both lists in sync.
+const PRIVILEGED_USER_IDS = ['1162', '1774'];
+
+// Cross-project directory for those two users: every project regardless of
+// who created it, with its mode (operation/simulation) and creator — not to
+// be confused with the mode-filtered GET '/' above, which every user hits
+// from their own Simulation History tab.
+router.get('/overview', async (req, res) => {
+  const { userId } = req.query;
+  if (!PRIVILEGED_USER_IDS.includes(String(userId))) {
+    return res.status(403).json({ success: false, error: 'Not authorized.' });
+  }
+  const { rows } = await pool.query(
+    `SELECT project_code, project_name, mode, created_by, updated_at, is_sim_locked
+     FROM projects ORDER BY updated_at DESC`
+  );
+  res.json({ success: true, projects: rows });
+});
+
 router.get('/:code', async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, notFound: true, error: 'Not found' });

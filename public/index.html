@@ -689,6 +689,14 @@
         </div>
     </div>
 
+    <!-- Visible only to the two privileged User IDs — toggled in enterDashboard() (navigation.js) -->
+    <div id="nav-projects-overview-section" class="hidden">
+        <div class="px-4 pt-6 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Admin</div>
+        <div onclick="showTab('projects-overview', this); renderProjectsOverviewTab();" class="nav-item">
+            All Projects
+        </div>
+    </div>
+
 </nav>
             <div class="p-4 border-t border-gray-700 text-xs text-gray-500 flex items-center justify-center gap-2">
                 <span>User: <span id="display-user-id">Not Logged In</span></span>
@@ -828,6 +836,12 @@
 <div id="tab-approvals" class="tab-content hidden max-w-full w-full">
     <div id="approvals-content" class="space-y-4">
         <div class="flex items-center justify-center py-16 text-gray-500 text-sm">Select Approvals from the sidebar.</div>
+    </div>
+</div>
+
+<div id="tab-projects-overview" class="tab-content hidden max-w-full w-full">
+    <div id="projects-overview-content" class="space-y-4">
+        <div class="flex items-center justify-center py-16 text-gray-500 text-sm">Select All Projects from the sidebar.</div>
     </div>
 </div>
 

@@ -13,6 +13,7 @@ import { installLogs } from './logs.js';
 import { installChecklists } from './checklists.js';
 import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
+import { installProjectsOverview } from './projectsOverview.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -29,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   installChecklists();
   installDashboard();
   installExport();
+  installProjectsOverview();
 });
 
 // Best-effort flush + warn if there's unsaved work when the tab closes/reloads.

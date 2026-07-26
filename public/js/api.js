@@ -59,6 +59,12 @@ export const api = {
     return { success: r.ok };
   },
 
+  getProjectsOverview: async (userId) => {
+    const r = await request('/projects/overview?userId=' + encodeURIComponent(userId));
+    if (!r.ok) return { success: false, error: r.data.error || 'Request failed', projects: [] };
+    return { success: true, projects: r.data.projects || [] };
+  },
+
   listProjects: async (filters = {}) => {
     const qs = filters.mode ? ('?mode=' + encodeURIComponent(filters.mode)) : '';
     const r = await request('/projects' + qs);
