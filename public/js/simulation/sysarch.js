@@ -20,15 +20,43 @@ function ensureSysarch() {
   return sa;
 }
 
-function card(title, color) {
+// Collapse state lives outside any render call so it survives the full
+// re-render that follows every edit (renderSimContent() rebuilds every
+// card from scratch). Resets on page reload, which is fine — the ask was
+// "collapsed by default", not "remember forever".
+const collapsedState = {
+  machines: true, equipment: true, simStatus: true, deliverables: true, systemIPs: true, issues: true,
+};
+
+function chevronSvg(collapsed) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform ${collapsed ? '' : 'rotate-90'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>`;
+}
+
+function card(title, color, key) {
   const el = document.createElement('div');
   el.className = 'mb-5 rounded-xl overflow-hidden';
   el.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
+
   const header = document.createElement('div');
   header.className = 'flex items-center justify-between px-6 py-3.5 border-b border-gray-700/50';
-  header.innerHTML = `<div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full" style="background:${color}"></span><span class="text-xs font-bold text-white uppercase tracking-widest">${title}</span></div>`;
-  el.appendChild(header);
-  return { el, header };
+
+  const titleGroup = document.createElement('div');
+  titleGroup.className = 'flex items-center gap-3 cursor-pointer select-none';
+  titleGroup.innerHTML = `<span class="collapse-chevron text-gray-400 flex items-center">${chevronSvg(collapsedState[key])}</span>` +
+    `<span class="w-2 h-2 rounded-full" style="background:${color}"></span><span class="text-xs font-bold text-white uppercase tracking-widest">${title}</span>`;
+  header.appendChild(titleGroup);
+
+  const body = document.createElement('div');
+  body.style.display = collapsedState[key] ? 'none' : '';
+
+  titleGroup.addEventListener('click', () => {
+    collapsedState[key] = !collapsedState[key];
+    body.style.display = collapsedState[key] ? 'none' : '';
+    titleGroup.querySelector('.collapse-chevron').innerHTML = chevronSvg(collapsedState[key]);
+  });
+
+  el.append(header, body);
+  return { el, header, body };
 }
 
 function textCell(value, placeholder, onChange, mono) {
@@ -60,7 +88,7 @@ function removeBtnCell(onClick) {
 
 // ---- Machines & Software ----
 function renderMachines(sa) {
-  const { el, header } = card('Machines & Software', '#459fd9');
+  const { el, header, body } = card('Machines & Software', '#459fd9', 'machines');
   header.appendChild(addBtn('Add Machine', () => { sa.machines.push({ name: '', ip: '', software: '', version: '', activated: 'Activated', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -101,13 +129,13 @@ function renderMachines(sa) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
-  el.appendChild(table);
+  body.appendChild(table);
   return el;
 }
 
 // ---- Equipment & Consumables (merged: replaces old sysarch.equipment + packingList) ----
 function renderEquipment(sa) {
-  const { el, header } = card('Equipment & Consumables', '#34d399');
+  const { el, header, body } = card('Equipment & Consumables', '#34d399', 'equipment');
   header.appendChild(addBtn('Add Item', () => { sa.equipment.push({ batch: '', category: EQUIP_CATEGORIES[0], item: '', serial: '', qty: 1, rovAssignment: 'Shared', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -162,13 +190,13 @@ function renderEquipment(sa) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
-  el.appendChild(table);
+  body.appendChild(table);
   return el;
 }
 
 // ---- Simulation Status (test scenario log) ----
 function renderSimStatus(sa) {
-  const { el, header } = card('Simulation Status', '#fbbf24');
+  const { el, header, body } = card('Simulation Status', '#fbbf24', 'simStatus');
   header.appendChild(addBtn('Add Entry', () => { sa.simStatus.push({ machine: '', scenario: '', expected: '', completion: 0, status: 'Passed', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -210,16 +238,16 @@ function renderSimStatus(sa) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
-  el.appendChild(table);
+  body.appendChild(table);
   return el;
 }
 
 // ---- Deliverables ----
 function renderDeliverables(sa) {
   const del = sa.deliverables;
-  const { el } = card('Deliverables', '#a78bfa');
-  const body = document.createElement('div');
-  body.className = 'p-5 grid grid-cols-2 gap-6';
+  const { el, body } = card('Deliverables', '#a78bfa', 'deliverables');
+  const content = document.createElement('div');
+  content.className = 'p-5 grid grid-cols-2 gap-6';
 
   const left = document.createElement('div'); left.className = 'space-y-3';
   const toField = document.createElement('div');
@@ -264,14 +292,14 @@ function renderDeliverables(sa) {
     right.appendChild(row);
   });
 
-  body.append(left, right);
-  el.appendChild(body);
+  content.append(left, right);
+  body.appendChild(content);
   return el;
 }
 
 // ---- System IPs ----
 function renderSystemIPs(sa) {
-  const { el, header } = card('System IPs', '#60a5fa');
+  const { el, header, body } = card('System IPs', '#60a5fa', 'systemIPs');
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
   table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
@@ -298,21 +326,21 @@ function renderSystemIPs(sa) {
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
-  el.appendChild(table);
+  body.appendChild(table);
   return el;
 }
 
 // ---- Issues (new — see rebuild note above) ----
 function renderIssues() {
   const issues = simState.shared.issues;
-  const { el, header } = card('Issues', '#f87171');
+  const { el, header, body } = card('Issues', '#f87171', 'issues');
   header.appendChild(addBtn('Add Issue', () => { issues.push({ title: '', description: '', severity: 'medium', status: 'open' }); renderSimContent(); scheduleSimSync(); }));
 
   if (issues.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'text-center text-gray-600 py-8 text-sm';
     empty.textContent = 'No issues flagged.';
-    el.appendChild(empty);
+    body.appendChild(empty);
     return el;
   }
 
@@ -346,7 +374,7 @@ function renderIssues() {
     row.append(topRow, descInput);
     list.appendChild(row);
   });
-  el.appendChild(list);
+  body.appendChild(list);
   return el;
 }
 
