@@ -138,7 +138,24 @@ export function startProjectAutoSave() {
     if (state.currentMode !== 'operation' || state.currentUserRole === 'reviewer') return;
     if (!document.getElementById('projectCode')?.value) return;
     saveProject({ silent: true });
-  }, 90 * 1000);
+  }, 60 * 1000);
+}
+
+// Best-effort save on tab close/refresh — sendBeacon fires even as the page
+// unloads, unlike a normal fetch which can get cancelled mid-flight.
+export function flushSaveOnUnload() {
+  if (state.currentMode !== 'operation' || state.currentUserRole === 'reviewer') return;
+  const data = collectAllData();
+  const projectCode = data.projectCode;
+  if (!projectCode) return;
+  const payload = JSON.stringify({
+    project_code: projectCode,
+    mode: 'operation',
+    created_by: state.currentUserName,
+    project_name: data.projectName || projectCode,
+    data,
+  });
+  navigator.sendBeacon('/api/projects', new Blob([payload], { type: 'application/json' }));
 }
 
 export function installProjectDetails() {

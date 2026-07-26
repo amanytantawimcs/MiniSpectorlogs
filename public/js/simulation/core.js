@@ -227,11 +227,24 @@ export function startSimAutoSave() {
   autoSaveTimer = setInterval(() => {
     if (state.currentMode !== 'simulation' || !simState.selectedScope) return;
     saveSimulation({ silent: true });
-  }, 20 * 1000);
+  }, 60 * 1000);
 }
 
 export function stopSimAutoSave() {
   if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null; }
+}
+
+// Best-effort save on tab close/refresh, mirrors flushSaveOnUnload() in projectDetails.js.
+export function flushSimOnUnload() {
+  if (state.currentMode !== 'simulation' || !simState.projectData.code) return;
+  const payload = JSON.stringify({
+    project_code: simState.projectData.code,
+    mode: 'simulation',
+    created_by: state.currentUserName,
+    project_name: simState.projectData.name || simState.projectData.code,
+    data: collectSimState(),
+  });
+  navigator.sendBeacon('/api/projects', new Blob([payload], { type: 'application/json' }));
 }
 
 export function installSimCore() {
