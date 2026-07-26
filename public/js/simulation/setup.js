@@ -55,17 +55,13 @@ function renderROVChips() {
       </div>
       <span class="text-xs font-bold tracking-wide ${selected ? 'text-orange-300' : 'text-white'}">MS-${num}</span>
       ${selected
-        ? `<button type="button" class="rov-role-btn text-[9px] font-bold px-2.5 py-0.5 rounded-full transition-all ${isMain ? 'bg-orange-500 text-white cursor-default' : 'bg-gray-700 text-gray-400 hover:bg-blue-500/20 hover:text-blue-300 cursor-pointer'}" title="${isMain ? 'Main unit' : 'Click to promote to Main'}">${isMain ? 'MAIN' : 'STANDBY'}</button>
-           <input type="text" class="rov-serial-input w-full text-[9px] font-mono text-center bg-gray-900/70 border border-orange-500/30 rounded px-1.5 py-0.5 text-orange-200 placeholder-gray-600 outline-none focus:border-orange-400 transition-colors" placeholder="Serial No." value="${(simState.rovSerials.get(num) || '').replace(/"/g, '&quot;')}">`
+        ? `<button type="button" class="rov-role-btn text-[9px] font-bold px-2.5 py-0.5 rounded-full transition-all ${isMain ? 'bg-orange-500 text-white cursor-default' : 'bg-gray-700 text-gray-400 hover:bg-blue-500/20 hover:text-blue-300 cursor-pointer'}" title="${isMain ? 'Main unit' : 'Click to promote to Main'}">${isMain ? 'MAIN' : 'STANDBY'}</button>`
         : `<span class="text-[9px] text-white/60 font-medium">Available</span>`}
     `;
 
     chip.addEventListener('click', () => toggleSimROV(num));
     chip.querySelector('.rov-remove-btn')?.addEventListener('click', (e) => { e.stopPropagation(); removeROV(num); });
     chip.querySelector('.rov-role-btn')?.addEventListener('click', (e) => { e.stopPropagation(); if (!isMain) setROVRole(num); });
-    const serialInput = chip.querySelector('.rov-serial-input');
-    serialInput?.addEventListener('click', (e) => e.stopPropagation());
-    serialInput?.addEventListener('input', () => simState.rovSerials.set(num, serialInput.value));
 
     container.appendChild(chip);
   }
