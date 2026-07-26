@@ -33,6 +33,26 @@ function closeSupport() {
   if (el) el.style.display = 'none';
 }
 
+function openPrivacyPolicy() {
+  const el = document.getElementById('privacy-policy-modal');
+  if (el) el.style.display = 'flex';
+}
+
+function closePrivacyPolicy() {
+  const el = document.getElementById('privacy-policy-modal');
+  if (el) el.style.display = 'none';
+}
+
+function openTermsOfService() {
+  const el = document.getElementById('terms-of-service-modal');
+  if (el) el.style.display = 'flex';
+}
+
+function closeTermsOfService() {
+  const el = document.getElementById('terms-of-service-modal');
+  if (el) el.style.display = 'none';
+}
+
 // A full reload puts every module back to its just-loaded defaults (login
 // screen, cleared state, timers gone) — simpler and safer than manually
 // unwinding every global. The beforeunload handler in main.js still fires
@@ -47,4 +67,8 @@ export function installNavigationStubs() {
   window.closeSupport = closeSupport;
   window.signOut = signOut;
   window.reviewerLogout = signOut; // previously dead — reviewer badge's ✕ never had a handler
+  window.openPrivacyPolicy = openPrivacyPolicy;
+  window.closePrivacyPolicy = closePrivacyPolicy;
+  window.openTermsOfService = openTermsOfService;
+  window.closeTermsOfService = closeTermsOfService;
 }

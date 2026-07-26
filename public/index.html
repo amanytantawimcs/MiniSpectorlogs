@@ -320,7 +320,7 @@
         </div>
     </div>
 
-    <p class="absolute bottom-6 text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only</p>
+    <p class="absolute bottom-6 left-4 right-4 text-center text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Terms of Service</button></p>
     <button onclick="showAdminLogin()" class="absolute bottom-5 right-6 text-gray-700 hover:text-gray-500 text-[11px] transition-colors">Admin</button>
 </div>
 
@@ -541,7 +541,7 @@
         <button id="btn-back-join" class="mt-5 text-gray-500 hover:text-gray-300 text-sm transition-colors w-full text-center">← Back</button>
     </div>
 
-    <p class="absolute bottom-6 text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only</p>
+    <p class="absolute bottom-6 left-4 right-4 text-center text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Terms of Service</button></p>
 </div>
 
 <div id="session-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 hidden">
@@ -1690,6 +1690,125 @@
             <button onclick="closeSupport()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold w-full">Close</button>
         </div>
     </div>
+
+    <div id="privacy-policy-modal" class="modal-overlay" style="display: none; z-index: 100;">
+        <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600 text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-gray-700 pb-4">
+                <h3 class="text-xl font-bold text-white">Security &amp; Privacy Policy</h3>
+                <button onclick="closePrivacyPolicy()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                <p><span class="font-bold text-white">Our Commitment to Your Data.</span> Welcome to the MiniSpector Logs Portal. This portal is designed to help you manage ROV operational data securely. We are committed to protecting the privacy of our users and the confidentiality of the operational logs stored here.</p>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">1. What Data Do We Collect?</h4>
+                    <p class="mb-2">We collect only the data needed to run this logging system:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><span class="font-semibold text-gray-200">Your User Profile:</span> We collect your professional contact info (name, work email, company) to create your account and secure your access.</li>
+                        <li><span class="font-semibold text-gray-200">The Operational Logs:</span> The main purpose of the portal is to store the dive details, equipment status, and maintenance reports you enter. (For this data, your employer is the "Data Controller," and we are the "Data Processor.")</li>
+                        <li><span class="font-semibold text-gray-200">Technical Usage Info:</span> We automatically collect basic data from your web browser (like your IP address) to keep the system secure and running smoothly.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">2. How Do We Use Your Data?</h4>
+                    <p class="mb-2">We use this data for the following essential functions:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>To let you log in and access your specific project logs.</li>
+                        <li>To enable the "automatic save" feature and keep reports synced in real-time.</li>
+                        <li>To provide you with technical support when you need it.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">3. Data Storage and Security</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><span class="font-semibold text-gray-200">Secure Servers:</span> We store your data on secure servers.</li>
+                        <li><span class="font-semibold text-gray-200">Encryption:</span> We use advanced encryption to protect your data while it travels over the Internet and while it is stored in our database.</li>
+                        <li><span class="font-semibold text-gray-200">Restricted Access:</span> Access to logs is strictly limited to authorized users associated with that specific operation.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">4. Data Retention</h4>
+                    <p>We keep your operational logs according to the agreement we have with your company. User profile data is kept as long as your account is active.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">5. Your Rights</h4>
+                    <p>You have the right to review and correct your user profile data. For questions about the operational data in the logs themselves, please contact your employer.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">6. Contact Us</h4>
+                    <p>If you have any questions about data security or privacy, please contact us at: <a href="mailto:sd@mcsoil.com" class="text-blue-400 hover:text-blue-300">sd@mcsoil.com</a></p>
+                </div>
+            </div>
+            <button onclick="closePrivacyPolicy()" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold w-full">Close</button>
+        </div>
+    </div>
+
+    <div id="terms-of-service-modal" class="modal-overlay" style="display: none; z-index: 100;">
+        <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600 text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-gray-700 pb-4">
+                <h3 class="text-xl font-bold text-white">Terms of Service</h3>
+                <button onclick="closeTermsOfService()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                <p><span class="font-bold text-white">By Using This Portal, You Agree to These Terms.</span> Welcome to the MiniSpector Logs Portal. These Terms are a simple agreement between you and MCS. By logging in and using this system, you agree to follow these rules.</p>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">1. Using Your Account</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><span class="font-semibold text-gray-200">Authorized Use:</span> This portal is for authorized MCS personnel and our Clients only.</li>
+                        <li><span class="font-semibold text-gray-200">Keep Your Password Secret:</span> You are responsible for keeping your login credentials safe. Do not share your password with anyone.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">2. Your Responsibilities as a User</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Use the portal only for its intended purpose: logging and managing ROV operational data.</li>
+                        <li>Do not enter personal information into the operational logs (other than necessary crew names).</li>
+                        <li>Do not try to access another client's data or bypass any security features.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">3. Operational Data and Accuracy</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><span class="font-semibold text-gray-200">Data Entry is Your Responsibility:</span> The accuracy and completeness of all logs, checklists, and fault reports depend entirely on you. MCS is not responsible for any incorrect data you enter.</li>
+                        <li><span class="font-semibold text-gray-200">Operational Decisions Are Yours:</span> This portal is a tool for documentation. All on-site decisions, such as a "Ready to Dive" call or safety assessment, are the sole responsibility of the on-site team (Pilot, Supervisor, etc.) and your company.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">4. Important Disclaimers and Limitations</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><span class="font-semibold text-gray-200">"As-Is" System:</span> We provide this logging system "as-is." While we work hard to keep it available and error-free, we cannot guarantee it will never have issues.</li>
+                        <li><span class="font-semibold text-gray-200">Limitation of Liability:</span> To the maximum extent permitted by law, MCS will not be responsible for any damages or operational losses (like downtime) that may occur in connection with your use of this portal.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">5. Termination of Access</h4>
+                    <p>We may suspend or stop your access to the portal if you violate these terms or for other business reasons.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">6. Changes to These Terms</h4>
+                    <p>We may update these terms from time to time. We will post the changes on the portal, and your continued use means you accept the updated terms.</p>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-1">7. Contact Information</h4>
+                    <p>If you have any questions about these Terms of Service, please contact your MCS representative or email us at: <a href="mailto:sd@mcsoil.com" class="text-blue-400 hover:text-blue-300">sd@mcsoil.com</a>.</p>
+                </div>
+            </div>
+            <button onclick="closeTermsOfService()" class="mt-6 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold w-full">Close</button>
+        </div>
+    </div>
+
 <div id="standby-selector-modal" class="modal-overlay" style="display: none; z-index: 60;">
     <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600">
         <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
