@@ -1,9 +1,8 @@
-// Step 1 of the Simulation flow: Mission Info + MiniSpector (ROV) grid + History.
+// Step 1 of the Simulation flow: Mission Info + MiniSpector (ROV) grid.
 // Ported from the old app's setup wizard, rewritten to use addEventListener on
 // dynamically-built elements instead of inline onclick strings.
 
 import { state } from '../state.js';
-import { api } from '../api.js';
 import { showToast } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { OPERATION_SCOPES, MINISPECTOR_FIXED_SENSORS } from './config.js';
@@ -126,52 +125,12 @@ function setROVRole(num) {
   updateBeginBtn();
 }
 
-async function loadSimHistory() {
-  const el = document.getElementById('sim-history-list');
-  if (!el) return;
-  el.innerHTML = `<p class="text-gray-600 text-sm italic">Loading...</p>`;
-  const result = await api.listProjects({ mode: 'simulation' });
-  const sims = result.projects || [];
-  if (sims.length === 0) {
-    el.innerHTML = `<p class="text-gray-600 text-sm italic">No saved simulations yet.</p>`;
-    return;
-  }
-  el.innerHTML = '';
-  sims.forEach(s => {
-    const row = document.createElement('button');
-    row.type = 'button';
-    row.className = 'w-full text-left px-4 py-3 rounded-lg flex items-center justify-between transition-colors';
-    row.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
-    row.innerHTML = `
-      <div>
-        <p class="text-sm font-semibold text-white">${s.project_name || s.project_code}</p>
-        <p class="text-xs text-gray-500 font-mono mt-0.5">${s.project_code} · ${new Date(s.updated_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
-      </div>
-      ${s.is_sim_locked ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:rgba(107,114,128,0.2);color:#9ca3af;">PUSHED</span>' : ''}
-    `;
-    row.addEventListener('click', () => loadSimulationByCode(s.project_code));
-    el.appendChild(row);
-  });
-}
-
-async function loadSimulationByCode(code) {
-  const result = await api.pullProject(code);
-  if (!result.success || result.project.mode !== 'simulation') {
-    showToast('Could not load that simulation.', 'error');
-    return;
-  }
-  const { loadSimulationState } = await import('./core.js');
-  loadSimulationState(result.project.data, result.project.is_sim_locked);
-  showToast(`Loaded "${result.project.project_name || code}".`, 'success');
-}
-
 export function showSimSetupTab(tab) {
-  ['mission', 'units', 'history'].forEach(t => {
+  ['mission', 'units'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
   document.getElementById('sim-step1-footer')?.classList.toggle('hidden', tab !== 'units');
   if (tab === 'units') renderROVChips();
-  if (tab === 'history') loadSimHistory();
 }
 
 function beginSimulation() {
