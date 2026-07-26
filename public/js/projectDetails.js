@@ -161,7 +161,6 @@ export function flushSaveOnUnload() {
 export function installProjectDetails() {
   window.addCrewRow = addCrewRow;
   window.__addCrewRow = addCrewRow; // used by projectData.js populateUI()
-  window.manualSyncToCloud = () => saveProject();
 
   document.getElementById('btn-save-pc')?.addEventListener('click', () => saveProject());
 
