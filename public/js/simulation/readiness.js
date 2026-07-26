@@ -163,28 +163,6 @@ export function renderReadinessContent(area) {
   card.appendChild(kpiRow);
   wrap.appendChild(card);
 
-  const table = document.createElement('table');
-  table.style.cssText = 'width:100%;border-collapse:collapse;';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
-    <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th></tr></thead>`;
-  const tbody = document.createElement('tbody');
-  active.forEach((s, i) => {
-    const tr = document.createElement('tr');
-    tr.style.cssText = `background:${i % 2 === 0 ? 'rgba(17,24,39,0.35)' : 'rgba(17,24,39,0.15)'};border-bottom:1px solid rgba(55,65,81,0.25)`;
-    tr.innerHTML = `<td class="px-3 py-2 text-sm text-gray-200">${escapeHtml(s.name)}</td>
-      <td class="px-3 py-2 text-xs text-gray-400">${escapeHtml(s.model || '—')}</td>
-      <td class="px-3 py-2 text-center">${s.calibrated ? '<span style="color:#f39124">✓</span>' : '<span style="color:#4b5563">—</span>'}</td>
-      <td class="px-3 py-2 text-center">${s.tested ? '<span style="color:#459fd9">✓</span>' : '<span style="color:#4b5563">—</span>'}</td>`;
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  const tableCard = document.createElement('div');
-  tableCard.className = 'rounded-xl overflow-hidden mb-5';
-  tableCard.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
-  tableCard.appendChild(table);
-  wrap.appendChild(tableCard);
-
   wrap.appendChild(renderApprovalCard());
   area.appendChild(wrap);
 }
