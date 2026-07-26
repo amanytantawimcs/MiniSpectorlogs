@@ -227,7 +227,7 @@ export function startSimAutoSave() {
   autoSaveTimer = setInterval(() => {
     if (state.currentMode !== 'simulation' || !simState.selectedScope) return;
     saveSimulation({ silent: true });
-  }, 60 * 1000);
+  }, 20 * 1000);
 }
 
 export function stopSimAutoSave() {

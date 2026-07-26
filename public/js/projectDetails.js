@@ -138,7 +138,7 @@ export function startProjectAutoSave() {
     if (state.currentMode !== 'operation' || state.currentUserRole === 'reviewer') return;
     if (!document.getElementById('projectCode')?.value) return;
     saveProject({ silent: true });
-  }, 60 * 1000);
+  }, 20 * 1000);
 }
 
 // Best-effort save on tab close/refresh — sendBeacon fires even as the page
