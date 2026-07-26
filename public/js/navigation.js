@@ -33,8 +33,18 @@ function closeSupport() {
   if (el) el.style.display = 'none';
 }
 
+// A full reload puts every module back to its just-loaded defaults (login
+// screen, cleared state, timers gone) — simpler and safer than manually
+// unwinding every global. The beforeunload handler in main.js still fires
+// first, so any unsaved work gets its flush + warning before this runs.
+function signOut() {
+  window.location.reload();
+}
+
 export function installNavigationStubs() {
   window.showTab = showTab;
   window.openSupport = openSupport;
   window.closeSupport = closeSupport;
+  window.signOut = signOut;
+  window.reviewerLogout = signOut; // previously dead — reviewer badge's ✕ never had a handler
 }
