@@ -32,7 +32,7 @@ function chevronSvg(collapsed) {
   return `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 transition-transform ${collapsed ? '' : 'rotate-90'}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>`;
 }
 
-function card(title, color, key) {
+function card(title, key) {
   const el = document.createElement('div');
   el.className = 'mb-5 rounded-xl overflow-hidden';
   el.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
@@ -43,7 +43,7 @@ function card(title, color, key) {
   const titleGroup = document.createElement('div');
   titleGroup.className = 'flex items-center gap-3 cursor-pointer select-none';
   titleGroup.innerHTML = `<span class="collapse-chevron text-gray-400 flex items-center">${chevronSvg(collapsedState[key])}</span>` +
-    `<span class="w-2 h-2 rounded-full" style="background:${color}"></span><span class="text-xs font-bold text-white uppercase tracking-widest">${title}</span>`;
+    `<span class="text-xs font-bold text-white uppercase tracking-widest">${title}</span>`;
   header.appendChild(titleGroup);
 
   const body = document.createElement('div');
@@ -70,9 +70,12 @@ function textCell(value, placeholder, onChange, mono) {
 
 function addBtn(label, onClick) {
   const btn = document.createElement('button');
-  btn.type = 'button'; btn.textContent = label;
-  btn.className = 'px-3 py-1 rounded-lg text-xs font-bold';
-  btn.style.cssText = 'background:rgba(243,145,36,0.12);color:#f39124;border:1px solid rgba(243,145,36,0.3);';
+  btn.type = 'button';
+  btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors';
+  btn.style.cssText = 'background:rgba(243,145,36,0.1);color:#f39124;border:1px solid rgba(243,145,36,0.25);';
+  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg><span>${label}</span>`;
+  btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(243,145,36,0.18)'; });
+  btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(243,145,36,0.1)'; });
   btn.addEventListener('click', onClick);
   return btn;
 }
@@ -88,7 +91,7 @@ function removeBtnCell(onClick) {
 
 // ---- Machines & Software ----
 function renderMachines(sa) {
-  const { el, header, body } = card('Machines & Software', '#459fd9', 'machines');
+  const { el, header, body } = card('Machines & Software', 'machines');
   header.appendChild(addBtn('Add Machine', () => { sa.machines.push({ name: '', ip: '', software: '', version: '', activated: 'Activated', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -135,7 +138,7 @@ function renderMachines(sa) {
 
 // ---- Equipment & Consumables (merged: replaces old sysarch.equipment + packingList) ----
 function renderEquipment(sa) {
-  const { el, header, body } = card('Equipment & Consumables', '#34d399', 'equipment');
+  const { el, header, body } = card('Equipment & Consumables', 'equipment');
   header.appendChild(addBtn('Add Item', () => { sa.equipment.push({ batch: '', category: EQUIP_CATEGORIES[0], item: '', serial: '', qty: 1, rovAssignment: 'Shared', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -196,7 +199,7 @@ function renderEquipment(sa) {
 
 // ---- Simulation Status (test scenario log) ----
 function renderSimStatus(sa) {
-  const { el, header, body } = card('Simulation Status', '#fbbf24', 'simStatus');
+  const { el, header, body } = card('Simulation Status', 'simStatus');
   header.appendChild(addBtn('Add Entry', () => { sa.simStatus.push({ machine: '', scenario: '', expected: '', completion: 0, status: 'Passed', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -245,7 +248,7 @@ function renderSimStatus(sa) {
 // ---- Deliverables ----
 function renderDeliverables(sa) {
   const del = sa.deliverables;
-  const { el, body } = card('Deliverables', '#a78bfa', 'deliverables');
+  const { el, body } = card('Deliverables', 'deliverables');
   const content = document.createElement('div');
   content.className = 'p-5 grid grid-cols-2 gap-6';
 
@@ -278,7 +281,7 @@ function renderDeliverables(sa) {
   const right = document.createElement('div');
   const notesHeader = document.createElement('div'); notesHeader.className = 'flex items-center justify-between mb-2';
   notesHeader.innerHTML = `<p class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Notes</p>`;
-  const addNoteBtn = addBtn('+ Note', () => { if (!del.notes) del.notes = []; del.notes.push(''); renderSimContent(); scheduleSimSync(); });
+  const addNoteBtn = addBtn('Note', () => { if (!del.notes) del.notes = []; del.notes.push(''); renderSimContent(); scheduleSimSync(); });
   notesHeader.appendChild(addNoteBtn);
   right.appendChild(notesHeader);
   (del.notes || []).forEach((n, i) => {
@@ -299,7 +302,7 @@ function renderDeliverables(sa) {
 
 // ---- System IPs ----
 function renderSystemIPs(sa) {
-  const { el, header, body } = card('System IPs', '#60a5fa', 'systemIPs');
+  const { el, header, body } = card('System IPs', 'systemIPs');
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
   table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
@@ -333,7 +336,7 @@ function renderSystemIPs(sa) {
 // ---- Issues (new — see rebuild note above) ----
 function renderIssues() {
   const issues = simState.shared.issues;
-  const { el, header, body } = card('Issues', '#f87171', 'issues');
+  const { el, header, body } = card('Issues', 'issues');
   header.appendChild(addBtn('Add Issue', () => { issues.push({ title: '', description: '', severity: 'medium', status: 'open' }); renderSimContent(); scheduleSimSync(); }));
 
   if (issues.length === 0) {
