@@ -119,7 +119,7 @@ export function renderWorkspaceShell() {
 function renderSimROVTabs() {
   const container = document.getElementById('sim-rov-tabs');
   if (!container) return;
-  container.classList.remove('hidden');
+  container.className = 'flex items-center overflow-x-auto';
   container.innerHTML = '';
   [...simState.selectedROVs.entries()].sort((a, b) => a[0] - b[0]).forEach(([num, role]) => {
     const isMain = role === 'main';
