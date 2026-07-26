@@ -113,7 +113,7 @@ async function renderAdminUsersTab() {
   const el = document.getElementById('admin-content-users');
   if (!el) return;
   el.innerHTML = `<div class="text-gray-500 text-sm py-8 text-center">Loading users...</div>`;
-  const result = await api.getUsers();
+  const result = await api.getUsers(adminCreds?.username, adminCreds?.passwordHash);
   const users = result.users || [];
   el.innerHTML = `
     <div class="max-w-2xl">
@@ -136,7 +136,6 @@ async function renderAdminUsersTab() {
                             <td class="px-4 py-3 font-mono text-gray-300 text-xs">${escapeHtml(String(u.id))}</td>
                             <td class="px-4 py-3 text-white">${escapeHtml(u.name || '')}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <button onclick="adminResetPasscode('${escapeHtml(String(u.id))}')" class="text-xs text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 rounded hover:bg-blue-900/20 mr-1">Reset Passcode</button>
                                 <button onclick="adminDeleteUser('${escapeHtml(String(u.id))}')" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-900/20">Remove</button>
                             </td>
                         </tr>`).join('')}
@@ -165,29 +164,23 @@ async function renderAdminUsersTab() {
 }
 
 async function adminAddUser() {
+  if (!adminCreds) { showToast('Admin session expired — log in again.', 'error'); exitAdminPanel(); showAdminLogin(); return; }
   const id = document.getElementById('new-user-id')?.value?.trim();
   const name = document.getElementById('new-user-name')?.value?.trim();
   const err = document.getElementById('admin-user-error');
   if (!id || !name) { err.textContent = 'Both ID and name are required.'; err.classList.remove('hidden'); return; }
   err.classList.add('hidden');
-  const result = await api.addUser({ id, name });
+  const result = await api.addUser({ id, name }, adminCreds.username, adminCreds.passwordHash);
   if (result.success) { renderAdminUsersTab(); }
   else { err.textContent = result.error || 'Failed to add user.'; err.classList.remove('hidden'); }
 }
 
 async function adminDeleteUser(userId) {
+  if (!adminCreds) { showToast('Admin session expired — log in again.', 'error'); exitAdminPanel(); showAdminLogin(); return; }
   if (!confirm(`Remove user "${userId}"? This does not remove them from existing projects.`)) return;
-  const result = await api.deleteUser(userId);
+  const result = await api.deleteUser(userId, adminCreds.username, adminCreds.passwordHash);
   if (result.success === false) { showToast(result.error || 'Failed to remove user.', 'error'); return; }
   renderAdminUsersTab();
-}
-
-async function adminResetPasscode(userId) {
-  if (!adminCreds) { showToast('Admin session expired — log in again.', 'error'); exitAdminPanel(); showAdminLogin(); return; }
-  if (!confirm(`Reset the passcode for user "${userId}"? They will set a new one on their next login.`)) return;
-  const result = await api.resetPasscode(userId, adminCreds.username, adminCreds.passwordHash);
-  if (result.success) showToast('Passcode reset. The user will set a new one at their next login.', 'success');
-  else showToast(result.error || 'Failed to reset passcode.', 'error');
 }
 
 function renderAdminProjectsTab() {
@@ -205,5 +198,4 @@ export function installAdmin() {
   window.showAdminTab = showAdminTab;
   window.adminAddUser = adminAddUser;
   window.adminDeleteUser = adminDeleteUser;
-  window.adminResetPasscode = adminResetPasscode;
 }

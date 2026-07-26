@@ -36,10 +36,8 @@ export const api = {
     return { success: r.ok, error: r.data.error };
   },
 
-  resetPasscode: async (userId, adminUsername, adminPasswordHash) => {
-    const r = await request('/users/' + encodeURIComponent(userId) + '/reset-passcode', {
-      method: 'POST', body: JSON.stringify({ adminUsername, adminPasswordHash }),
-    });
+  resetPasscode: async (userId) => {
+    const r = await request('/users/' + encodeURIComponent(userId) + '/reset-passcode', { method: 'POST' });
     return { success: r.ok, error: r.data.error };
   },
 
@@ -120,19 +118,21 @@ export const api = {
     return { success: true };
   },
 
-  getUsers: async () => {
-    const r = await request('/users');
+  getUsers: async (adminUsername, adminPasswordHash) => {
+    const qs = '?adminUsername=' + encodeURIComponent(adminUsername) + '&adminPasswordHash=' + encodeURIComponent(adminPasswordHash);
+    const r = await request('/users' + qs);
     if (!r.ok) return { success: false, users: [] };
     return { success: true, users: r.data.users || [] };
   },
 
-  addUser: async (user) => {
-    const r = await request('/users', { method: 'POST', body: JSON.stringify(user) });
+  addUser: async (user, adminUsername, adminPasswordHash) => {
+    const r = await request('/users', { method: 'POST', body: JSON.stringify({ ...user, adminUsername, adminPasswordHash }) });
     return { success: r.ok, error: r.data.error };
   },
 
-  deleteUser: async (userId) => {
-    const r = await request('/users/' + encodeURIComponent(userId), { method: 'DELETE' });
+  deleteUser: async (userId, adminUsername, adminPasswordHash) => {
+    const qs = '?adminUsername=' + encodeURIComponent(adminUsername) + '&adminPasswordHash=' + encodeURIComponent(adminPasswordHash);
+    const r = await request('/users/' + encodeURIComponent(userId) + qs, { method: 'DELETE' });
     return { success: r.ok };
   },
 };

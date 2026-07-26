@@ -143,6 +143,40 @@ function setLoginPasscodeMode(hasPasscode) {
   }
 }
 
+async function requestPasscodeReset() {
+  const idInput = document.getElementById('login-id-input');
+  const errEl = document.getElementById('login-error');
+  const userId = idInput.value.trim();
+  errEl.classList.add('hidden');
+
+  if (!userId) {
+    errEl.innerText = 'Enter your User ID above first, then click Reset Passcode.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  const lookup = await api.getUserName(userId);
+  if (!lookup.success) {
+    errEl.innerText = 'User ID not found.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  if (!confirm(`Reset the passcode for ${lookup.name} (ID ${userId})? You'll set a new one right after.`)) return;
+
+  const result = await api.resetPasscode(userId);
+  if (!result.success) {
+    errEl.innerText = result.error || 'Could not reset passcode. Try again.';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  setLoginPasscodeMode(false);
+  document.getElementById('login-pin-input').value = '';
+  document.getElementById('login-pin-confirm-input').value = '';
+  showToast('Passcode reset. Set a new one below and log in.', 'success');
+}
+
 export function installAuth() {
   const idInput = document.getElementById('login-id-input');
   let lookupCache = { id: null, result: null };
@@ -160,6 +194,8 @@ export function installAuth() {
     const result = await lookupUser(userId);
     if (result.success) setLoginPasscodeMode(result.hasPasscode);
   });
+
+  document.getElementById('btn-reset-passcode')?.addEventListener('click', requestPasscodeReset);
 
   document.getElementById('btn-login').addEventListener('click', async () => {
     const userId = idInput.value.trim();
@@ -196,8 +232,8 @@ export function installAuth() {
           return;
         }
       } else {
-        if (!/^\d{4,6}$/.test(pin)) {
-          errEl.innerText = 'Choose a 4-6 digit passcode.';
+        if (!/^\d{4,}$/.test(pin)) {
+          errEl.innerText = 'Choose a passcode of at least 4 digits.';
           errEl.classList.remove('hidden');
           return;
         }

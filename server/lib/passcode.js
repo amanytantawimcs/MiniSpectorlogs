@@ -14,6 +14,8 @@ function verifyPasscode(passcode, hash, salt) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-const PASSCODE_FORMAT = /^\d{4,6}$/;
+// No fixed upper digit-count from the product side (4, 5, 6, 7... all valid) —
+// 32 is just a sane hard ceiling so someone can't submit a multi-KB string as a "passcode".
+const PASSCODE_FORMAT = /^\d{4,32}$/;
 
 module.exports = { hashPasscode, verifyPasscode, PASSCODE_FORMAT };
