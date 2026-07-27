@@ -58,8 +58,8 @@ export function renderInfographics() {
       activeHTML += `
         <div class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 p-2 rounded">
           <span class="font-bold text-blue-400 text-xs">${escapeHtml(log.num || 'DIV')}</span>
-          <span class="text-white text-xs">${escapeHtml(log.rov || 'Dive')} In Progress</span>
-          <span class="text-gray-400 text-[10px] animate-pulse">● Live</span>
+          <span class="text-[#E9F0F8] text-xs">${escapeHtml(log.rov || 'Dive')} In Progress</span>
+          <span class="text-[#9AB0C8] text-[10px] animate-pulse">● Live</span>
         </div>`;
     }
   });
@@ -68,13 +68,13 @@ export function renderInfographics() {
       activeHTML += `
         <div class="flex items-center justify-between bg-red-900/20 border border-red-500/30 p-2 rounded">
           <span class="font-bold text-red-400 text-xs">${escapeHtml(log.id || 'SB')}</span>
-          <span class="text-white text-xs">${escapeHtml(log.category || 'Standby')}</span>
-          <span class="text-gray-400 text-[10px] animate-pulse">● Live</span>
+          <span class="text-[#E9F0F8] text-xs">${escapeHtml(log.category || 'Standby')}</span>
+          <span class="text-[#9AB0C8] text-[10px] animate-pulse">● Live</span>
         </div>`;
     }
   });
   if (activeListContainer) {
-    activeListContainer.innerHTML = activeHTML || `<p class="text-gray-500 italic text-xs text-center py-2">No active operations.</p>`;
+    activeListContainer.innerHTML = activeHTML || `<p class="text-[#6C88A6] italic text-xs text-center py-2">No active operations.</p>`;
   }
 
   // ── ROV live status badge ────────────────────────────────────────────
@@ -100,7 +100,7 @@ export function renderInfographics() {
     } else if (allLogs.length > 0 && allLogs[0].type === 'STANDBY' && allLogs[0].isOpen) {
       rovStatusEl.innerHTML = `<div style="text-align:center;padding:10px 0;border-radius:10px;font-weight:800;font-size:0.85rem;letter-spacing:0.1em;color:#fff;background:linear-gradient(135deg,#991b1b,#ef4444);box-shadow:0 0 18px rgba(239,68,68,0.35);" class="animate-pulse">&#x25CF; STANDBY</div>`;
     } else {
-      rovStatusEl.innerHTML = `<div style="text-align:center;padding:10px 0;border-radius:10px;font-weight:700;font-size:0.85rem;letter-spacing:0.1em;color:#9ca3af;background:#1f2937;border:1px solid #374151;">&#x25CB; ON DECK</div>`;
+      rovStatusEl.innerHTML = `<div style="text-align:center;padding:10px 0;border-radius:10px;font-weight:700;font-size:0.85rem;letter-spacing:0.1em;color:#9AB0C8;background:#101B2C;border:1px solid #16233A;">&#x25CB; ON DECK</div>`;
     }
   }
 
@@ -109,8 +109,8 @@ export function renderInfographics() {
   const maintEl = document.getElementById('op-total-maint');
   if (maintEl) {
     maintEl.innerText = totalMaintCount;
-    maintEl.classList.remove('text-gray-400', 'text-white', 'text-red-500');
-    maintEl.classList.add(totalMaintCount > 0 ? 'text-red-500' : 'text-white');
+    maintEl.classList.remove('text-[#9AB0C8]', 'text-[#E9F0F8]', 'text-red-500');
+    maintEl.classList.add(totalMaintCount > 0 ? 'text-red-500' : 'text-[#E9F0F8]');
   }
 
   // ── A. Utilization chart (horizontal bar) ────────────────────────────
@@ -133,7 +133,7 @@ export function renderInfographics() {
         datasets: [{
           label: 'Hours',
           data: [totalDiveHours, totalStandbyHours, operationalHours],
-          backgroundColor: [gradDive, gradStandby, '#2d3748'],
+          backgroundColor: [gradDive, gradStandby, '#16233A'],
           borderRadius: 8, barThickness: 28, borderWidth: 0,
         }],
       },
@@ -143,14 +143,14 @@ export function renderInfographics() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f9fafb', bodyColor: '#94a3b8',
-            borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 12, cornerRadius: 8,
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             displayColors: false, callbacks: { label: ctx => `${ctx.raw} hrs` },
           },
         },
         scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false }, ticks: { color: '#6b7280', font: { family: 'Inter', size: 11 } } },
-          y: { grid: { display: false, drawBorder: false }, ticks: { color: '#d1d5db', font: { family: 'Inter', size: 12, weight: '600' } } },
+          x: { grid: { color: 'rgba(120,166,212,0.08)', drawBorder: false }, ticks: { color: '#6C88A6', font: { family: 'Inter', size: 11 } } },
+          y: { grid: { display: false, drawBorder: false }, ticks: { color: '#E9F0F8', font: { family: 'Inter', size: 12, weight: '600' } } },
         },
       },
     });
@@ -169,7 +169,7 @@ export function renderInfographics() {
   if (Object.keys(activeReasons).length === 0) activeReasons['No Data'] = 1;
 
   const reasonsCanvas = document.getElementById('chartStandbyReasons');
-  const reasonColors = ['#ef5353', '#3b82f6', '#f59e0b', '#10b981', '#e4f551', '#8b5cf6', '#6b7280'];
+  const reasonColors = ['#ef5353', '#3b82f6', '#f59e0b', '#10b981', '#e4f551', '#8b5cf6', '#6C88A6'];
   if (reasonsCanvas) {
     const ctxReasons = reasonsCanvas.getContext('2d');
     if (chartReasons) chartReasons.destroy();
@@ -177,7 +177,7 @@ export function renderInfographics() {
       type: 'doughnut',
       data: {
         labels: Object.keys(activeReasons),
-        datasets: [{ data: Object.values(activeReasons), backgroundColor: reasonColors, borderColor: '#1f2937', borderWidth: 2, hoverOffset: 4 }],
+        datasets: [{ data: Object.values(activeReasons), backgroundColor: reasonColors, borderColor: '#101B2C', borderWidth: 2, hoverOffset: 4 }],
       },
       options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } },
     });
@@ -194,9 +194,9 @@ export function renderInfographics() {
         <div class="legend-row">
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="legend-dot" style="background:${color}"></span>
-            <span style="font-size:0.75rem;color:#d1d5db;font-weight:500;">${escapeHtml(key)}</span>
+            <span style="font-size:0.75rem;color:#E9F0F8;font-weight:500;">${escapeHtml(key)}</span>
           </div>
-          <span style="font-size:0.75rem;font-weight:700;color:#f9fafb;font-family:monospace;">${val}h</span>
+          <span style="font-size:0.75rem;font-weight:700;color:#E9F0F8;font-family:monospace;">${val}h</span>
         </div>`;
     });
   }
@@ -223,7 +223,7 @@ export function renderInfographics() {
       type: 'doughnut',
       data: {
         labels: ['Compliant', 'Non-Compliant'],
-        datasets: [{ data: [calPercent, 100 - calPercent], backgroundColor: ['#10b981', '#374151'], borderWidth: 0, borderRadius: 20 }],
+        datasets: [{ data: [calPercent, 100 - calPercent], backgroundColor: ['#10b981', '#16233A'], borderWidth: 0, borderRadius: 20 }],
       },
       options: { responsive: true, maintainAspectRatio: false, rotation: -90, circumference: 180, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } } },
     });
@@ -268,23 +268,23 @@ export function renderInfographics() {
         datasets: [
           { label: 'Dive Operations', data: shiftDiveH, backgroundColor: '#459fd9', borderRadius: 6, borderWidth: 0 },
           { label: 'Standby / Delays', data: shiftStandbyH, backgroundColor: '#f59e0b', borderRadius: 6, borderWidth: 0 },
-          { label: 'Operational / Other', data: shiftOtherH, backgroundColor: '#374151', borderRadius: 6, borderWidth: 0 },
+          { label: 'Operational / Other', data: shiftOtherH, backgroundColor: '#16233A', borderRadius: 6, borderWidth: 0 },
         ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         animation: { duration: 600, easing: 'easeOutQuart' },
         plugins: {
-          legend: { display: true, position: 'top', labels: { color: '#9ca3af', font: { size: 11 }, boxWidth: 12, boxHeight: 8, padding: 16 } },
+          legend: { display: true, position: 'top', labels: { color: '#9AB0C8', font: { size: 11 }, boxWidth: 12, boxHeight: 8, padding: 16 } },
           tooltip: {
-            backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f9fafb', bodyColor: '#94a3b8',
-            borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 12, cornerRadius: 8,
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw} hrs` },
           },
         },
         scales: {
-          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#9ca3af', font: { size: 11 } } },
-          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 11 }, callback: v => `${v}h` } },
+          x: { grid: { color: 'rgba(120,166,212,0.08)' }, ticks: { color: '#9AB0C8', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(120,166,212,0.08)' }, ticks: { color: '#6C88A6', font: { size: 11 }, callback: v => `${v}h` } },
         },
       },
     });
@@ -311,18 +311,18 @@ export function renderInfographics() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(15,23,42,0.95)', titleColor: '#f9fafb', bodyColor: '#94a3b8',
-            borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1, padding: 12, cornerRadius: 8,
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             callbacks: { label: ctx => `Depth: ${ctx.raw} m` },
           },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 45 } },
+          x: { grid: { display: false }, ticks: { color: '#9AB0C8', font: { size: 10 }, maxRotation: 45 } },
           y: {
             reverse: true,
-            grid: { color: 'rgba(255,255,255,0.04)' },
-            ticks: { color: '#6b7280', font: { size: 11 }, callback: v => `${v}m` },
-            title: { display: true, text: '← Deeper', color: '#4b5563', font: { size: 10 } },
+            grid: { color: 'rgba(120,166,212,0.08)' },
+            ticks: { color: '#6C88A6', font: { size: 11 }, callback: v => `${v}m` },
+            title: { display: true, text: '← Deeper', color: '#6C88A6', font: { size: 10 } },
           },
         },
       },
@@ -341,11 +341,11 @@ function renderPreOpReadinessPanel() {
   if (!preOpData) {
     preOpBody.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:160px;padding:24px;text-align:center;">
-        <div style="width:44px;height:44px;border-radius:50%;background:rgba(31,41,55,0.8);display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:1px solid #374151;">
-          <svg width="20" height="20" fill="none" stroke="#4b5563" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(16,27,44,0.8);display:flex;align-items:center;justify-content:center;margin-bottom:12px;border:1px solid #16233A;">
+          <svg width="20" height="20" fill="none" stroke="#6C88A6" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         </div>
-        <p style="font-size:12px;font-weight:600;color:#6b7280;margin:0;">No simulation data</p>
-        <p style="font-size:11px;color:#4b5563;margin-top:4px;line-height:1.5;">Run a simulation and push<br>to operation to see readiness here.</p>
+        <p style="font-size:12px;font-weight:600;color:#6C88A6;margin:0;">No simulation data</p>
+        <p style="font-size:11px;color:#6C88A6;margin-top:4px;line-height:1.5;">Run a simulation and push<br>to operation to see readiness here.</p>
       </div>`;
     return;
   }
@@ -366,7 +366,7 @@ function renderPreOpReadinessPanel() {
   const eTotal = equip.length;
 
   const rovChips = povROVs.map(r =>
-    `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;${r.role === 'main' ? 'background:rgba(243,145,36,0.15);color:#f39124;border:1px solid rgba(243,145,36,0.3)' : 'background:rgba(55,65,81,0.5);color:#9ca3af;border:1px solid #374151'}">MS-${escapeHtml(String(r.rovNumber))} ${r.role.toUpperCase()}</span>`
+    `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;${r.role === 'main' ? 'background:rgba(243,145,36,0.15);color:#f39124;border:1px solid rgba(243,145,36,0.3)' : 'background:rgba(120,166,212,0.16);color:#9AB0C8;border:1px solid #16233A'}">MS-${escapeHtml(String(r.rovNumber))} ${r.role.toUpperCase()}</span>`
   ).join(' ');
 
   const pushedDate = preOpData.pushedAt
@@ -376,43 +376,43 @@ function renderPreOpReadinessPanel() {
   preOpBody.innerHTML = `
     <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
       <div>
-        <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">ROVs Deployed</div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;">${rovChips || '<span style="font-size:11px;color:#4b5563">—</span>'}</div>
+        <div style="font-size:9px;font-weight:700;color:#6C88A6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">ROVs Deployed</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">${rovChips || '<span style="font-size:11px;color:#6C88A6">—</span>'}</div>
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-          <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;">Sensor Readiness</div>
+          <div style="font-size:9px;font-weight:700;color:#6C88A6;text-transform:uppercase;letter-spacing:0.08em;">Sensor Readiness</div>
           <span style="font-size:16px;font-weight:800;color:${sColor};letter-spacing:-0.5px;">${sPct}%</span>
         </div>
-        <div style="height:5px;background:rgba(55,65,81,0.6);border-radius:9999px;overflow:hidden;margin-bottom:6px;">
+        <div style="height:5px;background:rgba(120,166,212,0.16);border-radius:9999px;overflow:hidden;margin-bottom:6px;">
           <div style="width:${sPct}%;height:100%;background:${sColor};border-radius:9999px;"></div>
         </div>
         <div style="display:flex;gap:10px;">
           <span style="font-size:10px;color:#f39124;">✓ ${sCal} calibrated</span>
           <span style="font-size:10px;color:#459fd9;">✓ ${sTested} tested</span>
-          <span style="font-size:10px;color:#6b7280;">${sTotal} total</span>
+          <span style="font-size:10px;color:#6C88A6;">${sTotal} total</span>
         </div>
       </div>
       ${eTotal > 0 ? `
       <div>
-        <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">Equipment (${eTotal} items)</div>
+        <div style="font-size:9px;font-weight:700;color:#6C88A6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">Equipment (${eTotal} items)</div>
         <div style="display:flex;gap:6px;">
           <div style="flex:1;text-align:center;background:rgba(243,145,36,0.1);border:1px solid rgba(243,145,36,0.2);border-radius:8px;padding:7px 4px;">
             <div style="font-size:18px;font-weight:800;color:#f39124;line-height:1;">${eOK}</div>
-            <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-top:2px;">OK</div>
+            <div style="font-size:8px;font-weight:700;color:#6C88A6;text-transform:uppercase;margin-top:2px;">OK</div>
           </div>
           <div style="flex:1;text-align:center;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:7px 4px;">
             <div style="font-size:18px;font-weight:800;color:#f87171;line-height:1;">${eFault}</div>
-            <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-top:2px;">Fault</div>
+            <div style="font-size:8px;font-weight:700;color:#6C88A6;text-transform:uppercase;margin-top:2px;">Fault</div>
           </div>
           <div style="flex:1;text-align:center;background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);border-radius:8px;padding:7px 4px;">
             <div style="font-size:18px;font-weight:800;color:#facc15;line-height:1;">${eMissing}</div>
-            <div style="font-size:8px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-top:2px;">Missing</div>
+            <div style="font-size:8px;font-weight:700;color:#6C88A6;text-transform:uppercase;margin-top:2px;">Missing</div>
           </div>
         </div>
       </div>` : ''}
-      <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;">
-        <span style="font-size:10px;color:#4b5563;">Pushed from simulation · ${pushedDate}</span>
+      <div style="border-top:1px solid rgba(120,166,212,0.16);padding-top:8px;">
+        <span style="font-size:10px;color:#6C88A6;">Pushed from simulation · ${pushedDate}</span>
       </div>
     </div>`;
 }

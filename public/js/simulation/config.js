@@ -11,13 +11,13 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' }, { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'UT', status: 'required' },
       { name: 'FMD', status: 'required' }, { name: 'Cleaning Brush', status: 'required' },
-      { name: 'PRC Real-Time', status: 'optional' },
+      { name: 'PRC Camera 1', status: 'optional' }, { name: 'PRC Camera 2', status: 'optional' },
     ],
   },
   2: {
     name: 'Platform Conventional Inspection with PRC', category: 'Platform',
     sensors: [
-      { name: 'PRC Real-Time', status: 'required' }, { name: 'Navigation', status: 'required' },
+      { name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' }, { name: 'Navigation', status: 'required' },
       { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
       { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
       { name: 'UT', status: 'required' }, { name: 'FMD', status: 'required' },
@@ -47,7 +47,8 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
       { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' },
+      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
   6: {
@@ -57,7 +58,8 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
       { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' },
+      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
   7: {
@@ -67,7 +69,8 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
       { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' },
+      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
   8: {
@@ -78,6 +81,8 @@ export const OPERATION_SCOPES = {
       { name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'required' },
       { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
       { name: 'PRC External Frame', status: 'optional' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
   9: {
@@ -87,7 +92,8 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
       { name: 'MBES', status: 'required' }, { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'PipeTracker', status: 'optional' },
+      { name: 'PipeTracker', status: 'optional' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
   10: {
@@ -96,7 +102,8 @@ export const OPERATION_SCOPES = {
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
       { name: 'MBES', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'PipeTracker', status: 'optional' },
+      { name: 'PipeTracker', status: 'optional' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
   11: {
@@ -105,6 +112,8 @@ export const OPERATION_SCOPES = {
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
       { name: 'CP', status: 'optional' }, { name: 'Manipulator', status: 'optional' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
   12: {
@@ -113,6 +122,8 @@ export const OPERATION_SCOPES = {
       { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
       { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
       { name: 'Altimeter', status: 'required' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
   13: {
@@ -120,8 +131,10 @@ export const OPERATION_SCOPES = {
     sensors: [
       { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
       { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
-      { name: 'Altimeter', status: 'required' }, { name: 'PRC Real-Time', status: 'optional' },
-      { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'Altimeter', status: 'required' }, { name: 'PRC Camera 1', status: 'optional' },
+      { name: 'PRC Camera 2', status: 'optional' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
   14: {
@@ -131,6 +144,8 @@ export const OPERATION_SCOPES = {
       { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
       { name: 'Altimeter', status: 'required' }, { name: 'Scan (SBES/Profiler)', status: 'required' },
       { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
   15: {
@@ -138,7 +153,17 @@ export const OPERATION_SCOPES = {
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'Water Jet', status: 'required' },
+      { name: 'Water Jet', status: 'required' }, { name: 'Center Camera', status: 'required' },
+      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
+    ],
+  },
+  16: {
+    name: 'PRC Camera Inspection', category: 'PRC',
+    sensors: [
+      { name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' },
+      { name: 'Front/Boom Camera', status: 'required' }, { name: 'Rear Camera', status: 'required' },
+      { name: 'Gyro', status: 'required' }, { name: 'DVL', status: 'required' },
+      { name: 'Depth', status: 'required' },
     ],
   },
 };
@@ -147,12 +172,16 @@ export const SENSOR_HARDWARE = {
   'Front/Boom Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
   'Rear Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
   'Side Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
-  'PRC (Fixed)': ['Embedded in Prospector'],
+  'Center Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
+  'Port Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
+  'Starboard Camera': ['AQV 62 IP Subsea Camera', 'Board Camera', 'MCS HIKVISION Camera'],
   'PRC External Frame': ['External PRC Frame'],
-  'PRC Real-Time': ['Real-time PRC Pod'],
+  'PRC Camera 1': ['Embedded in Prospector'],
+  'PRC Camera 2': ['Embedded in Prospector'],
   Navigation: ['SUBSONUS USBL/INS'],
   Gyro: ['Embedded in Prospector', 'Exail Octans Nano'],
   Depth: ['Embedded in Prospector'],
+  DVL: ['DVL Sensor'],
   Altimeter: ['Impact Subsea ISA200', 'Embedded in Prospector'],
   'Scan (SBES/Profiler)': ['DFP TriTech', 'Impact Subsea ISP360'],
   MBES: ['SeaBat T20-S', 'IMAGENEX MODEL 837A Delta T', 'NORBIT Winghead B44'],
@@ -170,10 +199,12 @@ export const SENSOR_HARDWARE = {
 export const SENSOR_CATEGORIES = {
   'Rear Camera': 'Cameras & Lighting', 'Side Camera': 'Cameras & Lighting',
   'Front/Boom Camera': 'Cameras & Lighting', 'PTZ Camera': 'Cameras & Lighting', 'GVI Camera': 'Cameras & Lighting',
-  Navigation: 'Navigation & Depth', Gyro: 'Navigation & Depth', Depth: 'Navigation & Depth', Altimeter: 'Navigation & Depth',
+  'Center Camera': 'Cameras & Lighting', 'Port Camera': 'Cameras & Lighting', 'Starboard Camera': 'Cameras & Lighting',
+  Navigation: 'Navigation & Depth', Gyro: 'Navigation & Depth', Depth: 'Navigation & Depth', Altimeter: 'Navigation & Depth', DVL: 'Navigation & Depth',
   CP: 'Inspection Tools', UT: 'Inspection Tools', ACFM: 'Inspection Tools', FMD: 'Inspection Tools',
   'Sonar 360': 'Inspection Tools', MBES: 'Inspection Tools', PipeTracker: 'Inspection Tools', 'Scan (SBES/Profiler)': 'Inspection Tools',
-  'PRC Real-Time': 'Payloads / Tooling', 'PRC (Fixed)': 'Payloads / Tooling', 'PRC External Frame': 'Payloads / Tooling',
+  'PRC External Frame': 'Payloads / Tooling',
+  'PRC Camera 1': 'Payloads / Tooling', 'PRC Camera 2': 'Payloads / Tooling',
   'Cleaning Brush': 'Payloads / Tooling', 'Water Jet': 'Payloads / Tooling', Manipulator: 'Payloads / Tooling',
 };
 
@@ -182,9 +213,12 @@ export const CAT_ORDER = { 'Cameras & Lighting': 0, 'Navigation & Depth': 1, 'In
 // Fixed unit sensors every selected ROV gets automatically (not scope-driven).
 export const MINISPECTOR_FIXED_SENSORS = [
   { name: 'Rear Camera', category: 'Cameras & Lighting' },
-  { name: 'Side Camera', category: 'Cameras & Lighting' },
   { name: 'Front/Boom Camera', category: 'Cameras & Lighting' },
-  { name: 'PRC (Fixed)', category: 'Payloads / Tooling' },
+  { name: 'PRC Camera 1', category: 'Payloads / Tooling' },
+  { name: 'PRC Camera 2', category: 'Payloads / Tooling' },
+  { name: 'Gyro', category: 'Navigation & Depth' },
+  { name: 'DVL', category: 'Navigation & Depth' },
+  { name: 'Depth', category: 'Navigation & Depth' },
 ];
 
 // Merged "Equipment & Consumables" list (replaces the old app's separate

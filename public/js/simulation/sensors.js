@@ -2,9 +2,10 @@
 // (required + custom + optional), per-ROV fixed sensors (calibration wired up
 // here — the old app never connected this, see rebuild notes), and thrusters.
 
-import { escapeHtml } from '../ui.js';
+import { escapeHtml, showToast, renderLockedNotice } from '../ui.js';
 import { simState } from './state.js';
-import { OPERATION_SCOPES, SENSOR_HARDWARE, SENSOR_CATEGORIES, CAT_ORDER } from './config.js';
+import { SENSOR_HARDWARE, SENSOR_CATEGORIES, CAT_ORDER } from './config.js';
+import { findScope } from './scopeCatalog.js';
 import { renderSimContent, scheduleSimSync } from './core.js';
 
 function rovOptions() {
@@ -34,6 +35,85 @@ function buildToggle(active, color, onToggle) {
   return wrap;
 }
 
+// Calibrated/Tested cell for the fixed-sensors table: a toggle plus a
+// double-click-to-reveal date field. Updates its own DOM in place (rather
+// than going through the usual renderSimContent() full re-render) so the
+// browser's dblclick detection — which requires two clicks on the *same*
+// element within its timing window — doesn't get broken by the node being
+// torn down and rebuilt between the two clicks.
+function buildDateToggleCell(sensor, field, color, onAfterToggle) {
+  const dateField = field + 'Date';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:inline-flex;flex-direction:column;align-items:center;gap:3px;';
+
+  const pill = document.createElement('div');
+  pill.style.cssText = `width:40px;height:20px;border-radius:9999px;cursor:pointer;background:${sensor[field] ? color : '#4b5563'};position:relative;transition:background 0.2s;`;
+  const knob = document.createElement('div');
+  knob.style.cssText = `position:absolute;top:2px;left:2px;width:16px;height:16px;background:white;border-radius:50%;transition:transform 0.2s;transform:${sensor[field] ? 'translateX(20px)' : 'translateX(0)'};`;
+  pill.appendChild(knob);
+  pill.addEventListener('click', () => {
+    sensor[field] = !sensor[field];
+    pill.style.background = sensor[field] ? color : '#4b5563';
+    knob.style.transform = sensor[field] ? 'translateX(20px)' : 'translateX(0)';
+    scheduleSimSync();
+    onAfterToggle?.();
+  });
+  wrap.appendChild(pill);
+
+  const dateLabel = document.createElement('span');
+  dateLabel.style.cssText = 'font-size:9.5px;font-family:ui-monospace,monospace;color:#6C88A6;white-space:nowrap;';
+  dateLabel.textContent = sensor[dateField] || '— set date —';
+  wrap.appendChild(dateLabel);
+
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = sensor[dateField] || '';
+  dateInput.style.cssText = 'display:none;width:120px;margin-top:2px;background:#0C1727;border:1px solid rgba(120,166,212,0.3);border-radius:6px;color:#E9F0F8;font-size:10px;padding:2px 4px;';
+  dateInput.addEventListener('click', e => e.stopPropagation());
+  dateInput.addEventListener('change', () => {
+    sensor[dateField] = dateInput.value;
+    dateLabel.textContent = dateInput.value || '— set date —';
+    scheduleSimSync();
+  });
+  dateInput.addEventListener('blur', () => { dateInput.style.display = 'none'; });
+  wrap.appendChild(dateInput);
+
+  wrap.addEventListener('dblclick', (e) => {
+    e.preventDefault();
+    dateInput.style.display = 'block';
+    dateInput.focus();
+    if (dateInput.showPicker) { try { dateInput.showPicker(); } catch { /* unsupported browser */ } }
+  });
+
+  return wrap;
+}
+
+// Per-unit rows for a Qty > 1 sensor line: each unit gets its own
+// model/serial/calibrated/tested, migrated lazily from the old flat
+// single-instance fields so already-saved missions don't lose data.
+export function ensureSensorInstances(sensor) {
+  const qty = Math.max(1, sensor.qty || 1);
+  if (!Array.isArray(sensor.instances)) {
+    sensor.instances = [{
+      model: sensor.model || '', serialNo: sensor.serialNo || '',
+      calibrated: !!sensor.calibrated, calibratedDate: sensor.calibratedDate || '',
+      tested: !!sensor.tested, testedDate: sensor.testedDate || '',
+    }];
+  }
+  while (sensor.instances.length < qty) sensor.instances.push({ model: '', serialNo: '', calibrated: false, calibratedDate: '', tested: false, testedDate: '' });
+  while (sensor.instances.length > qty) sensor.instances.pop();
+  return sensor.instances;
+}
+
+// Readiness/badge counting unit for a sensor line: qty-capable sensors
+// (required + custom, i.e. the main Sensors table) count as one item per
+// unit; optional-but-not-yet-custom sensors have no qty UI and stay a
+// single item, matching what's actually editable on screen.
+export function sensorReadinessItems(sensor) {
+  if (sensor.status === 'optional' && !sensor.custom) return [sensor];
+  return ensureSensorInstances(sensor);
+}
+
 function buildModelCell(sensor, onChange) {
   const hardware = SENSOR_HARDWARE[sensor.name] || [];
   if (hardware.length === 0 || (sensor.model && !hardware.includes(sensor.model))) {
@@ -59,14 +139,13 @@ function buildModelCell(sensor, onChange) {
 function renderFleetSection() {
   const entries = [...simState.selectedROVs.entries()].sort((a, b) => a[0] - b[0]);
   const card = document.createElement('div');
-  card.className = 'mb-5 rounded-xl overflow-hidden';
-  card.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
+  card.className = 'rcard mb-5';
   if (entries.length === 0) {
     card.innerHTML = `<div class="text-center text-gray-600 py-8 text-sm">No MiniSpectors selected — go back to Step 1.</div>`;
     return card;
   }
   const header = document.createElement('div');
-  header.className = 'flex items-center gap-3 px-6 py-3.5 border-b border-gray-700/50';
+  header.className = 'flex items-center gap-3 px-6 py-3.5 border-b rcard-head';
   header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#f39124"></span><span class="text-xs font-bold text-white uppercase tracking-widest">MiniSpector Fleet</span>`;
   card.appendChild(header);
 
@@ -78,7 +157,7 @@ function renderFleetSection() {
     const label = document.createElement('span');
     label.className = 'font-bold text-white text-sm shrink-0';
     label.style.minWidth = '55px';
-    label.textContent = `MS-${num}`;
+    label.textContent = `MiniSpector-${num}`;
 
     const serialInput = document.createElement('input');
     serialInput.type = 'text';
@@ -109,14 +188,13 @@ function renderFleetSection() {
 function renderSensorsTable() {
   const sensors = simState.shared.sensors || [];
   const active = sensors.filter(s => s.status !== 'optional' || s.custom);
-  const scope = OPERATION_SCOPES[simState.selectedScope];
+  const scope = findScope(simState.selectedScope);
 
   const card = document.createElement('div');
-  card.className = 'mb-5 rounded-xl overflow-hidden';
-  card.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
-
+  card.className = 'rcard mb-5';
+  
   const header = document.createElement('div');
-  header.className = 'flex items-center gap-3 px-6 py-3.5 border-b border-gray-700/50';
+  header.className = 'flex items-center gap-3 px-6 py-3.5 border-b rcard-head';
   header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#f39124"></span>
     <span class="text-xs font-bold text-white uppercase tracking-widest">Sensors</span>
     <span class="text-xs text-gray-600">${active.length} item${active.length !== 1 ? 's' : ''} — scope: <span style="color:#f39124">${escapeHtml(scope?.name || '–')}</span></span>`;
@@ -126,61 +204,86 @@ function renderSensorsTable() {
   tableWrap.style.overflowX = 'auto';
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;min-width:740px;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-4 py-2 text-left">#</th><th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
     <th class="px-3 py-2 text-left">Serial No.</th><th class="px-3 py-2 text-center">Qty</th>
     <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th>
     <th class="px-3 py-2 text-left">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
 
   if (active.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-gray-600 text-sm">No sensors — select a scope or add a custom sensor below</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600 text-sm">No sensors — select a scope or add a custom sensor below</td></tr>`;
   }
   active.forEach((sensor, i) => {
     const idx = sensors.indexOf(sensor);
-    const tr = document.createElement('tr');
-    tr.style.cssText = `background:${i % 2 === 0 ? 'rgba(17,24,39,0.45)' : 'rgba(17,24,39,0.15)'};border-bottom:1px solid rgba(55,65,81,0.25)`;
+    const qty = Math.max(1, sensor.qty || 1);
+    const instances = ensureSensorInstances(sensor);
+    const rowBg = i % 2 === 0 ? 'rgba(17,24,39,0.45)' : 'rgba(17,24,39,0.15)';
 
-    const tdNum = document.createElement('td'); tdNum.className = 'px-4 py-2.5 text-xs text-gray-500 font-mono text-center'; tdNum.textContent = i + 1;
-    const tdName = document.createElement('td'); tdName.className = 'px-4 py-2.5 text-sm text-gray-200';
-    tdName.textContent = sensor.name;
-    if (sensor.custom) tdName.innerHTML += ` <span class="text-[9px] px-1.5 py-0.5 rounded" style="background:rgba(249,115,22,0.15);color:#fb923c;">CUSTOM</span>`;
+    instances.forEach((instance, unitIdx) => {
+      const tr = document.createElement('tr');
+      tr.style.cssText = `background:${rowBg};border-bottom:1px solid rgba(55,65,81,0.25)`;
 
-    const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5';
-    tdModel.appendChild(buildModelCell(sensor, (v) => { sensor.model = v; scheduleSimSync(); if (v === ' ') renderSimContent(); }));
+      if (unitIdx === 0) {
+        const tdName = document.createElement('td');
+        tdName.className = 'px-4 py-2.5 text-sm text-gray-200 align-top';
+        tdName.rowSpan = qty;
+        tdName.textContent = sensor.name;
+        if (qty > 1) tdName.innerHTML += ` <span class="text-[9px] px-1.5 py-0.5 rounded" style="background:rgba(69,159,217,0.15);color:#459fd9;">×${qty}</span>`;
+        if (sensor.custom) tdName.innerHTML += ` <span class="text-[9px] px-1.5 py-0.5 rounded" style="background:rgba(249,115,22,0.15);color:#fb923c;">CUSTOM</span>`;
+        tr.appendChild(tdName);
+      }
 
-    const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5';
-    const serialInput = document.createElement('input');
-    serialInput.type = 'text'; serialInput.placeholder = 'S/N...'; serialInput.value = sensor.serialNo || '';
-    serialInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1.5 text-xs font-mono outline-none';
-    serialInput.style.color = '#459fd9';
-    serialInput.addEventListener('input', () => { sensor.serialNo = serialInput.value; scheduleSimSync(); });
-    tdSerial.appendChild(serialInput);
+      const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5';
+      tdModel.appendChild(buildModelCell({ name: sensor.name, model: instance.model }, (v) => { instance.model = v; scheduleSimSync(); if (v === ' ') renderSimContent(); }));
+      tr.appendChild(tdModel);
 
-    const tdQty = document.createElement('td'); tdQty.className = 'px-3 py-2.5 text-center';
-    const qtyInput = document.createElement('input');
-    qtyInput.type = 'number'; qtyInput.min = '1'; qtyInput.value = sensor.qty || 1;
-    qtyInput.className = 'w-14 bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1 text-xs text-center text-white outline-none';
-    qtyInput.addEventListener('input', () => { sensor.qty = parseInt(qtyInput.value, 10) || 1; scheduleSimSync(); });
-    tdQty.appendChild(qtyInput);
+      const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5';
+      const serialInput = document.createElement('input');
+      serialInput.type = 'text'; serialInput.placeholder = qty > 1 ? `S/N (unit ${unitIdx + 1})...` : 'S/N...'; serialInput.value = instance.serialNo || '';
+      serialInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1.5 text-xs font-mono outline-none';
+      serialInput.style.color = '#459fd9';
+      serialInput.addEventListener('input', () => { instance.serialNo = serialInput.value; scheduleSimSync(); });
+      tdSerial.appendChild(serialInput);
+      tr.appendChild(tdSerial);
 
-    const tdCal = document.createElement('td'); tdCal.className = 'px-3 py-2.5 text-center';
-    tdCal.appendChild(buildToggle(sensor.calibrated, '#f39124', () => { sensor.calibrated = !sensor.calibrated; scheduleSimSync(); renderSimContent(); }));
+      if (unitIdx === 0) {
+        const tdQty = document.createElement('td'); tdQty.className = 'px-3 py-2.5 text-center align-top'; tdQty.rowSpan = qty;
+        const qtyInput = document.createElement('input');
+        qtyInput.type = 'number'; qtyInput.min = '1'; qtyInput.value = qty;
+        qtyInput.className = 'w-14 bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1 text-xs text-center text-white outline-none';
+        qtyInput.addEventListener('input', () => {
+          sensor.qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+          ensureSensorInstances(sensor);
+          scheduleSimSync(); renderSimContent();
+        });
+        tdQty.appendChild(qtyInput);
+        tr.appendChild(tdQty);
+      }
 
-    const tdTest = document.createElement('td'); tdTest.className = 'px-3 py-2.5 text-center';
-    tdTest.appendChild(buildToggle(sensor.tested, '#459fd9', () => { sensor.tested = !sensor.tested; scheduleSimSync(); renderSimContent(); }));
+      const tdCal = document.createElement('td'); tdCal.className = 'px-3 py-2.5 text-center';
+      tdCal.appendChild(buildDateToggleCell(instance, 'calibrated', '#f39124'));
+      tr.appendChild(tdCal);
 
-    const tdAss = document.createElement('td'); tdAss.className = 'px-3 py-2.5';
-    tdAss.appendChild(buildAssignmentSelect(sensor.rovAssignment || 'Shared', (v) => { sensor.rovAssignment = v; scheduleSimSync(); }));
+      const tdTest = document.createElement('td'); tdTest.className = 'px-3 py-2.5 text-center';
+      tdTest.appendChild(buildDateToggleCell(instance, 'tested', '#459fd9'));
+      tr.appendChild(tdTest);
 
-    const tdRemove = document.createElement('td'); tdRemove.className = 'px-3 py-2.5 text-center';
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button'; removeBtn.className = 'text-gray-600 hover:text-red-400 text-lg font-bold leading-none'; removeBtn.innerHTML = '&times;';
-    removeBtn.addEventListener('click', () => { sensors.splice(idx, 1); renderSimContent(); scheduleSimSync(); });
-    tdRemove.appendChild(removeBtn);
+      if (unitIdx === 0) {
+        const tdAss = document.createElement('td'); tdAss.className = 'px-3 py-2.5 align-top'; tdAss.rowSpan = qty;
+        tdAss.appendChild(buildAssignmentSelect(sensor.rovAssignment || 'Shared', (v) => { sensor.rovAssignment = v; scheduleSimSync(); }));
+        tr.appendChild(tdAss);
 
-    tr.append(tdNum, tdName, tdModel, tdSerial, tdQty, tdCal, tdTest, tdAss, tdRemove);
-    tbody.appendChild(tr);
+        const tdRemove = document.createElement('td'); tdRemove.className = 'px-3 py-2.5 text-center align-top'; tdRemove.rowSpan = qty;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button'; removeBtn.className = 'text-gray-600 hover:text-red-400 text-lg font-bold leading-none'; removeBtn.innerHTML = '&times;';
+        removeBtn.addEventListener('click', () => { sensors.splice(idx, 1); renderSimContent(); scheduleSimSync(); });
+        tdRemove.appendChild(removeBtn);
+        tr.appendChild(tdRemove);
+      }
+
+      tbody.appendChild(tr);
+    });
   });
   table.appendChild(tbody);
   tableWrap.appendChild(table);
@@ -219,9 +322,8 @@ function renderOptionalSensors() {
   if (optional.length === 0) return null;
 
   const card = document.createElement('div');
-  card.className = 'mb-5 rounded-xl overflow-hidden';
-  card.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
-  card.innerHTML = `<div class="flex items-center gap-3 px-6 py-3.5 border-b border-gray-700/50"><span class="w-2 h-2 rounded-full" style="background:#6b7280"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Optional Sensors</span></div>`;
+  card.className = 'rcard mb-5';
+  card.innerHTML = `<div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head"><span class="w-2 h-2 rounded-full" style="background:#6b7280"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Optional Sensors</span></div>`;
 
   let lastCat = null;
   optional.forEach(sensor => {
@@ -257,41 +359,113 @@ function renderOptionalSensors() {
 
 // Per-ROV fixed sensors (cameras, PRC) — calibration wired up here, unlike the
 // old app where this existed in the data model but had no working UI.
+// Remembers which unit's table is on screen across re-renders (module-level,
+// display-only — same "current focus" idea as simState.activeROV, which this
+// also updates so other panels that read it stay in sync).
+let fixedSensorsUnit = null;
+
 function renderFixedSensorsSection() {
   const entries = [...simState.selectedROVs.entries()].sort((a, b) => a[0] - b[0]);
   if (entries.length === 0) return null;
-  const activeNum = simState.selectedROVs.has(simState.activeROV) ? simState.activeROV : entries[0][0];
+  if (!simState.selectedROVs.has(fixedSensorsUnit)) {
+    fixedSensorsUnit = simState.selectedROVs.has(simState.activeROV) ? simState.activeROV : entries[0][0];
+  }
+  const activeNum = fixedSensorsUnit;
 
   const card = document.createElement('div');
-  card.className = 'mb-5 rounded-xl overflow-hidden';
-  card.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
+  card.className = 'rcard mb-5';
+  
   const header = document.createElement('div');
-  header.className = 'flex items-center gap-3 px-6 py-3.5 border-b border-gray-700/50';
-  header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#a78bfa"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Fixed Unit Sensors — MS-${activeNum}</span>`;
+  header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head flex-wrap gap-3';
+
+  const left = document.createElement('div');
+  left.className = 'flex items-center gap-3';
+  left.innerHTML = `<span class="rcard-bar"></span><span class="rcard-title">Fixed unit sensors</span><span class="text-xs" style="color:#6C88A6">Permanently mounted, logged per unit</span>`;
+  header.appendChild(left);
+
+  const right = document.createElement('div');
+  right.className = 'flex items-center gap-2 flex-wrap';
+
+  if (entries.length > 1) {
+    const tabs = document.createElement('div');
+    tabs.className = 'fixedsens-tabs';
+    entries.forEach(([num, role]) => {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'fixedsens-tab' + (num === activeNum ? ' active' : '');
+      tab.innerHTML = `MiniSpector-${num}${role ? `<span class="fixedsens-role-badge ${role}">${role}</span>` : ''}`;
+      tab.addEventListener('click', () => { fixedSensorsUnit = num; simState.activeROV = num; renderSimContent(); });
+      tabs.appendChild(tab);
+    });
+    right.appendChild(tabs);
+  }
+
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
+  copyBtn.textContent = 'Copy to other unit' + (entries.length > 2 ? 's' : '');
+  copyBtn.className = 'fixedsens-copy-btn';
+  copyBtn.disabled = entries.length < 2;
+  copyBtn.addEventListener('click', () => {
+    const source = simState.shared.rovSensors[activeNum] || [];
+    entries.forEach(([num]) => {
+      if (num === activeNum) return;
+      const target = simState.shared.rovSensors[num] || [];
+      source.forEach(s => {
+        const match = target.find(t => t.name === s.name);
+        if (match) {
+          match.model = s.model; match.serial = s.serial;
+          match.calibrated = s.calibrated; match.calibratedDate = s.calibratedDate;
+          match.tested = s.tested; match.testedDate = s.testedDate;
+        }
+      });
+    });
+    scheduleSimSync();
+    showToast(`Copied to ${entries.length - 1} other unit${entries.length > 2 ? 's' : ''}`, 'success');
+    renderSimContent();
+  });
+  right.appendChild(copyBtn);
+
+  header.appendChild(right);
   card.appendChild(header);
 
   const fixed = simState.shared.rovSensors[activeNum] || [];
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
     <th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
+    <th class="px-3 py-2 text-left">Serial No.</th>
     <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th></tr></thead>`;
   const tbody = document.createElement('tbody');
   fixed.forEach((sensor, i) => {
     const tr = document.createElement('tr');
     tr.style.cssText = `background:${i % 2 === 0 ? 'rgba(17,24,39,0.45)' : 'rgba(17,24,39,0.15)'};border-bottom:1px solid rgba(55,65,81,0.25)`;
-    const tdName = document.createElement('td'); tdName.className = 'px-4 py-2.5 text-sm text-gray-200'; tdName.textContent = sensor.name;
+    const tdName = document.createElement('td'); tdName.className = 'px-4 py-2.5 text-sm text-gray-200';
+    const dot = document.createElement('span');
+    dot.className = 'fixedsens-dot'; dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563';
+    const nameWrap = document.createElement('span'); nameWrap.className = 'inline-flex items-center';
+    nameWrap.appendChild(dot); nameWrap.append(sensor.name);
+    tdName.appendChild(nameWrap);
+
     const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5';
     const modelInput = document.createElement('input');
     modelInput.type = 'text'; modelInput.value = sensor.model || ''; modelInput.placeholder = 'Model...';
     modelInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600';
     modelInput.addEventListener('input', () => { sensor.model = modelInput.value; scheduleSimSync(); });
     tdModel.appendChild(modelInput);
+
+    const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5';
+    const serialInput = document.createElement('input');
+    serialInput.type = 'text'; serialInput.value = sensor.serial || ''; serialInput.placeholder = 'S/N...';
+    serialInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600';
+    serialInput.style.color = '#459fd9';
+    serialInput.addEventListener('input', () => { sensor.serial = serialInput.value; scheduleSimSync(); });
+    tdSerial.appendChild(serialInput);
+
     const tdCal = document.createElement('td'); tdCal.className = 'px-3 py-2.5 text-center';
-    tdCal.appendChild(buildToggle(sensor.calibrated, '#f39124', () => { sensor.calibrated = !sensor.calibrated; scheduleSimSync(); renderSimContent(); }));
+    tdCal.appendChild(buildDateToggleCell(sensor, 'calibrated', '#f39124', () => { dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563'; }));
     const tdTest = document.createElement('td'); tdTest.className = 'px-3 py-2.5 text-center';
-    tdTest.appendChild(buildToggle(sensor.tested, '#459fd9', () => { sensor.tested = !sensor.tested; scheduleSimSync(); renderSimContent(); }));
-    tr.append(tdName, tdModel, tdCal, tdTest);
+    tdTest.appendChild(buildDateToggleCell(sensor, 'tested', '#459fd9'));
+    tr.append(tdName, tdModel, tdSerial, tdCal, tdTest);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -299,13 +473,90 @@ function renderFixedSensorsSection() {
   return card;
 }
 
+function kpi(value, label, color) {
+  const div = document.createElement('div');
+  div.style.cssText = `flex:1;min-width:0;background:${color}14;border:1px solid ${color}33;border-radius:10px;padding:10px 14px;`;
+  div.innerHTML = `<div style="font-size:22px;font-weight:800;color:${color};line-height:1;">${value}</div>
+    <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-top:3px">${label}</div>`;
+  return div;
+}
+
+// Readiness rollup + Push to Operation — formerly its own "System Readiness"
+// tab (with an approval gate in front of the push button); both the
+// approval cycle and the dedicated tab were removed, so this card now lives
+// at the bottom of Sensors and equipment and the push is always available.
+function renderReadinessAndPushCard() {
+  const sensors = simState.shared.sensors || [];
+  const scopeActive = sensors.filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
+  const scopeActiveItems = scopeActive.flatMap(sensorReadinessItems);
+  const fixedAll = Object.values(simState.shared.rovSensors || {}).flat();
+  const active = [...scopeActiveItems, ...fixedAll];
+  const total = active.length;
+
+  const card = document.createElement('div');
+  card.className = 'rcard mb-5';
+
+  const calibrated = active.filter(s => s.calibrated).length;
+  const tested = active.filter(s => s.tested).length;
+  const noModel = active.filter(s => !s.model || s.model.trim() === '').length;
+  const ready = active.filter(s => s.calibrated && s.tested && s.model && s.model.trim() !== '').length;
+  const percent = total > 0 ? Math.round((ready / total) * 100) : 0;
+  const barColor = percent === 100 ? '#22c55e' : percent >= 60 ? '#f39124' : '#ef4444';
+
+  const header = document.createElement('div');
+  header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head';
+  header.innerHTML = `<span class="text-xs font-bold text-white uppercase tracking-widest">Overall Readiness</span>
+    <span style="font-size:22px;font-weight:800;color:${barColor};">${percent}%</span>`;
+  card.appendChild(header);
+
+  const barWrap = document.createElement('div');
+  barWrap.className = 'px-6 pt-4 pb-1';
+  barWrap.innerHTML = `<div style="height:7px;background:rgba(55,65,81,0.6);border-radius:9999px;overflow:hidden;">
+      <div style="width:${percent}%;height:100%;background:${barColor};border-radius:9999px;"></div>
+    </div>
+    <div style="font-size:11px;color:#6b7280;margin-top:5px;">${total === 0 ? 'No active sensors yet' : percent === 100 ? 'All sensors fully configured and ready' : `${ready} of ${total} sensors fully configured`}</div>`;
+  card.appendChild(barWrap);
+
+  const kpiRow = document.createElement('div');
+  kpiRow.style.cssText = 'display:flex;gap:10px;padding:12px 24px 16px;flex-wrap:wrap;';
+  kpiRow.append(
+    kpi(ready, 'Ready', '#f39124'),
+    kpi(calibrated, 'Calibrated', '#f39124'),
+    kpi(tested, 'Tested', '#459fd9'),
+    kpi(noModel, 'No Model', noModel === 0 ? '#f39124' : '#f87171'),
+    kpi(total, 'Total Active', '#9ca3af'),
+  );
+  card.appendChild(kpiRow);
+
+  const footer = document.createElement('div');
+  footer.className = 'flex items-center justify-between gap-4 flex-wrap px-6 py-4 border-t border-gray-700/40';
+  const desc = document.createElement('p');
+  desc.className = 'text-xs text-gray-400 flex-1';
+  desc.style.minWidth = '200px';
+  desc.textContent = 'Transfers sensors, machines and equipment into Operation and pre-fills Project Details.';
+  footer.appendChild(desc);
+
+  const pushBtn = document.createElement('button');
+  pushBtn.type = 'button';
+  pushBtn.textContent = 'Push to Operation';
+  pushBtn.className = 'px-4 py-2 rounded-lg text-xs font-bold';
+  pushBtn.style.cssText = 'background:#f39124;color:#fff;border:2px solid #f39124;cursor:pointer;';
+  pushBtn.addEventListener('click', async () => {
+    const { pushToOperation } = await import('../preOp.js');
+    pushToOperation();
+  });
+  footer.appendChild(pushBtn);
+  card.appendChild(footer);
+
+  return card;
+}
+
 function renderThrustersSection() {
   const thrusters = simState.shared.thrusters || [];
   const card = document.createElement('div');
-  card.className = 'mb-5 rounded-xl overflow-hidden';
-  card.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
+  card.className = 'rcard mb-5';
   const header = document.createElement('div');
-  header.className = 'flex items-center justify-between px-6 py-3.5 border-b border-gray-700/50';
+  header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head';
   header.innerHTML = `<div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full" style="background:#459fd9"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Thrusters</span></div>`;
   const addBtn = document.createElement('button');
   addBtn.type = 'button'; addBtn.textContent = 'Add Thruster';
@@ -317,7 +568,7 @@ function renderThrustersSection() {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
     <th class="px-4 py-2 text-left">Thruster No.</th><th class="px-4 py-2 text-left">Serial</th>
     <th class="px-4 py-2 text-left">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
@@ -362,19 +613,23 @@ function renderThrustersSection() {
 export function renderSensorsContent(area) {
   area.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.className = 'max-w-5xl mx-auto pb-6';
-  const title = document.createElement('h3');
-  title.className = 'text-xl font-bold text-white mb-5';
-  title.textContent = 'Sensors & Equipment';
-  wrap.appendChild(title);
+  wrap.className = 'mx-auto pb-6';
+  wrap.style.maxWidth = '1400px';
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'mb-6';
+  titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Sensors and equipment</h3>
+    <p class="text-gray-400 mt-1 text-sm">Log every sensor going in the water, with its model, serial and certificate.</p>`;
+  wrap.appendChild(titleWrap);
+  if (simState.locked) wrap.appendChild(renderLockedNotice());
 
   wrap.appendChild(renderFleetSection());
+  const fixed = renderFixedSensorsSection();
+  if (fixed) wrap.appendChild(fixed);
   wrap.appendChild(renderSensorsTable());
   const optional = renderOptionalSensors();
   if (optional) wrap.appendChild(optional);
-  const fixed = renderFixedSensorsSection();
-  if (fixed) wrap.appendChild(fixed);
   wrap.appendChild(renderThrustersSection());
+  wrap.appendChild(renderReadinessAndPushCard());
 
   area.appendChild(wrap);
 }

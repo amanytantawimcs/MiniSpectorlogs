@@ -102,7 +102,7 @@ function showAdminTab(tab) {
       content.classList.add('hidden');
       btn.style.background = 'transparent';
       btn.style.border = '1px solid transparent';
-      btn.style.color = '#9ca3af';
+      btn.style.color = '#9AB0C8';
     }
   });
   if (tab === 'users') renderAdminUsersTab();
@@ -112,29 +112,29 @@ function showAdminTab(tab) {
 async function renderAdminUsersTab() {
   const el = document.getElementById('admin-content-users');
   if (!el) return;
-  el.innerHTML = `<div class="text-gray-500 text-sm py-8 text-center">Loading users...</div>`;
+  el.innerHTML = `<div class="text-sm py-8 text-center" style="color:#6C88A6">Loading users...</div>`;
   const result = await api.getUsers(adminCreds?.username, adminCreds?.passwordHash);
   const users = result.users || [];
   el.innerHTML = `
     <div class="max-w-2xl">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-white">User Accounts</h2>
+            <h2 class="text-base font-bold" style="color:#E9F0F8">User Accounts</h2>
         </div>
-        <div class="rounded-xl overflow-hidden mb-4" style="border:1px solid rgba(55,65,81,0.6);">
+        <div class="rcard mb-4">
             <table class="w-full text-sm">
                 <thead>
-                    <tr style="background:rgba(31,41,55,0.8);border-bottom:1px solid rgba(55,65,81,0.5);">
-                        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">User ID</th>
-                        <th class="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Name</th>
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">User ID</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Name</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${users.length === 0 ? `<tr><td colspan="3" class="text-center text-gray-600 py-6 text-sm">No users yet.</td></tr>` :
+                    ${users.length === 0 ? `<tr><td colspan="3" class="text-center py-6 text-sm" style="color:#6C88A6">No users yet.</td></tr>` :
                         users.map(u => `
-                        <tr style="border-bottom:1px solid rgba(55,65,81,0.3);">
-                            <td class="px-4 py-3 font-mono text-gray-300 text-xs">${escapeHtml(String(u.id))}</td>
-                            <td class="px-4 py-3 text-white">${escapeHtml(u.name || '')}</td>
+                        <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
+                            <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(String(u.id))}</td>
+                            <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(u.name || '')}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <button onclick="adminDeleteUser('${escapeHtml(String(u.id))}')" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-900/20">Remove</button>
                             </td>
@@ -142,22 +142,16 @@ async function renderAdminUsersTab() {
                 </tbody>
             </table>
         </div>
-        <div class="rounded-xl p-4" style="background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);">
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Add User</p>
+        <div class="rcard p-4">
+            <p class="text-xs font-bold uppercase tracking-wider mb-3" style="color:#9AB0C8">Add User</p>
             <div class="flex gap-3">
-                <input id="new-user-id" type="text" placeholder="User ID (e.g. 105)" autocomplete="off"
-                    class="flex-1 px-3 py-2 rounded-lg text-sm text-white placeholder-gray-600 outline-none"
-                    style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.7);"
-                    onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.7)'">
-                <input id="new-user-name" type="text" placeholder="Full Name" autocomplete="off"
-                    class="flex-1 px-3 py-2 rounded-lg text-sm text-white placeholder-gray-600 outline-none"
-                    style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.7);"
-                    onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.7)'"
+                <input id="new-user-id" type="text" placeholder="User ID (e.g. 105)" autocomplete="off" class="flex-1">
+                <input id="new-user-name" type="text" placeholder="Full Name" autocomplete="off" class="flex-1"
                     onkeydown="if(event.key==='Enter') adminAddUser()">
                 <button onclick="adminAddUser()" class="px-4 py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90 whitespace-nowrap"
                     style="background:#f39124;">Add User</button>
             </div>
-            <p class="text-gray-600 text-xs mt-2">New users set their own passcode the first time they log in.</p>
+            <p class="text-xs mt-2" style="color:#6C88A6">New users set their own passcode the first time they log in.</p>
             <p id="admin-user-error" class="text-red-400 text-xs mt-2 hidden"></p>
         </div>
     </div>`;
@@ -186,7 +180,7 @@ async function adminDeleteUser(userId) {
 function renderAdminProjectsTab() {
   const el = document.getElementById('admin-content-projects');
   if (!el) return;
-  el.innerHTML = `<div class="text-gray-600 text-sm py-8 text-center">Project access control — coming in a later update.</div>`;
+  el.innerHTML = `<div class="text-sm py-8 text-center" style="color:#6C88A6">Project access control — coming in a later update.</div>`;
 }
 
 export function installAdmin() {

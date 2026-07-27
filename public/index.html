@@ -14,35 +14,38 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> 
-    
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.44.0/tabler-icons.min.css" rel="stylesheet">
+
     <style>
-        :root { 
+        :root {
             --color-mcs-blue: #459fd9;
-            --color-bg-dark: #1f2937;
-            --color-bg-darker: #111827;
-            --color-mcs-orange:#f39124; 
+            --color-bg-dark: #101B2C;
+            --color-bg-darker: #0A111C;
+            --color-mcs-orange:#f39124;
         }
 
-        body { 
+        body {
             font-family: 'Inter', sans-serif;
             background-color: var(--color-bg-darker);
-            color: #e5e7eb; 
+            color: #e5e7eb;
         }
-         
-        /* --- SIDEBAR STYLES --- */
+
+        /* --- SIDEBAR STYLES (unified navy/orange design, both modes) --- */
         .nav-item {
             cursor: pointer;
-            padding: 7px 12px;
-            margin: 1px 6px;
-            border-radius: 7px;
+            position: relative;
+            padding: 8px 12px;
+            margin: 2px 6px;
+            border-radius: 10px;
             transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-            color: #9ca3af;
+            color: #9AB0C8;
             display: flex;
             align-items: center;
             gap: 9px;
             font-weight: 500;
             font-size: 0.825rem;
+            background: transparent;
             border-left: 3px solid transparent;
             white-space: nowrap;
             overflow: hidden;
@@ -50,28 +53,34 @@
         }
 
         .nav-item:hover {
-            background: linear-gradient(90deg, rgba(243,145,36,0.09) 0%, rgba(255,255,255,0.03) 100%);
-            color: #f3f4f6;
-            border-left-color: rgba(243,145,36,0.45);
+            background: #14243A;
+            color: #E9F0F8;
+            border-left-color: transparent;
+            box-shadow: none;
         }
 
         /* ACTIVE STATE */
         .nav-item.active {
-            background: linear-gradient(90deg, rgba(243,145,36,0.18) 0%, rgba(243,145,36,0.06) 100%);
-            color: #ffffff;
-            border-left-color: #f39124;
-            font-weight: 600;
-            box-shadow: inset 0 0 0 1px rgba(243,145,36,0.12);
+            background: rgba(71,163,220,0.18);
+            color: #E9F0F8;
+            font-weight: 700;
+            border-left-color: transparent;
+            box-shadow: none;
         }
+        .nav-item.active::before {
+            content: ''; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px;
+            background: #F0912D; border-radius: 0 3px 3px 0;
+        }
+        .nav-item:focus-visible { outline: 2px solid #47A3DC; outline-offset: -2px; }
 
         .nav-icon {
             display: flex; align-items: center; justify-content: center;
             width: 22px; height: 18px; border-radius: 5px;
-            background-color: #374151; color: #9ca3af;
+            background-color: #0C1727; color: #6C88A6;
             font-size: 0.78rem; flex-shrink: 0; transition: all 0.18s ease;
         }
-        .nav-item.active .nav-icon { background-color: rgba(243,145,36,0.25); color: #f39124; }
-        .nav-item:hover .nav-icon  { background-color: #4b5563; color: #e5e7eb; }
+        .nav-item.active .nav-icon { background-color: rgba(240,145,45,0.25); color: #F0912D; }
+        .nav-item:hover .nav-icon  { background-color: #14243A; color: #E9F0F8; }
 
         /* --- LOGIN SCREEN STYLES --- */
         .login-bg {
@@ -93,20 +102,21 @@
         }
 
         /* --- GENERAL STYLES --- */
-        input, select, textarea { background-color: #374151; border: 1px solid #4b5563; color: white; padding: 10px; border-radius: 6px; width: 100%; outline: none; transition: border-color 0.2s; }
-        input:focus, select:focus, textarea:focus { border-color: var(--color-mcs-blue); ring: 2px solid var(--color-mcs-blue); }
-        
+        input, select, textarea { background-color: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; padding: 10px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.2s; }
+        input::placeholder, select::placeholder, textarea::placeholder { color: #6C88A6; }
+        input:focus, select:focus, textarea:focus { border-color: #47A3DC; box-shadow: 0 0 0 3px rgba(71,163,220,0.14); }
+
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111827; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        
+        ::-webkit-scrollbar-track { background: #0A111C; }
+        ::-webkit-scrollbar-thumb { background: rgba(120,166,212,0.28); border-radius: 4px; }
+
         table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        th { background-color: #374151; color: #9ca3af; padding: 12px; text-align: left; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        td { border-bottom: 1px solid #374151; padding: 12px; }
+        th { background-color: #16233A; color: #9AB0C8; padding: 12px; text-align: left; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { border-bottom: 1px solid rgba(120,166,212,0.16); padding: 12px; }
         tr:last-child td { border-bottom: none; }
-        
+
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 50; }
-        .modal-container { background: #1f2937; border: 1px solid #374151; border-radius: 12px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 25px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+        .modal-container { background: #101B2C; border: 1px solid rgba(120,166,212,0.16); border-radius: 16px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 25px; box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9); }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .hidden { display: none !important; }
@@ -116,12 +126,12 @@
 
         /* ── INFOGRAPHICS ── */
         .kpi-card {
-            background: linear-gradient(135deg, rgba(31,41,55,0.85), rgba(17,24,39,0.95));
-            border: 1px solid rgba(255,255,255,0.06);
+            background: #101B2C;
+            border: 1px solid rgba(120,166,212,0.16);
             border-radius: 16px; padding: 20px;
             position: relative; overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            backdrop-filter: blur(8px);
+            box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9);
         }
         .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
         .kpi-card::before {
@@ -129,7 +139,7 @@
             height: 2px; border-radius: 16px 16px 0 0;
         }
         .kpi-orange::before { background: linear-gradient(90deg,#f39124,#fbbf24); }
-        .kpi-blue::before   { background: linear-gradient(90deg,#3b82f6,#60a5fa); }
+        .kpi-blue::before   { background: linear-gradient(90deg,#459fd9,#60a5fa); }
         .kpi-green::before  { background: linear-gradient(90deg,#10b981,#34d399); }
         .kpi-red::before    { background: linear-gradient(90deg,#ef4444,#f87171); }
 
@@ -138,27 +148,26 @@
             display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
         }
         .kpi-orange .kpi-icon { background: rgba(243,145,36,0.15); }
-        .kpi-blue   .kpi-icon { background: rgba(59,130,246,0.15); }
+        .kpi-blue   .kpi-icon { background: rgba(69,159,217,0.15); }
         .kpi-green  .kpi-icon { background: rgba(16,185,129,0.15); }
         .kpi-red    .kpi-icon { background: rgba(239,68,68,0.15); }
-        .kpi-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#6b7280; }
-        .kpi-value { font-size:2.4rem; font-weight:800; color:#f9fafb; line-height:1.1; margin:4px 0; }
-        .kpi-sub   { font-size:0.72rem; color:#4b5563; margin-top:4px; }
+        .kpi-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#6C88A6; }
+        .kpi-value { font-size:2.4rem; font-weight:800; color:#E9F0F8; line-height:1.1; margin:4px 0; }
+        .kpi-sub   { font-size:0.72rem; color:#6C88A6; margin-top:4px; }
 
         .chart-card {
-            background: linear-gradient(135deg, rgba(31,41,55,0.75), rgba(17,24,39,0.9));
-            border: 1px solid rgba(255,255,255,0.06);
+            background: #101B2C;
+            border: 1px solid rgba(120,166,212,0.16);
             border-radius: 16px; padding: 22px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9);
         }
         .chart-card-header {
             display:flex; align-items:center; justify-content:space-between;
             margin-bottom:14px; padding-bottom:12px;
-            border-bottom:1px solid rgba(255,255,255,0.05);
+            border-bottom:1px solid rgba(120,166,212,0.16);
         }
         .chart-title {
-            font-size:0.75rem; font-weight:700; color:#d1d5db;
+            font-size:0.75rem; font-weight:700; color:#9AB0C8;
             text-transform:uppercase; letter-spacing:0.06em;
             display:flex; align-items:center; gap:8px;
         }
@@ -196,6 +205,276 @@
         .legend-row:hover { background:rgba(255,255,255,0.04); }
         .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
 
+        /* ── Sidebar nav shape (unified, both modes) ── */
+        .nav-item-ic { font-size: 15px; color: #6C88A6; flex-shrink: 0; width: 16px; text-align: center; }
+        .nav-item.active .nav-item-ic { color: #F0912D; }
+        .nav-item:hover .nav-item-ic { color: #E9F0F8; }
+        .nav-tag { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #9AB0C8; border: 1px solid rgba(120,166,212,0.28); border-radius: 20px; padding: 0 7px; line-height: 16px; }
+        .nav-item.active .nav-tag { color: #F0912D; border-color: rgba(240,145,45,0.4); }
+        .sim-nav-label { margin: 0 0 6px; padding: 10px 16px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6C88A6; border-bottom: none; }
+        .sim-nav-label-accent { padding-top: 10px; }
+
+        /* Brand block: centered/stacked, compact footprint so the whole nav
+           fits without scrolling at short (768px) viewport heights. */
+        .brand-block { flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px 8px; border-bottom: none; }
+        .brand-block img { height: 46px; margin-bottom: 8px; }
+        .brand-block h1 { font-size: 14.5px; }
+        .brand-block p { margin-top: 3px; font-size: 10px; }
+        nav { padding-top: 0; padding-bottom: 4px; }
+
+        /* Sidebar footer: name/role card with avatar. */
+        .user-card-role { display: none; }
+        .sidebar-footer {
+            height: auto; justify-content: flex-start; gap: 0;
+            margin: 8px; padding: 9px 10px; border-radius: 12px;
+            background: #14243A; border: 1px solid rgba(120,166,212,0.16);
+            border-top: 1px solid rgba(120,166,212,0.16);
+        }
+        #user-id-label { display: none; }
+        .user-avatar {
+            display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 8px; margin-right: 10px;
+            background: #459fd9; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+        }
+        .user-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+        #display-user-id { display: block; font-size: 13px; font-weight: 700; color: #E9F0F8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .user-card-role { display: block; font-size: 11px; color: #6C88A6; margin-top: 1px; }
+        .sidebar-footer button { margin-left: 6px; flex-shrink: 0; }
+
+        /* ── Sidebar shell: rounded right edge, flush against the canvas ── */
+        aside {
+            background: #101B2C; border-color: rgba(120,166,212,0.16);
+            width: 250px; margin: 0; border-radius: 0 20px 20px 0; border: none; overflow: visible;
+            border-right: 1px solid rgba(120,166,212,0.16);
+            backdrop-filter: none; box-shadow: none;
+        }
+        .blur-me { background: #0D111C !important; }
+        main > header {
+            margin: 0; border-radius: 0; border: none;
+            border-bottom: 1px solid rgba(120,166,212,0.16);
+            background: #0C111C;
+            backdrop-filter: blur(14px);
+            position: sticky; top: 0; z-index: 20;
+        }
+        #main-content-area {
+            margin: 0; border-radius: 0; border: none; padding: 0;
+            background: #0A111C;
+        }
+        /* #tab-simulation manages its own padding internally (sim-scroll-area /
+           sim-content-area); every other tab needs it restored now that the
+           shared parent (#main-content-area) no longer provides any. */
+        .tab-content { padding: 24px; }
+        #tab-simulation { padding: 0; }
+        /* These two are context labels ("you're in Simulation"), not a style
+           difference — stay gated to body.sim-mode regardless of the shared
+           theme, so Operation tabs don't show a stray "Simulation" crumb. */
+        .sim-crumb-label, .sim-crumb-chevron { display: none; }
+        body.sim-mode .sim-crumb-label { display: inline; color: #6C88A6; font-size: 13px; font-weight: 500; }
+        body.sim-mode .sim-crumb-chevron { display: inline-block; color: #6C88A6; }
+        body.sim-mode .sim-hide-el { display: none; }
+        #page-title { color: #E9F0F8; }
+        .sim-save-status { display: none; align-items: center; gap: 6px; margin-left: 10px; font-size: 12px; color: #6C88A6; }
+        .sim-save-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+        .sim-save-status.show { display: inline-flex; }
+
+        /* ── Sidebar collapse (icon rail), both modes ── */
+        .sim-collapse-btn {
+            display: flex;
+            width: 100%; height: 40px; padding: 0 20px; margin: 0; gap: 10px;
+            background: transparent; border: none; border-top: 1px solid rgba(120,166,212,0.16);
+            align-items: center;
+            color: #9AB0C8; cursor: pointer; font-size: 12.5px; font-weight: 600;
+            transition: color .15s ease, background-color .15s ease;
+        }
+        .sim-collapse-btn i { font-size: 15px; transition: transform .2s ease; flex-shrink: 0; }
+        .sim-collapse-btn:hover { color: #E9F0F8; background: rgba(120,166,212,0.06); }
+        .sim-collapse-btn:focus-visible { outline: 2px solid #47A3DC; outline-offset: -2px; }
+        aside.sim-collapsed .sim-collapse-btn i { transform: rotate(180deg); display: inline-block; }
+        aside.sim-collapsed .sim-collapse-btn { justify-content: center; padding: 0; }
+        aside.sim-collapsed .sim-collapse-btn #sim-collapse-label { display: none; }
+
+        aside.sim-collapsed { width: 64px; }
+        aside.sim-collapsed .brand-block { padding: 14px 6px 6px; }
+        aside.sim-collapsed .brand-block h1,
+        aside.sim-collapsed .brand-block p { display: none; }
+        aside.sim-collapsed .sidebar-footer { flex-direction: column; gap: 8px; justify-content: center; padding: 9px 6px; }
+        aside.sim-collapsed .sidebar-footer > span { display: none; }
+        aside.sim-collapsed .user-avatar { margin-right: 0; }
+        aside.sim-collapsed .sidebar-footer button { margin-left: 0; }
+        aside.sim-collapsed .sim-nav-label {
+            position: absolute !important; width: 1px; height: 1px; padding: 0 !important; margin: -1px !important;
+            overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0 !important;
+        }
+        aside.sim-collapsed #nav-simulation-section div[role="group"] {
+            padding-top: 10px; margin-top: 6px; border-top: 1px solid rgba(120,166,212,0.16);
+        }
+        aside.sim-collapsed #nav-simulation-section div[role="group"]:first-of-type {
+            border-top: none; margin-top: 0; padding-top: 0;
+        }
+        aside.sim-collapsed .nav-item { justify-content: center; gap: 0; padding: 8px 0; margin: 1px 8px; }
+        aside.sim-collapsed .nav-item > div.flex { gap: 0; }
+        aside.sim-collapsed .nav-item span:not(.nav-tag) { display: none; }
+        aside.sim-collapsed .nav-item-ic { font-size: 17px; }
+        aside.sim-collapsed .nav-item .nav-tag {
+            position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; min-width: 0;
+            padding: 0; border-radius: 50%; font-size: 0; line-height: 0; border: none; overflow: hidden;
+        }
+
+        /* Rail tooltip: a single body-level element positioned via JS (not CSS
+           ::after) so it can't be clipped by nav's overflow-y:auto ancestor. */
+        #sim-rail-tooltip {
+            position: fixed; z-index: 200; background: #101B2C; color: #E9F0F8;
+            border: 1px solid rgba(120,166,212,0.24); padding: 5px 10px; border-radius: 6px;
+            font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none;
+            opacity: 0; visibility: hidden; transition: opacity .12s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        #sim-rail-tooltip.show { opacity: 1; visibility: visible; }
+
+        /* ── Responsive off-canvas drawer (<900px), both modes ── */
+        .sim-hamburger-btn {
+            display: none; width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(120,166,212,0.16);
+            background: transparent; color: #9AB0C8; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 16px; flex-shrink: 0; transition: background .15s ease, color .15s ease;
+        }
+        .sim-hamburger-btn:hover { background: #14243A; color: #E9F0F8; }
+        .sim-hamburger-btn:focus-visible { outline: 2px solid #47A3DC; outline-offset: 1px; }
+        .sim-drawer-backdrop {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 45;
+            opacity: 0; transition: opacity .2s ease;
+        }
+        .sim-drawer-backdrop.show { opacity: 1; }
+        body.sim-drawer-locked { overflow: hidden; }
+
+        @media (max-width: 900px) {
+            .sim-hamburger-btn { display: flex; }
+            .sim-collapse-btn { display: none; }
+            aside {
+                position: fixed; left: 0; top: 0; height: 100vh; z-index: 50;
+                transform: translateX(-100%); transition: transform .25s ease;
+                box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            }
+            aside.sim-collapsed { width: 268px; } /* rail collapse is desktop-only; ignore it in drawer mode */
+            aside.sim-collapsed .brand-block h1,
+            aside.sim-collapsed .brand-block p,
+            aside.sim-collapsed .nav-item span:not(.nav-tag),
+            aside.sim-collapsed .sidebar-footer > span { display: revert; }
+            aside.sim-collapsed .nav-item .nav-tag {
+                position: static; width: auto; height: auto; padding: 0 7px; border-radius: 20px;
+                font-size: 10px; line-height: 16px; border: 1px solid rgba(120,166,212,0.28);
+            }
+            aside.sim-drawer-open { transform: translateX(0); }
+            .sim-drawer-backdrop.show { display: block; }
+        }
+
+        /* ── Dot-grid canvas background behind the sim wizard + workspace ── */
+        #sim-scroll-area, #sim-content-area {
+            background-image: radial-gradient(rgba(120,166,212,0.07) 1px, transparent 1px);
+            background-size: 26px 26px;
+        }
+
+        /* ── Unified flat card shape ("rcard"), used by Mission Info/MiniSpectors,
+           every dynamically built Simulation workspace card, and (as of the
+           Operation reskin) Operation-mode cards too. ── */
+        .rcard {
+            background: #101B2C; border: 1px solid rgba(120,166,212,0.16);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9);
+        }
+        .rcard-head { border-bottom-color: rgba(120,166,212,0.16) !important; }
+        .rcard-bar { width: 3px; height: 15px; border-radius: 3px; background: #F0912D; flex-shrink: 0; }
+        .rcard-title { font-size: 14.5px; font-weight: 600; color: #E9F0F8; }
+        .rcard-hint { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #6C88A6; }
+
+        /* Neutral reference-style button + field, used by the scope picker row. */
+        .rbtn { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #E9F0F8; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; cursor: pointer; transition: border-color .18s ease; }
+        .rbtn:hover { border-color: rgba(120,166,212,0.28); }
+        .rbtn-lg { height: 42px; padding: 0 18px; font-size: 13.5px; }
+        .rbtn-orange-outline {
+            height: 36px; padding: 0 16px; border-radius: 10px;
+            border: 1px solid rgba(243,145,36,0.55); background: transparent;
+            color: #f39124; font-size: 12.5px; font-weight: 700;
+            display: inline-flex; align-items: center; white-space: nowrap; cursor: pointer;
+            transition: background-color .18s ease, border-color .18s ease;
+        }
+        .rbtn-orange-outline:hover { background: rgba(243,145,36,0.1); border-color: #f39124; }
+        .rbtn-orange-outline:disabled { opacity: 0.35; cursor: not-allowed; }
+        .rbtn-orange-outline:disabled:hover { background: transparent; border-color: rgba(243,145,36,0.55); }
+        .rfield { background: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
+        .rfield::placeholder { color: #6C88A6; }
+        .rfield:focus { outline: none; border-color: #47A3DC; box-shadow: 0 0 0 3px rgba(71,163,220,0.14); }
+        .rfield-label { display: block; font-size: 13px; font-weight: 600; color: #9AB0C8; margin-bottom: 6px; }
+        .rfield-label .req { color: #F0912D; margin-left: 2px; }
+
+        /* ── SIMULATION: operation-scope bundle catalog ── */
+        .scope-fam-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #6C88A6; margin: 16px 0 8px; display: flex; align-items: center; gap: 10px; }
+        .scope-fam-label::after { content: ''; flex: 1; height: 1px; background: rgba(120,166,212,0.16); }
+        .scope-bundles-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 10px; }
+        .scope-bundle-btn { text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #0C1727; cursor: pointer; transition: all 0.18s ease; display: block; width: 100%; color: inherit; }
+        .scope-bundle-btn:hover { border-color: rgba(120,166,212,0.28); transform: translateY(-1px); }
+        .scope-bundle-btn[aria-pressed="true"] { border-color: #F0912D; background: rgba(240,145,45,0.1); }
+        .scope-bundle-btn .row { display: flex; align-items: center; gap: 9px; }
+        .scope-bundle-mark { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(120,166,212,0.28); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.18s ease; }
+        .scope-bundle-btn[aria-pressed="true"] .scope-bundle-mark { background: #F0912D; border-color: #F0912D; color: #20130A; }
+        .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #E9F0F8; line-height: 1.35; margin: 0; }
+        .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(71,163,220,0.4); color: #47A3DC; background: rgba(71,163,220,0.14); }
+        .scope-detail { border: 1px solid rgba(120,166,212,0.16); border-radius: 12px; background: #14243A; overflow: hidden; margin-top: 18px; }
+        .scope-detail-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(120,166,212,0.16); flex-wrap: wrap; }
+        .scope-detail-head h4 { font-size: 14px; font-weight: 600; color: #E9F0F8; margin: 0; }
+        .scope-detail-head .code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #6C88A6; }
+        .scope-detail-acts { margin-left: auto; display: flex; gap: 8px; }
+        .scope-sensor-cols { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); }
+        .scope-scol { padding: 16px; border-right: 1px solid rgba(120,166,212,0.16); }
+        .scope-scol:last-child { border-right: none; }
+        .scope-scol h5 { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #6C88A6; font-weight: 400; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .scope-scol h5 b { font-weight: 400; letter-spacing: 0.05em; padding: 1px 7px; border-radius: 20px; border: 1px solid rgba(120,166,212,0.16); color: #9AB0C8; }
+        .scope-sensors { display: flex; flex-wrap: wrap; gap: 7px; min-height: 30px; }
+        .scope-sensor-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px 5px 11px; border-radius: 20px; font-size: 12.5px; border: 1px solid rgba(120,166,212,0.16); background: #0C1727; color: #9AB0C8; }
+        .scope-sensor-chip.req { border-color: rgba(240,145,45,0.4); background: rgba(240,145,45,0.14); color: #F0912D; }
+        .scope-sensor-chip button { background: none; border: none; padding: 0; cursor: pointer; color: inherit; opacity: 0.55; display: flex; align-items: center; }
+        .scope-sensor-chip button:hover { opacity: 1; }
+        .scope-empty { font-size: 12.5px; color: #6C88A6; font-style: italic; }
+        .scope-addrow select { width: 100%; height: 34px; padding: 0 10px; margin-top: 10px; background: #0C1727; border: 1px solid rgba(120,166,212,0.16); border-radius: 8px; font-size: 12.5px; color: #9AB0C8; cursor: pointer; }
+        .scope-dirty-bar { display: none; align-items: center; gap: 10px; padding: 11px 16px; border-top: 1px solid rgba(120,166,212,0.16); background: rgba(240,145,45,0.1); font-size: 12.5px; color: #9AB0C8; flex-wrap: wrap; }
+        .scope-dirty-bar.on { display: flex; }
+        .scope-dirty-bar .acts { margin-left: auto; display: flex; gap: 8px; }
+
+        /* ── SIMULATION: MiniSpectors unit picker ── */
+        .units-seg-btn { height: 28px; padding: 0 12px; border: none; background: none; border-radius: 7px; cursor: pointer; color: #6b7280; font-size: 12px; font-weight: 600; transition: all 0.18s ease; }
+        .units-seg-btn[aria-pressed="true"] { background: #1f2937; color: #f3f4f6; }
+        .units-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 12px; }
+        .unit-card { position: relative; padding: 6px 14px; border-radius: 12px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; transition: all 0.2s ease; color: inherit; }
+        .unit-card:hover { border-color: rgba(120,166,212,0.28); transform: translateY(-2px); }
+        .unit-card .unit-glyph { width: 80px; height: 80px; border-radius: 12px; background: transparent; display: flex; align-items: center; justify-content: center; margin-bottom: 0; }
+        .unit-card .unit-glyph svg { width: 68px; height: 68px; }
+        .unit-card .unit-glyph img { width: 76px; height: 76px; object-fit: contain; }
+        .unit-card h4 { font-size: 12.5px; font-weight: 700; font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.01em; color: #f3f4f6; margin: 0; white-space: nowrap; }
+        .unit-card .unit-stat-text { display: block; margin-top: 6px; font-size: 11.5px; font-weight: 600; color: #6C88A6; }
+        .unit-role-badge { position: absolute; top: 10px; right: 10px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 20px; text-transform: uppercase; z-index: 2; }
+        .unit-role-badge.main { background: #f39124; color: #20130A; }
+        .unit-role-badge.standby { background: rgba(69,159,217,0.15); color: #459fd9; border: 1px solid rgba(69,159,217,0.4); }
+        .unit-fitline { margin-top: 8px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+        .unit-fitline.yes { color: #3fb57f; }
+        .unit-fitline.part { color: #6b7280; }
+        .unit-card[data-role="main"] { border-color: #f39124; background: rgba(243,145,36,0.08); }
+        .unit-card[data-role="standby"] { border-color: rgba(69,159,217,0.4); background: rgba(69,159,217,0.08); }
+        .unit-card[data-state="busy"] { opacity: 0.45; }
+        .unit-card[data-state="busy"]:hover { transform: none; border-color: #374151; }
+        .unit-promote-btn { margin-top: 9px; width: 100%; height: 26px; border-radius: 7px; border: 1px solid rgba(69,159,217,0.4); background: transparent; color: #459fd9; font-size: 11px; font-weight: 600; cursor: pointer; transition: background 0.18s ease; }
+        .unit-promote-btn:hover { background: rgba(69,159,217,0.15); }
+
+        /* ── SIMULATION: Fixed unit sensors table (per-unit tab switcher) ── */
+        .fixedsens-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #0C1727; border: 1px solid rgba(120,166,212,0.16); }
+        .fixedsens-tab { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: none; border-radius: 7px; background: transparent; color: #6C88A6; font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', ui-monospace, monospace; cursor: pointer; transition: all 0.18s ease; white-space: nowrap; }
+        .fixedsens-tab.active { background: #1f2937; color: #f3f4f6; }
+        .fixedsens-role-badge { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 20px; text-transform: uppercase; }
+        .fixedsens-role-badge.main { background: #f39124; color: #20130A; }
+        .fixedsens-role-badge.standby { background: rgba(69,159,217,0.15); color: #459fd9; border: 1px solid rgba(69,159,217,0.4); }
+        .fixedsens-copy-btn { height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #E9F0F8; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .18s ease; }
+        .fixedsens-copy-btn:hover { border-color: rgba(120,166,212,0.32); }
+        .fixedsens-copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .fixedsens-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
+
         /* ── Viewer / Read-only mode ── */
         body.viewer-mode .edit-only { display: none !important; }
         body.viewer-mode #header-file-io-group,
@@ -228,7 +507,7 @@
     </style>
 </head>
 <body>
-<div id="login-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900">
+<div id="login-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0C1727]">
     <div class="login-bg fixed inset-0 z-0"></div>
 
     <div class="relative z-10 w-full max-w-sm px-4">
@@ -236,9 +515,9 @@
         <div class="text-center mb-8">
             <img src="assets/logo.png" alt="Logo" class="h-14 w-auto mx-auto mb-4 object-contain"
                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
-            <p class="text-gray-300 text-sm font-semibold tracking-wide whitespace-nowrap">Service Development and Technical Support</p>
+            <p class="text-[#9AB0C8] text-sm font-semibold tracking-wide whitespace-nowrap">Service Development and Technical Support</p>
             <h1 class="text-xl font-bold text-white"> MiniSpector® Log System</h1>
-            <p class="text-gray-500 text-sm mt-1">Sign in to continue</p>
+            <p class="text-[#6C88A6] text-sm mt-1">Sign in to continue</p>
         </div>
 
         <!-- Member Login — primary card -->
@@ -251,32 +530,32 @@
                 </div>
                 <span class="text-sm font-bold text-white">Member Login</span>
             </div>
-            <p class="text-xs text-gray-500 mb-5 ml-10">Full access — logs, simulation, export.</p>
+            <p class="text-xs text-[#6C88A6] mb-5 ml-10">Full access — logs, simulation, export.</p>
 
             <div class="mb-3">
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">User ID</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">User ID</label>
                 <input type="text" id="login-id-input" placeholder="Enter your ID..."
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#459fd9'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
             </div>
             <div class="mb-3">
-                <label id="login-pin-label" class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Passcode <span class="text-gray-600 font-normal normal-case">(min 4 digits)</span></label>
+                <label id="login-pin-label" class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Passcode <span class="text-[#6C88A6] font-normal normal-case">(min 4 digits)</span></label>
                 <input type="password" id="login-pin-input" placeholder="••••••" maxlength="32" inputmode="numeric"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#459fd9'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
                     onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
             </div>
             <div id="login-pin-confirm-wrap" class="mb-4 hidden">
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Confirm Passcode</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Confirm Passcode</label>
                 <input type="password" id="login-pin-confirm-input" placeholder="••••••" maxlength="32" inputmode="numeric"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#459fd9'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
                     onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
             </div>
-            <p id="login-pin-hint" class="text-gray-600 text-xs mb-3 hidden">First time signing in — set a passcode you'll use from now on.</p>
+            <p id="login-pin-hint" class="text-[#6C88A6] text-xs mb-3 hidden">First time signing in — set a passcode you'll use from now on.</p>
             <p id="login-error" class="text-red-400 text-xs mb-3 hidden"></p>
             <button type="button" id="btn-reset-passcode" class="text-xs text-blue-400 hover:text-blue-300 transition-colors mb-3 block">Forgot / Reset Passcode?</button>
             <button id="btn-login"
@@ -305,10 +584,10 @@
         <!-- Review Access panel — hidden by default -->
         <div id="review-panel" class="hidden mt-3 rounded-2xl p-5 backdrop-blur-md" style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);">
             <div class="mb-3">
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Project Code</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Project Code</label>
                 <input type="text" id="review-code-input" placeholder="PRJ-MCS-2024-XXXX"
                     autocomplete="off"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all font-mono"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all font-mono"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);text-transform:uppercase;letter-spacing:0.04em;"
                     onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
                     onkeydown="if(event.key==='Enter') document.getElementById('btn-review-login').click()">
@@ -322,8 +601,8 @@
         </div>
     </div>
 
-    <p class="absolute bottom-6 left-4 right-4 text-center text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Terms of Service</button></p>
-    <button onclick="showAdminLogin()" class="absolute bottom-5 right-6 text-gray-700 hover:text-gray-500 text-[11px] transition-colors">Admin</button>
+    <p class="absolute bottom-6 left-4 right-4 text-center text-[#6C88A6] text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Terms of Service</button></p>
+    <button onclick="showAdminLogin()" class="absolute bottom-5 right-6 text-gray-700 hover:text-[#6C88A6] text-[11px] transition-colors">Admin</button>
 </div>
 
 <!-- ============================================================ -->
@@ -331,7 +610,7 @@
 <!-- ============================================================ -->
 <div id="admin-login-modal" class="fixed inset-0 z-[60] hidden items-center justify-center" style="background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);">
     <div class="relative w-full max-w-sm mx-4 rounded-2xl p-6" style="background:#1f2937;border:1px solid rgba(243,145,36,0.35);">
-        <button onclick="hideAdminLogin()" class="absolute top-3 right-3 text-gray-500 hover:text-white transition-colors">
+        <button onclick="hideAdminLogin()" class="absolute top-3 right-3 text-[#6C88A6] hover:text-white transition-colors">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
         <div class="flex items-center gap-2 mb-5">
@@ -341,17 +620,17 @@
         <!-- Login form -->
         <div id="admin-login-form" class="space-y-3">
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Username</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Username</label>
                 <input id="admin-username" type="text" autocomplete="off" placeholder="Admin username"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
                     onkeydown="if(event.key==='Enter') document.getElementById('admin-password').focus()">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Password</label>
                 <input id="admin-password" type="password" placeholder="Password"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
                     onkeydown="if(event.key==='Enter') doAdminLogin()">
@@ -364,16 +643,16 @@
         <div id="admin-setup-form" class="hidden space-y-3">
             <p class="text-xs text-yellow-400 bg-yellow-900/20 border border-yellow-700/30 rounded-lg px-3 py-2">No admin account found. Create your credentials now.</p>
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Username</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Username</label>
                 <input id="setup-username" type="text" autocomplete="off" placeholder="Choose a username"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Password</label>
+                <label class="block text-xs font-semibold text-[#9AB0C8] mb-1.5 uppercase tracking-wider">Password</label>
                 <input id="setup-password" type="password" placeholder="Choose a strong password"
-                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all"
+                    class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all"
                     style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);"
                     onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
             </div>
@@ -392,9 +671,9 @@
         <div class="flex items-center gap-3">
             <svg class="w-5 h-5 text-[#f39124]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             <span class="text-white font-bold text-lg">Admin Panel</span>
-            <span class="text-xs text-gray-600 ml-1">MCS MiniSpector</span>
+            <span class="text-xs text-[#6C88A6] ml-1">MCS MiniSpector</span>
         </div>
-        <button onclick="exitAdminPanel()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-all" style="border:1px solid rgba(55,65,81,0.6);">
+        <button onclick="exitAdminPanel()" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#9AB0C8] hover:text-white transition-all" style="border:1px solid rgba(55,65,81,0.6);">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
             Exit Admin
         </button>
@@ -408,7 +687,7 @@
                 Users
             </button>
             <button id="admin-tab-btn-projects" onclick="showAdminTab('projects')"
-                class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-left transition-all text-gray-400 hover:text-white"
+                class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-left transition-all text-[#9AB0C8] hover:text-white"
                 style="border:1px solid transparent;">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 Projects
@@ -424,7 +703,7 @@
 <!-- ============================================================ -->
 <!-- MODE SELECTION SCREEN                                       -->
 <!-- ============================================================ -->
-<div id="mode-screen" class="fixed inset-0 z-45 flex flex-col items-center justify-center bg-gray-900 hidden">
+<div id="mode-screen" class="fixed inset-0 z-45 flex flex-col items-center justify-center bg-[#0C1727] hidden">
     <div class="login-bg fixed inset-0 z-0"></div>
 
     <!-- Header -->
@@ -432,7 +711,7 @@
         <img src="assets/logo.png" alt="Logo" class="h-12 w-auto mx-auto mb-4 object-contain"
              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
         <h1 class="text-2xl font-bold text-white mb-1">Welcome, <span id="mode-user-name" class="text-[#f39124]"></span></h1>
-        <p id="mode-subtitle" class="text-gray-400 text-sm">What would you like to do today?</p>
+        <p id="mode-subtitle" class="text-[#9AB0C8] text-sm">What would you like to do today?</p>
     </div>
 
     <!-- ── STEP 1: Two path cards ─────────────────────────────── -->
@@ -440,14 +719,14 @@
 
         <!-- New Project -->
         <button id="btn-mode-new"
-            class="group w-72 p-8 rounded-2xl border-2 border-gray-700 bg-white/5 hover:border-[#f39124] hover:bg-orange-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1">
+            class="group w-72 p-8 rounded-2xl border-2 border-[rgba(120,166,212,0.16)] bg-white/5 hover:border-[#f39124] hover:bg-orange-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1">
             <div class="w-14 h-14 rounded-xl bg-orange-500/15 flex items-center justify-center mb-5 group-hover:bg-orange-500/25 transition-all">
                 <svg class="w-7 h-7 text-[#f39124]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
             </div>
             <h2 class="text-xl font-bold text-white mb-2 group-hover:text-[#f39124] transition-colors">New Project</h2>
-            <p class="text-sm text-gray-400 leading-relaxed">Start a new ROV inspection — plan equipment and sensors, then move to live execution.</p>
+            <p class="text-sm text-[#9AB0C8] leading-relaxed">Start a new ROV inspection — plan equipment and sensors, then move to live execution.</p>
             <div class="mt-6 flex items-center gap-2 text-[#f39124] text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
                 <span>Get started</span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -458,14 +737,14 @@
 
         <!-- Join / Continue -->
         <button id="btn-mode-join-btn"
-            class="group w-72 p-8 rounded-2xl border-2 border-gray-700 bg-white/5 hover:border-green-500 hover:bg-green-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-green-500/20 hover:-translate-y-1">
+            class="group w-72 p-8 rounded-2xl border-2 border-[rgba(120,166,212,0.16)] bg-white/5 hover:border-green-500 hover:bg-green-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-green-500/20 hover:-translate-y-1">
             <div class="w-14 h-14 rounded-xl bg-green-500/15 flex items-center justify-center mb-5 group-hover:bg-green-500/25 transition-all">
                 <svg class="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
             </div>
             <h2 class="text-xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors">Join / Continue</h2>
-            <p class="text-sm text-gray-400 leading-relaxed">Resume a saved local session or connect to a live project by cloud code.</p>
+            <p class="text-sm text-[#9AB0C8] leading-relaxed">Resume a saved local session or connect to a live project by cloud code.</p>
             <div class="mt-6 flex items-center gap-2 text-green-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
                 <span>Continue</span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -477,7 +756,7 @@
 
     <!-- ── STEP 2A: New Project — Sim or Op choice ────────────── -->
     <div id="mode-step2-new" class="hidden relative z-10 w-full max-w-md">
-        <p class="text-gray-400 text-sm text-center mb-6">How would you like to start the project?</p>
+        <p class="text-[#9AB0C8] text-sm text-center mb-6">How would you like to start the project?</p>
         <div class="flex flex-col gap-3">
 
             <!-- Recommended: Simulation first -->
@@ -492,7 +771,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-white text-sm">Start with Simulation</div>
-                        <div class="text-xs text-gray-400 mt-0.5">Plan sensors, equipment &amp; ROVs — then push to Operation</div>
+                        <div class="text-xs text-[#9AB0C8] mt-0.5">Plan sensors, equipment &amp; ROVs — then push to Operation</div>
                     </div>
                     <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:rgba(243,145,36,0.2);color:#f39124">Recommended</span>
                 </div>
@@ -510,21 +789,21 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="font-bold text-white text-sm">Start Operation Directly</div>
-                        <div class="text-xs text-gray-400 mt-0.5">Skip simulation — log dives, shifts and maintenance right away</div>
+                        <div class="text-xs text-[#9AB0C8] mt-0.5">Skip simulation — log dives, shifts and maintenance right away</div>
                     </div>
                 </div>
             </button>
         </div>
-        <button id="btn-back-new" class="mt-7 text-gray-500 hover:text-gray-300 text-sm transition-colors w-full text-center">← Back</button>
+        <button id="btn-back-new" class="mt-7 text-[#6C88A6] hover:text-[#9AB0C8] text-sm transition-colors w-full text-center">← Back</button>
     </div>
 
     <!-- ── STEP 2B: Join / Continue ───────────────────────────── -->
     <div id="mode-step2-join" class="hidden relative z-10 w-full max-w-md">
 
         <!-- Project code search -->
-        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Project Code</label>
+        <label class="block text-xs font-semibold text-[#9AB0C8] mb-2 uppercase tracking-wider">Project Code</label>
         <input id="join-code-input" type="text" placeholder="PRJ-MCS-2024-XXXX" autocomplete="off"
-            class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-gray-600 outline-none transition-all font-mono"
+            class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all font-mono"
             style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);text-transform:uppercase;letter-spacing:0.04em;"
             onfocus="this.style.borderColor='#4ade80'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
             onkeydown="if(event.key==='Enter') document.getElementById('btn-join-confirm').click()">
@@ -540,25 +819,25 @@
             Join Project
         </button>
 
-        <button id="btn-back-join" class="mt-5 text-gray-500 hover:text-gray-300 text-sm transition-colors w-full text-center">← Back</button>
+        <button id="btn-back-join" class="mt-5 text-[#6C88A6] hover:text-[#9AB0C8] text-sm transition-colors w-full text-center">← Back</button>
     </div>
 
-    <p class="absolute bottom-6 left-4 right-4 text-center text-gray-500 text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-gray-300 transition-colors">Terms of Service</button></p>
+    <p class="absolute bottom-6 left-4 right-4 text-center text-[#6C88A6] text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Terms of Service</button></p>
 </div>
 
-<div id="session-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 hidden">
+<div id="session-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0C1727] hidden">
     <div class="login-bg fixed inset-0 z-0"></div>
 
-    <div class="relative z-10 bg-white/10 border border-white/20 w-full max-w-lg rounded-xl shadow-2xl border border-gray-700 overflow-hidden">
-        <div class="p-6 border-b border-gray-700 bg-gray-800/50">
+    <div class="relative z-10 bg-white/10 border border-white/20 w-full max-w-lg rounded-xl shadow-2xl border border-[rgba(120,166,212,0.16)] overflow-hidden">
+        <div class="p-6 border-b border-[rgba(120,166,212,0.16)] bg-[#101B2C]">
             <h3 class="text-xl font-bold text-white mb-1">Old Sessions Found</h3>
-            <p class="text-sm text-gray-400">Would you like to continue a previous log?</p>
+            <p class="text-sm text-[#9AB0C8]">Would you like to continue a previous log?</p>
         </div>
 
         <div id="recent-sessions-list" class="p-4 space-y-3 max-h-80 overflow-y-auto">
             </div>
 
-        <div class="p-6 border-t border-gray-700 bg-gray-800/50">
+        <div class="p-6 border-t border-[rgba(120,166,212,0.16)] bg-[#101B2C]">
             <button id="btn-start-new" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
                 <span>+</span> Create New Log
             </button>
@@ -572,13 +851,13 @@
          style="background: linear-gradient(135deg, #0f172a 0%, #1a2744 40%, #111827 100%);">
     </div>
 
-    <aside class="w-60 bg-gray-800/90 flex flex-col relative z-10 backdrop-blur-sm m-2 rounded-2xl border border-gray-700/40 overflow-hidden">
-        <div class="flex flex-col items-center pt-5 pb-4 px-4 border-b border-gray-700/50">
-            <img src="assets/MCS.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'" alt="Logo" class="h-12 w-auto object-contain mb-2">
-            <h1 class="text-sm font-bold text-white tracking-wide">MiniSpector® Log</h1>
-            <p class="text-[10px] text-gray-500 mt-0.5">version 1.0.0</p>
+    <aside id="app-sidebar" class="flex flex-col relative z-10">
+        <div class="brand-block flex">
+            <img src="assets/logo.png" alt="Logo" class="h-12 w-auto object-contain mb-2">
+            <h1 class="text-sm font-bold text-white tracking-wide">MiniSpector® Log System</h1>
+            <p class="text-[10px] text-[#6C88A6] mt-0.5 text-center">Service Development and Technical Support</p>
         </div>
-<nav class="flex-1 overflow-y-auto py-4 space-y-1 px-2">
+<nav id="main-sidebar-nav" class="flex-1 overflow-y-auto py-4 space-y-1 px-2" aria-label="Main navigation">
 
     <div id="nav-operation-sections">
 
@@ -599,34 +878,34 @@
     </div>
 
     <!-- ── Mobilization ───────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Mobilization</div>
+    <div class="sim-nav-label sim-nav-label-accent">Mobilization</div>
     <div onclick="setChecklistType('mobilization'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-mob">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Mobilization</span>
         </div>
-        <span id="cl-badge-mobilization" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/73</span>
+        <span id="cl-badge-mobilization" class="nav-tag flex-shrink-0">0/73</span>
     </div>
 
     <!-- ── Setup ──────────────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Setup</div>
+    <div class="sim-nav-label sim-nav-label-accent">Setup</div>
     <div onclick="setChecklistType('startup'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-startup">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Start-Up</span>
         </div>
-        <span id="cl-badge-startup" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/57</span>
+        <span id="cl-badge-startup" class="nav-tag flex-shrink-0">0/57</span>
     </div>
 
     <!-- ── Operations ────────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Operations</div>
+    <div class="sim-nav-label sim-nav-label-accent">Operations</div>
 
     <div onclick="setChecklistType('preOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-preop">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Pre-Op Checklist</span>
         </div>
-        <span id="cl-badge-preop" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/74</span>
+        <span id="cl-badge-preop" class="nav-tag flex-shrink-0">0/74</span>
     </div>
 
     <div onclick="showTab('standby', this)" class="nav-item">Standby Time Log</div>
@@ -637,35 +916,35 @@
 
     <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-postop">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Post-Op Checklist</span>
         </div>
-        <span id="cl-badge-postop" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/19</span>
+        <span id="cl-badge-postop" class="nav-tag flex-shrink-0">0/19</span>
     </div>
 
     <!-- ── Close-Out ──────────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Close-Out</div>
+    <div class="sim-nav-label sim-nav-label-accent">Close-Out</div>
     <div onclick="showTab('lars', this)" class="nav-item">LARS Status</div>
     <div onclick="setChecklistType('shutdown'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-shutdown">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Shutdown</span>
         </div>
-        <span id="cl-badge-shutdown" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/8</span>
+        <span id="cl-badge-shutdown" class="nav-tag flex-shrink-0">0/8</span>
     </div>
 
     <!-- ── Demobilization ─────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Demobilization</div>
+    <div class="sim-nav-label sim-nav-label-accent">Demobilization</div>
     <div onclick="setChecklistType('demob'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-demob">
         <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
             <span>Demobilization</span>
         </div>
-        <span id="cl-badge-demob" class="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-700 text-gray-400 flex-shrink-0">0/27</span>
+        <span id="cl-badge-demob" class="nav-tag flex-shrink-0">0/27</span>
     </div>
 
     <!-- ── Analysis ───────────────────────────────────── -->
-    <div class="px-4 pt-5 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Analysis</div>
+    <div class="sim-nav-label sim-nav-label-accent">Analysis</div>
     <div id="nav-dash" onclick="showTab('infographics', this); renderInfographics();" class="hidden nav-item">
         <span class="nav-icon">📊</span> Infographics
     </div>
@@ -673,31 +952,54 @@
     </div><!-- end nav-operation-sections -->
 
     <div id="nav-simulation-section" class="hidden">
-        <div class="px-4 pt-6 pb-2 text-[10px] font-bold text-[--color-mcs-orange] uppercase tracking-widest border-b border-gray-700/50 mb-2 flex items-center justify-between">
+        <h3 id="sim-heading-prep" class="sim-nav-label sim-nav-label-accent">Preparation</h3>
+        <div id="nav-prep-group" role="group" aria-labelledby="sim-heading-prep">
+        <div onclick="showTab('simulation', this); showSimSetupTab('mission'); document.getElementById('page-title').innerText='Mission Info';" class="nav-item flex items-center gap-2" id="sim-nav-mission" data-tooltip="Mission Info">
+            <i class="ti ti-target-arrow nav-item-ic" aria-hidden="true"></i>
+            <span>Mission Info</span>
+        </div>
+        <div onclick="showTab('simulation', this); showSimSetupTab('units'); document.getElementById('page-title').innerText='MiniSpectors';" class="nav-item flex items-center gap-2" id="sim-nav-units" data-tooltip="MiniSpectors — 0 selected">
+            <i class="ti ti-anchor nav-item-ic" aria-hidden="true"></i>
+            <span>MiniSpectors</span>
+            <span id="sim-units-badge" class="nav-tag">0</span>
+        </div>
+        </div>
+
+        <h3 id="sim-heading-sim" class="sim-nav-label sim-nav-label-accent">
             <span>Simulation</span>
-            <span id="sim-approval-badge" class="hidden text-[10px] font-bold bg-yellow-500 text-gray-900 rounded-full px-1.5 py-0.5 leading-none">0</span>
+        </h3>
+        <div role="group" aria-labelledby="sim-heading-sim">
+        <div onclick="goToWorkspaceSubTab('sensors', 'sim-nav-sensors')" class="nav-item flex items-center gap-2" id="sim-nav-sensors" data-tooltip="Sensors and equipment — 0/0 ready">
+            <i class="ti ti-cpu nav-item-ic" aria-hidden="true"></i>
+            <span>Sensors and equipment</span>
         </div>
-        <div onclick="showTab('simulation', this); showSimSetupTab('mission')" class="nav-item" id="sim-nav-mission">
-            Mission Info
+        <div onclick="goToWorkspaceSubTab('sysarch', 'sim-nav-topology')" class="nav-item flex items-center gap-2" id="sim-nav-topology" data-tooltip="Topology">
+            <i class="ti ti-topology-star nav-item-ic" aria-hidden="true"></i>
+            <span>Topology</span>
         </div>
-        <div id="sim-nav-approvals" onclick="showTab('approvals', this); renderApprovalsTab();" class="nav-item hidden flex items-center justify-between">
-            <span>Approvals</span>
-            <span id="sim-approval-badge-nav" class="hidden text-[10px] font-bold bg-yellow-500 text-gray-900 rounded-full px-1.5 py-0.5 leading-none">0</span>
         </div>
     </div>
 
     <!-- Visible only to the two privileged User IDs — toggled in enterDashboard() (navigation.js) -->
     <div id="nav-projects-overview-section" class="hidden">
-        <div class="px-4 pt-6 pb-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-700/50 mb-2">Admin</div>
+        <div class="sim-nav-label">Admin</div>
         <div onclick="showTab('projects-overview', this); renderProjectsOverviewTab();" class="nav-item">
             All Projects
         </div>
     </div>
 
 </nav>
-            <div class="p-4 border-t border-gray-700 text-xs text-gray-500 flex items-center justify-center gap-2">
-                <span>User: <span id="display-user-id">Not Logged In</span></span>
-                <button onclick="signOut()" title="Sign Out" class="w-6 h-6 flex items-center justify-center rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+            <button type="button" id="sim-sidebar-collapse-btn" class="sim-collapse-btn" title="Collapse sidebar" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="app-sidebar">
+                <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                <span id="sim-collapse-label">Collapse</span>
+            </button>
+            <div class="sidebar-footer text-xs flex items-center">
+                <div id="user-avatar" class="user-avatar hidden" aria-hidden="true">--</div>
+                <span class="user-card-text">
+                    <span id="user-id-label">User: </span><span id="display-user-id">Not Logged In</span>
+                    <span id="display-user-role" class="user-card-role hidden"></span>
+                </span>
+                <button onclick="signOut()" title="Sign Out" aria-label="Sign Out" class="w-6 h-6 flex items-center justify-center rounded-md text-[#6C88A6] hover:text-red-400 hover:bg-red-500/10 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                     </svg>
@@ -705,11 +1007,21 @@
             </div>
         </aside>
 
+        <div id="sim-drawer-backdrop" class="sim-drawer-backdrop"></div>
+
         <main class="flex-1 flex flex-col min-w-0 relative z-10">
-            <header class="shrink-0 bg-gray-800/90 border border-gray-700/40 backdrop-blur-sm rounded-2xl flex items-center justify-between px-6 py-3.5 mt-2 mr-2 ml-1">
-                <div class="flex items-center gap-3">
-                    <div class="w-1 h-5 rounded-full flex-shrink-0" style="background:linear-gradient(180deg,#f39124,#fbbf24)"></div>
+            <header class="shrink-0 flex items-center justify-between px-6 py-3.5">
+                <div class="flex items-center gap-2.5">
+                    <button type="button" id="sim-hamburger-btn" class="sim-hamburger-btn" aria-label="Open sidebar" aria-controls="app-sidebar" aria-expanded="false">
+                        <i class="ti ti-menu-2" aria-hidden="true"></i>
+                    </button>
+                    <span class="sim-crumb-label">Simulation</span>
+                    <svg class="sim-crumb-chevron" xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    <div class="w-1 h-5 rounded-full flex-shrink-0 sim-hide-el" style="background:linear-gradient(180deg,#f39124,#fbbf24)"></div>
                     <h2 id="page-title" class="text-sm font-bold text-white tracking-wide">Project Details</h2>
+                    <span id="sim-save-status" class="sim-save-status">
+                        <span class="dot"></span><span id="sim-save-text"></span>
+                    </span>
                 </div>
                 <div class="flex gap-3">
                 <div id="header-operation-buttons" class="flex items-center gap-2">
@@ -719,47 +1031,47 @@
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         Saved!
                     </div>
-                    <div id="autosave-indicator" class="hidden items-center gap-1.5 text-gray-400 text-xs bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-600/50">
+                    <div id="autosave-indicator" class="hidden items-center gap-1.5 text-[#9AB0C8] text-xs bg-[#16233A] px-3 py-1.5 rounded-lg border border-[rgba(120,166,212,0.16)]/50">
                         <svg class="w-3 h-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                         </svg>
                         Auto-saved
                     </div>
-                    <div id="sync-status" class="hidden items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-600/50 bg-gray-700/40">
+                    <div id="sync-status" class="hidden items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[rgba(120,166,212,0.16)]/50 bg-[#16233A]">
                         <span id="sync-dot" class="w-2 h-2 rounded-full"></span>
                         <span id="sync-label"></span>
                     </div>
 
                     <!-- Infographics -->
-                    <div class="flex items-center bg-gray-900/60 rounded-lg border border-gray-700/50 p-0.5">
+                    <div class="flex items-center bg-[#0C1727] rounded-lg border border-[rgba(120,166,212,0.16)] p-0.5">
                         <button onclick="document.getElementById('nav-dash').click()" title="Infographics & Analysis"
-                            class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-[#f39124] hover:bg-orange-500/10 transition-all">
+                            class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-[#f39124] hover:bg-orange-500/10 transition-all">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         </button>
                     </div>
 
                     <!-- Divider -->
-                    <div class="w-px h-6 bg-gray-700"></div>
+                    <div class="w-px h-6 bg-[#16233A]"></div>
 
                     <!-- File I/O + Export group -->
-                    <div id="header-file-io-group" class="flex items-center bg-gray-900/60 rounded-lg border border-gray-700/50 p-0.5 gap-0.5">
+                    <div id="header-file-io-group" class="flex items-center bg-[#0C1727] rounded-lg border border-[rgba(120,166,212,0.16)] p-0.5 gap-0.5">
                         <button id="btn-load-pc" title="Upload JSON"
-                            class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
+                            class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-blue-400 hover:bg-blue-500/10 transition-all">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                         </button>
                         <button id="btn-save-pc" title="Save JSON"
-                            class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
+                            class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-blue-400 hover:bg-blue-500/10 transition-all">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
                         </button>
                         <button onclick="exportWord('all')" title="Export All Reports"
-                            class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-orange-400 hover:bg-orange-500/10 transition-all">
+                            class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </button>
                     </div>
 
                     <!-- Divider -->
-                    <div class="w-px h-6 bg-gray-700"></div>
+                    <div class="w-px h-6 bg-[#16233A]"></div>
 
                 </div>
                     <span id="btn-mode-switch" style="display:none!important;width:0;height:0;overflow:hidden;pointer-events:none"></span>
@@ -770,13 +1082,13 @@
                         <button onclick="reviewerLogout()" style="font-size:10px;color:#6b7280;margin-left:4px;" class="hover:text-white transition-colors" title="Exit review mode">✕</button>
                     </div>
 
-                    <button onclick="openSupport()" class="px-4 py-2 bg-gray-700 hover:bg-[#105ba4]  text-white rounded-lg border border-gray-600 transition" title="Technical Support">
+                    <button onclick="openSupport()" class="px-4 py-2 bg-[#16233A] hover:bg-[#105ba4]  text-white rounded-lg border border-[rgba(120,166,212,0.16)] transition" title="Technical Support">
                        <img src= "assets/support_icon.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMi yIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0xIDE3aC-MnYxMy0xaDN6bTEuMjUtNC4xMmMuNzYuNzYgMS43NSAxLjEyIDIuNzUgMS4xMnYzYy0yLjUgMC00LjgzLS45OC02LjYtMi41OWwtMS4xNS0xLjE1Yy42MS0uNDUgMS4zNS0uNzMgMi4xNS0uNzMuNTUgMCAxLjA4LjEzIDEuNTcuMzVsMS4yOCAxem0tMS4yNS0xLjEzYy0uNTgtLjM1LTEuMjYtLjU1LTItLjU1LTEuMSAwLTIuMTIuNDMtMi44NyAxLjE5bC0xLjE1LTEuMTVDNy40MyA5LjQzIDkuNDggOCAxMiA4czQuNTggMS40MyA2LjA1IDMuMjlsLTEuMTUgMS4xNWMtLjc1LS43Ni0xLjc3LTEuMTktMi45LTEuMTl6Ii8+PC9zdmc+'" class="w-5 h-5 object-contain">
                     </button>
                 </div>
             </header> 
 
-            <div id="main-content-area" class="flex-1 overflow-y-auto p-6 relative mt-2 mr-2 ml-1 mb-2 bg-gray-900/70 rounded-2xl border border-gray-700/30">
+            <div id="main-content-area" class="flex-1 overflow-y-auto relative">
 
 <!-- DRAFT RECOVERY BANNER -->
 <div id="draft-recovery-banner" class="hidden items-center justify-between gap-4 mb-6 px-5 py-3.5 bg-amber-900/40 border border-amber-600/50 rounded-xl">
@@ -795,7 +1107,7 @@
             ↺ Restore Session
         </button>
         <button onclick="dismissDraft()"
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs font-bold rounded-lg transition-all">
+            class="px-4 py-2 bg-[#16233A] hover:bg-[#1c2d47] text-[#9AB0C8] text-xs font-bold rounded-lg transition-all">
             Discard
         </button>
     </div>
@@ -808,11 +1120,11 @@
     <div id="preop-content" class="space-y-6">
         <!-- Rendered dynamically by renderPreOpTab() -->
         <div class="flex flex-col items-center justify-center py-24 text-center">
-            <svg class="w-16 h-16 mb-4 opacity-20 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 mb-4 opacity-20 text-[#6C88A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <p class="text-gray-500 font-semibold">No Pre-Operation Data</p>
-            <p class="text-gray-600 text-sm mt-1">Use "Push to Operation" from the Simulation workspace to populate this tab.</p>
+            <p class="text-[#6C88A6] font-semibold">No Pre-Operation Data</p>
+            <p class="text-[#6C88A6] text-sm mt-1">Use "Push to Operation" from the Simulation workspace to populate this tab.</p>
         </div>
     </div>
 </div>
@@ -821,24 +1133,18 @@
     <div id="finalsetup-content" class="space-y-4 p-6">
         <!-- Rendered dynamically by renderFinalSetupTab() -->
         <div class="flex flex-col items-center justify-center py-24 text-center">
-            <svg class="w-16 h-16 mb-4 opacity-20 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 mb-4 opacity-20 text-[#6C88A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            <p class="text-gray-500 font-semibold">No Pre-Operation Data</p>
-            <p class="text-gray-600 text-sm mt-1">Use "Push to Operation" from the Simulation workspace to populate this tab.</p>
+            <p class="text-[#6C88A6] font-semibold">No Pre-Operation Data</p>
+            <p class="text-[#6C88A6] text-sm mt-1">Use "Push to Operation" from the Simulation workspace to populate this tab.</p>
         </div>
-    </div>
-</div>
-
-<div id="tab-approvals" class="tab-content hidden max-w-full w-full">
-    <div id="approvals-content" class="space-y-4">
-        <div class="flex items-center justify-center py-16 text-gray-500 text-sm">Select Approvals from the sidebar.</div>
     </div>
 </div>
 
 <div id="tab-projects-overview" class="tab-content hidden max-w-full w-full">
     <div id="projects-overview-content" class="space-y-4">
-        <div class="flex items-center justify-center py-16 text-gray-500 text-sm">Select All Projects from the sidebar.</div>
+        <div class="flex items-center justify-center py-16 text-[#6C88A6] text-sm">Select All Projects from the sidebar.</div>
     </div>
 </div>
 
@@ -1026,7 +1332,7 @@
 
     <!-- Operational ID strip -->
     <div class="flex items-center gap-3 mb-5">
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider flex-shrink-0">Operational ID</span>
+        <span class="text-xs font-bold text-[#6C88A6] uppercase tracking-wider flex-shrink-0">Operational ID</span>
         <input id="operationalIdAuto" type="text" class="bg-transparent text-sm font-bold text-blue-400 border-none focus:ring-0 outline-none p-0 cursor-default flex-1 min-w-0" readonly>
     </div>
 
@@ -1042,29 +1348,29 @@
 
         <div class="grid grid-cols-2 gap-4 mb-4">
             <div>
-                <label class="block text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">Project Name</label>
-                <input type="text" id="projectName" class="bg-gray-900/80 border-gray-600 focus:border-[#459fd9] h-10 text-base rounded-lg px-3 text-white w-full">
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Name</label>
+                <input type="text" id="projectName" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 text-base rounded-lg px-3 text-white w-full">
             </div>
             <div>
-                <label class="block text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">Project Code</label>
-                <input type="text" id="projectCode" class="bg-gray-900/80 border-gray-600 focus:border-[#459fd9] h-10 rounded-lg px-3 text-white font-mono w-full">
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Code</label>
+                <input type="text" id="projectCode" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white font-mono w-full">
             </div>
             <div class="col-span-2">
-                <label class="block text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">Scope / Operation Type</label>
-                <input type="text" id="scope" class="bg-gray-900/80 border-gray-600 focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Scope / Operation Type</label>
+                <input type="text" id="scope" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
             </div>
             <div>
-                <label class="block text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">Vessel</label>
-                <input type="text" id="Vessel" class="bg-gray-900/80 border-gray-600 focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Vessel</label>
+                <input type="text" id="Vessel" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
             </div>
             <div>
-                <label class="block text-gray-500 text-xs font-bold mb-1 uppercase tracking-wider">Location</label>
-                <input type="text" id="location" class="bg-gray-900/80 border-gray-600 focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Location</label>
+                <input type="text" id="location" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
             </div>
         </div>
 
         <div id="project-rov-roster" class="hidden">
-            <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">ROV Roster</p>
+            <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2">ROV Roster</p>
             <div id="project-rov-tags" class="flex flex-wrap gap-2"></div>
         </div>
     </div>
@@ -1073,15 +1379,15 @@
 <div id="tab-systems" class="tab-content hidden max-w-full w-full">
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white">Minispector Systems</h3>
-        <button onclick="addSystemRow()" class="px-4 py-2 bg-gray-700 hover:bg-[--color-mcs-orange] text-white rounded-lg shadow-lg font-bold text-sm transition transform hover:scale-105">
+        <button onclick="addSystemRow()" class="px-4 py-2 bg-[#16233A] hover:bg-[--color-mcs-orange] text-white rounded-lg shadow-lg font-bold text-sm transition transform hover:scale-105">
             + Add System
         </button>
     </div>
 
-    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-lg">
+    <div class="bg-[#101B2C] rounded-xl border border-[rgba(120,166,212,0.16)] overflow-hidden shadow-lg">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-gray-700/50 text-xs uppercase text-gray-400 font-bold border-b border-gray-600">
+                <tr class="bg-[#16233A] text-xs uppercase text-[#9AB0C8] font-bold border-b border-[rgba(120,166,212,0.16)]">
                     <th class="p-4 w-24 text-center">Primary</th>
                     <th class="p-4">Minispector No.</th>
                     <th class="p-4 text-center w-24">Action</th>
@@ -1135,24 +1441,24 @@
     <div id="sensor-empty-state" class="flex-1 flex flex-col items-center justify-center p-10 space-y-8 animate-in fade-in zoom-in duration-300">
         <div class="text-center">
             <h2 class="text-3xl font-bold text-white mb-2">Sensor & Payload Configuration</h2>
-            <p class="text-gray-400">No equipment currently assigned. Select a setup method below:</p>
+            <p class="text-[#9AB0C8]">No equipment currently assigned. Select a setup method below:</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-3xl">
-            <button onclick="loadDefaultSensors()" class="group relative flex flex-col items-center p-8 bg-gray-800 border-2 border-gray-700 hover:border-blue-500 rounded-2xl transition-all hover:bg-gray-750 hover:shadow-2xl hover:shadow-blue-900/20">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
+            <button onclick="loadDefaultSensors()" class="group relative flex flex-col items-center p-8 bg-[#101B2C] border-2 border-[rgba(120,166,212,0.16)] hover:border-blue-500 rounded-2xl transition-all hover:bg-gray-750 hover:shadow-2xl hover:shadow-blue-900/20">
+                <div class="w-16 h-16 bg-[#16233A] rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-2">Load Default Suite</h3>
-                <p class="text-sm text-gray-400 text-center">Populate with standard ROV camera and sensor package.</p>
+                <p class="text-sm text-[#9AB0C8] text-center">Populate with standard ROV camera and sensor package.</p>
             </button>
 
-            <button onclick="importPackingJSON()" class="group relative flex flex-col items-center p-8 bg-gray-800 border-2 border-gray-700 hover:border-[--color-mcs-orange] rounded-2xl transition-all hover:bg-gray-750 hover:shadow-2xl hover:shadow-orange-900/20">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mb-4 group-hover:bg-[--color-mcs-orange] transition-colors">
+            <button onclick="importPackingJSON()" class="group relative flex flex-col items-center p-8 bg-[#101B2C] border-2 border-[rgba(120,166,212,0.16)] hover:border-[--color-mcs-orange] rounded-2xl transition-all hover:bg-gray-750 hover:shadow-2xl hover:shadow-orange-900/20">
+                <div class="w-16 h-16 bg-[#16233A] rounded-full flex items-center justify-center mb-4 group-hover:bg-[--color-mcs-orange] transition-colors">
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-2">Import Packing List</h3>
-                <p class="text-sm text-gray-400 text-center">Load a specific mission configuration file (.json) .</p>
+                <p class="text-sm text-[#9AB0C8] text-center">Load a specific mission configuration file (.json) .</p>
             </button>
         </div>
     </div>
@@ -1164,12 +1470,12 @@
         </div>
 
         <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-bold text-gray-300">Camera & Lighting</h3>
+            <h3 class="text-lg font-bold text-[#9AB0C8]">Camera & Lighting</h3>
         </div>
-        <div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 mb-6">
+        <div class="bg-[#101B2C] rounded-xl overflow-hidden border border-[rgba(120,166,212,0.16)] mb-6">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-gray-700/50 text-gray-400 text-xs uppercase font-bold">
+                    <tr class="bg-[#16233A] text-[#9AB0C8] text-xs uppercase font-bold">
                         <th class="p-4 w-1/4">Component</th>
                         <th class="p-4 w-1/6">Status</th>
                         <th class="p-4 w-1/6">Model</th>
@@ -1185,12 +1491,12 @@
         </div>
 
         <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-bold text-gray-300">Sensors & Payload</h3>
+            <h3 class="text-lg font-bold text-[#9AB0C8]">Sensors & Payload</h3>
         </div>
-        <div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700">
+        <div class="bg-[#101B2C] rounded-xl overflow-hidden border border-[rgba(120,166,212,0.16)]">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-gray-700/50 text-gray-400 text-xs uppercase font-bold">
+                    <tr class="bg-[#16233A] text-[#9AB0C8] text-xs uppercase font-bold">
                         <th class="p-4 w-1/4">Sensor</th>
                         <th class="p-4 w-1/6">Status</th>
                         <th class="p-4 w-1/6">Model</th>
@@ -1206,8 +1512,8 @@
         </div>
     </div>
 </div>
-      <div id="tab-auxtools" class="tab-content hidden max-w-full w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Auxiliary Tool Status</h3></div><div class="bg-gray-800 rounded-xl overflow-hidden border border-gray-700"><table class="w-full"><thead><tr><th class="w-1/3">Tool / Equipment</th><th class="w-1/4">Status</th><th>Notes / Condition</th></tr></thead><tbody id="auxToolBody" class="text-sm"></tbody></table></div></div>
-     <div id="tab-software" class="tab-content hidden max-w-6xl w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Software System Status</h3></div><div class="bg-gray-800 p-6 rounded-xl border border-gray-700"><h3 class="text-white-400 font-bold mb-4 border-b border-gray-700 pb-2">Ready to Dive</h3><div class="space-y-4"><label class="flex items-center"><input type="checkbox" id="soft_pilot" class="mr-3 w-5 h-5"> Minispector Pilot Software: Running & Communicating</label><label class="flex items-center"><input type="checkbox" id="soft_hmi" class="mr-3 w-5 h-5"> On-deck Station (HMI): Displaying telemetry correctly</label><label class="flex items-center"><input type="checkbox" id="soft_logging" class="mr-3 w-5 h-5"> Logging System: Recording video & data stream</label></div></div></div>
+      <div id="tab-auxtools" class="tab-content hidden max-w-full w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Auxiliary Tool Status</h3></div><div class="bg-[#101B2C] rounded-xl overflow-hidden border border-[rgba(120,166,212,0.16)]"><table class="w-full"><thead><tr><th class="w-1/3">Tool / Equipment</th><th class="w-1/4">Status</th><th>Notes / Condition</th></tr></thead><tbody id="auxToolBody" class="text-sm"></tbody></table></div></div>
+     <div id="tab-software" class="tab-content hidden max-w-6xl w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Software System Status</h3></div><div class="bg-[#101B2C] p-6 rounded-xl border border-[rgba(120,166,212,0.16)]"><h3 class="text-white-400 font-bold mb-4 border-b border-[rgba(120,166,212,0.16)] pb-2">Ready to Dive</h3><div class="space-y-4"><label class="flex items-center"><input type="checkbox" id="soft_pilot" class="mr-3 w-5 h-5"> Minispector Pilot Software: Running & Communicating</label><label class="flex items-center"><input type="checkbox" id="soft_hmi" class="mr-3 w-5 h-5"> On-deck Station (HMI): Displaying telemetry correctly</label><label class="flex items-center"><input type="checkbox" id="soft_logging" class="mr-3 w-5 h-5"> Logging System: Recording video & data stream</label></div></div></div>
 <div id="tab-lars" class="tab-content hidden max-w-5xl w-full">
 
     <!-- Page Header -->
@@ -1218,7 +1524,7 @@
             </div>
             <div>
                 <h3 class="text-xl font-bold text-white tracking-tight">LARS Configuration &amp; Status</h3>
-                <p class="text-gray-500 text-xs mt-0.5">Launch &amp; Recovery System — deployment configuration and pre-dive checklist</p>
+                <p class="text-[#6C88A6] text-xs mt-0.5">Launch &amp; Recovery System — deployment configuration and pre-dive checklist</p>
             </div>
         </div>
     </div>
@@ -1234,7 +1540,7 @@
             </div>
             <div class="p-5 space-y-4">
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Winch Operation</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Winch Operation</label>
                     <select id="lars_davit_winch" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
                         <option value="" disabled selected>Select operation...</option>
                         <option value="Electric">Electric</option>
@@ -1242,7 +1548,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Secure Method</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Secure Method</label>
                     <select id="lars_davit_secure" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
                         <option value="" disabled selected>Select method...</option>
                         <option value="Welded">Welded</option>
@@ -1250,7 +1556,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
                     <select id="lars_davit_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
                         <option value="" disabled selected>Select type...</option>
                         <option value="Cage">Cage</option>
@@ -1268,7 +1574,7 @@
             </div>
             <div class="p-5 space-y-4">
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
                     <select id="lars_diving_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#459fd9'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
                         <option value="" disabled selected>Select type...</option>
                         <option value="Cage">Cage</option>
@@ -1276,13 +1582,13 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Clump Weight</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Clump Weight</label>
                     <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all group" style="background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.7);" onmouseover="this.style.borderColor='rgba(69,159,217,0.4)'" onmouseout="this.style.borderColor='rgba(55,65,81,0.7)'">
                         <input type="checkbox" id="lars_diving_clump" class="peer sr-only">
                         <div class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all" style="background:rgba(55,65,81,0.8);border:2px solid #4b5563;" id="lars_diving_clump_box">
                             <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                         </div>
-                        <span class="text-sm text-gray-300 group-hover:text-white transition-colors select-none">Clump Weight Installed</span>
+                        <span class="text-sm text-[#9AB0C8] group-hover:text-white transition-colors select-none">Clump Weight Installed</span>
                     </label>
                 </div>
             </div>
@@ -1296,7 +1602,7 @@
             </div>
             <div class="p-5 space-y-4">
                 <div>
-                    <label class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
+                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
                     <select id="lars_crane_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
                         <option value="" disabled selected>Select type...</option>
                         <option value="Cage">Cage</option>
@@ -1313,7 +1619,7 @@
         <div class="px-6 py-4 flex items-center gap-3" style="background:rgba(31,41,55,0.6);border-bottom:1px solid rgba(55,65,81,0.6);">
             <span class="w-2 h-2 rounded-full" style="background:#f39124;box-shadow:0 0 6px rgba(243,145,36,0.5);"></span>
             <span class="text-xs font-bold text-white uppercase tracking-widest">Operational Status Checklist</span>
-            <span class="text-[10px] text-gray-500 ml-1">— verify before diving operations</span>
+            <span class="text-[10px] text-[#6C88A6] ml-1">— verify before diving operations</span>
         </div>
         <div class="divide-y" style="border-color:rgba(55,65,81,0.5);">
 
@@ -1323,10 +1629,10 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">Winch / Hydraulics</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Inspected and confirmed functional</p>
+                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Winch / Hydraulics</p>
+                    <p class="text-xs text-[#6C88A6] mt-0.5">Inspected and confirmed functional</p>
                 </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-gray-700/50 text-gray-500">VERIFIED</span>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
             </label>
 
             <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
@@ -1335,10 +1641,10 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">Umbilical / Cable</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Visual inspection passed — no damage or kinks</p>
+                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Umbilical / Cable</p>
+                    <p class="text-xs text-[#6C88A6] mt-0.5">Visual inspection passed — no damage or kinks</p>
                 </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-gray-700/50 text-gray-500">VERIFIED</span>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
             </label>
 
             <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
@@ -1347,10 +1653,10 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">A-Frame / Crane</p>
-                    <p class="text-xs text-gray-500 mt-0.5">Functional and properly secured</p>
+                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">A-Frame / Crane</p>
+                    <p class="text-xs text-[#6C88A6] mt-0.5">Functional and properly secured</p>
                 </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-gray-700/50 text-gray-500">VERIFIED</span>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
             </label>
 
             <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
@@ -1359,10 +1665,10 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-200 group-hover:text-white transition-colors">Tether Management / Latch</p>
-                    <p class="text-xs text-gray-500 mt-0.5">System checked and latch confirmed operational</p>
+                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Tether Management / Latch</p>
+                    <p class="text-xs text-[#6C88A6] mt-0.5">System checked and latch confirmed operational</p>
                 </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-gray-700/50 text-gray-500">VERIFIED</span>
+                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
             </label>
 
         </div>
@@ -1373,12 +1679,12 @@
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white">Dive Log</h3>
         <div class="flex gap-3">
-            <button onclick="triggerQuickDive()" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
+            <button onclick="triggerQuickDive()" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
                 <span class="text-lg"></span> Start Dive
             </button>
             
-            <button onclick="openModal('diveLogs')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
-            <button onclick="exportWord('Divelog.docx')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button>
+            <button onclick="openModal('diveLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
+            <button onclick="exportWord('Divelog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button>
         </div>
     </div>
     <div id="dive-log-container" class="space-y-3"></div>
@@ -1386,11 +1692,11 @@
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white">Standby Time Log</h3>
         <div class="flex gap-3">
-            <button onclick="openStandbySelector()" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm flex items-center gap-2">
+            <button onclick="openStandbySelector()" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm flex items-center gap-2">
                 <span class="text-lg"></span> Start Standby
             </button>
-            <button onclick="openModal('standbyLogs')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
-            <button onclick="exportWord('Standby.docx')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button>
+            <button onclick="openModal('standbyLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
+            <button onclick="exportWord('Standby.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button>
         </div>
     </div>
     <div id="standby-log-container" class="space-y-3"></div>
@@ -1400,10 +1706,10 @@
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white">Technical Fault Log</h3>
         <div class="flex gap-3">
-            <button onclick="openModal('faultLogs')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
+            <button onclick="openModal('faultLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
                 + Add Fault
             </button>
-            <button onclick="exportWord('Faults.docx')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
+            <button onclick="exportWord('Faults.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
                 Export Report
             </button>
         </div>
@@ -1412,12 +1718,12 @@
     <div id="fault-log-container" class="space-y-3">
         </div>
 </div>
-                <div id="tab-maint" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">Maintenance Log</h3><div class="flex gap-3"><button onclick="openModal('maintenanceLogs')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('Maintenance.docx')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="maint-log-container" class="space-y-3"></div></div>
-                <div id="tab-hse" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">HSE Report</h3><div class="flex gap-3"><button onclick="openModal('hseReports')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('HSE.docx')" class="px-6 py-2 bg-gray-600 hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="hse-log-container" class="space-y-3"></div></div>
+                <div id="tab-maint" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">Maintenance Log</h3><div class="flex gap-3"><button onclick="openModal('maintenanceLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('Maintenance.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="maint-log-container" class="space-y-3"></div></div>
+                <div id="tab-hse" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">HSE Report</h3><div class="flex gap-3"><button onclick="openModal('hseReports')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('HSE.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="hse-log-container" class="space-y-3"></div></div>
                 <div id="tab-checklists" class="tab-content hidden max-w-full w-full">
                     <div id="cl-container"></div>
                 </div>
-                <div id="tab-remarks" class="tab-content hidden max-w-4xl"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Remarks</h3></div><div class="bg-gray-800 p-6 rounded-xl border border-gray-700"><label class="block text-sm text-gray-400 mb-2">Additional Operational Remarks</label><textarea id="additionalRemarks" rows="10" placeholder="Type final notes here..."></textarea></div></div>
+                <div id="tab-remarks" class="tab-content hidden max-w-4xl"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Remarks</h3></div><div class="bg-[#101B2C] p-6 rounded-xl border border-[rgba(120,166,212,0.16)]"><label class="block text-sm text-[#9AB0C8] mb-2">Additional Operational Remarks</label><textarea id="additionalRemarks" rows="10" placeholder="Type final notes here..."></textarea></div></div>
 
           
 
@@ -1430,91 +1736,78 @@
     <div id="sim-step-1" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
 
         <!-- Scrollable content -->
-        <div style="flex:1;overflow-y:auto;padding:2rem 2rem 1rem 2rem;">
+        <div id="sim-scroll-area" style="flex:1;overflow-y:auto;padding:2rem 2rem 1rem 2rem;">
 
             <!-- PANEL: Mission Info -->
-            <div id="sim-setup-mission" style="max-width:1100px;margin:0 auto;">
+            <div id="sim-setup-mission" style="max-width:1400px;margin:0 auto;">
 
                 <div class="mb-6">
                     <h3 class="text-2xl font-bold text-white tracking-tight">Mission Info</h3>
-                    <p class="text-gray-400 mt-1 text-sm">Fill in project details and select the operation scope.</p>
+                    <p class="text-[#9AB0C8] mt-1 text-sm">Name the project, set the asset and window, and pick the operation scope.</p>
                 </div>
 
                 <!-- Mission Info card -->
-                <div class="chart-card overflow-hidden mb-5">
-                    <div class="chart-card-header">
-                        <span class="chart-title">Project Details</span>
+                <div class="rcard mb-5">
+                    <div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head">
+                        <span class="rcard-bar"></span>
+                        <span class="rcard-title">Project details</span>
                     </div>
                     <div class="p-5 grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-300 mb-1">Project Name</label>
-                            <input id="sim-project-name" type="text" placeholder="Project Name"
-                                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-orange-500 outline-none transition-colors"/>
+                            <label class="rfield-label">Project Name</label>
+                            <input id="sim-project-name" type="text" placeholder="PL-114 tie-in survey"
+                                class="w-full rfield placeholder-[#6C88A6]"/>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-300 mb-1">Project Code</label>
-                            <input id="sim-project-code" type="text" placeholder="Project Code"
-                                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-orange-500 outline-none transition-colors"/>
+                            <label class="rfield-label">Project Code<span class="req">*</span></label>
+                            <input id="sim-project-code" type="text" placeholder="PLT-114-26"
+                                class="w-full rfield placeholder-[#6C88A6] font-mono"/>
                         </div>
+                        <input type="hidden" id="sim-project-weather" value=""/>
+                        <input type="hidden" id="sim-project-asset" value=""/>
                         <div class="col-span-2">
-                            <label class="block text-sm font-semibold text-gray-300 mb-1">Description</label>
-                            <textarea id="sim-project-desc" rows="2" placeholder="Optional mission description..."
-                                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-orange-500 outline-none transition-colors resize-none"></textarea>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="rfield-label" style="margin-bottom:0;">Description</label>
+                                <span id="sim-desc-count" class="text-[10px] font-mono text-[#6C88A6]">0 / 280</span>
+                            </div>
+                            <textarea id="sim-project-desc" rows="2" maxlength="280" placeholder="Optional mission description..."
+                                class="w-full rfield placeholder-[#6C88A6] resize-none" style="height:auto;padding-top:10px;padding-bottom:10px;"></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- Operation Scope -->
-                <div class="chart-card overflow-hidden mb-5">
-                    <div class="chart-card-header">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#f39124"></span>
-                            <span class="chart-title">Operation Scope</span>
-                        </div>
+                <!-- Operation Scope catalog -->
+                <div class="rcard mb-5" id="scope-card">
+                    <div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head">
+                        <span class="rcard-bar"></span>
+                        <span class="rcard-title">Operation scope</span>
+                        <span id="scope-cat-count" class="rcard-hint"></span>
                     </div>
-                    <div class="p-5 space-y-3">
-                        <select id="sim-scope-dropdown"
-                            class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm text-white focus:border-[#f39124] outline-none transition-colors">
-                            <option value="">Select operation scope...</option>
-                            <optgroup label="── Platform ──────">
-                                <option value="1">Platform Conventional (GVI · CVI · CP · UT · ACFM)</option>
-                                <option value="2">Platform Conventional + PRC</option>
-                                <option value="3">Platform GVI — Video Only</option>
-                                <option value="4">Platform Mass Cleaning</option>
-                            </optgroup>
-                            <optgroup label="── Pipeline ──────">
-                                <option value="5">Pipeline Conventional + SBES / Profiler</option>
-                                <option value="6">Pipeline Conventional + PRC + SBES / Profiler</option>
-                                <option value="7">Pipeline Geometric Assessment + PRC</option>
-                                <option value="8">Pipeline Conventional + PRC + PipeTracker</option>
-                                <option value="9">Pipeline Geophysical Survey</option>
-                                <option value="10">Seabed Geophysical Survey</option>
-                                <option value="11">Pipeline GVI / Video Recording</option>
-                                <option value="12">Pre-engineering Metrology (Spools)</option>
-                                <option value="13">Pre-engineering Metrology (Jumper)</option>
-                                <option value="14">Pipeline Conventional + Subsea + PRC</option>
-                                <option value="15">Pipeline Mass Cleaning</option>
-                            </optgroup>
-                        </select>
-                        <div id="sim-scope-preview" class="hidden rounded-xl bg-gray-900/60 border border-gray-700/40 p-4">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Required Sensors</p>
-                                    <p id="scope-preview-required" class="text-xs leading-relaxed" style="color:#f39124"></p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-2">Optional Sensors</p>
-                                    <p id="scope-preview-optional" class="text-xs text-gray-400 leading-relaxed"></p>
-                                </div>
+                    <div class="p-5">
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <div class="relative flex-1" style="min-width:230px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:#6C88A6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                                <input id="scope-search" type="search" placeholder="Search bundles or sensors — try PRC"
+                                    class="w-full rfield" style="padding-left:36px;"/>
                             </div>
+                            <select id="scope-fam-filter" class="rfield" style="width:auto;min-width:170px;cursor:pointer;">
+                                <option value="">All families</option>
+                                <option>Platform</option><option>Pipeline</option><option>PRC</option><option>Custom</option>
+                            </select>
+                            <button type="button" id="scope-blank-btn" class="rbtn rbtn-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                Blank bundle
+                            </button>
                         </div>
+                        <div id="scope-catalog"></div>
+                        <div id="scope-detail" class="mt-2"></div>
                     </div>
                 </div>
 
                 <!-- Next button -->
                 <div class="flex justify-end">
                     <button onclick="showSimSetupTab('units')"
-                        class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#f39124] hover:bg-orange-400 text-white font-bold text-sm transition-all">
+                        class="rbtn-orange-outline flex items-center gap-2">
                         MiniSpectors
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -1523,29 +1816,30 @@
             </div>
 
             <!-- PANEL: MiniSpectors -->
-            <div id="sim-setup-units" class="hidden" style="max-width:1100px;margin:0 auto;">
+            <div id="sim-setup-units" class="hidden" style="max-width:1400px;margin:0 auto;">
 
                 <div class="mb-6 flex items-center justify-between">
                     <div>
                         <h3 class="text-2xl font-bold text-white tracking-tight">MiniSpectors</h3>
-                        <p class="text-gray-400 mt-1 text-sm">Select the units for this simulation.</p>
+                        <p class="text-[#9AB0C8] mt-1 text-sm">Pick the units for this run. The first one you select flies as main.</p>
                     </div>
-                    <button onclick="showSimSetupTab('mission')"
-                        class="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                        Mission Info
+                    <button id="btn-begin-sim" onclick="beginSimulation()" disabled
+                        class="rbtn-orange-outline flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Start Simulation
                     </button>
                 </div>
 
-                <div class="chart-card overflow-hidden">
-                    <div class="chart-card-header">
+                <div class="rcard">
+                    <div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head flex-wrap">
+                        <span class="rcard-bar"></span>
                         <div>
-                            <div class="chart-title">MiniSpectors</div>
-                            <div class="text-[11px] text-gray-500 mt-0.5">Click a unit to select &middot; First selected becomes Main &middot; Click STANDBY to promote</div>
+                            <div class="rcard-title">Available units</div>
+                            <div class="text-[11px] mt-0.5" style="color:#6C88A6" id="units-hint"></div>
                         </div>
                     </div>
                     <div class="p-5">
-                        <div id="sim-rov-chips" class="grid gap-3" style="grid-template-columns:repeat(6,1fr);"></div>
+                        <div id="sim-rov-chips" class="units-grid"></div>
                     </div>
                 </div>
 
@@ -1553,83 +1847,46 @@
 
         </div><!-- end scrollable -->
 
-        <!-- Sticky footer: only visible on MiniSpectors panel -->
-        <div id="sim-step1-footer" class="hidden flex items-center justify-between" style="flex-shrink:0;background:rgba(17,24,39,0.96);border-top:1px solid #374151;padding:14px 32px;">
-            <span id="sim-selected-label" class="text-xs text-gray-500 font-medium">Select an operation scope and at least one MiniSpector to begin</span>
-            <button id="btn-begin-sim" onclick="beginSimulation()" disabled
-                class="px-6 py-2.5 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-400
-                       text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Start Simulation
-            </button>
-        </div>
-
     </div>
 
     <!-- ===== STEP 2 : WORKSPACE ===== -->
     <div id="sim-step-2" class="hidden" style="display:flex;flex:1;flex-direction:column;min-height:0;">
 
-        <!-- Toolbar -->
-        <div class="shrink-0 bg-gray-800/90 border-b border-gray-700 px-5 flex items-center justify-between" style="min-height:52px;">
-
-            <!-- LEFT: Back -->
-            <div class="flex items-center gap-1">
-                <button onclick="simGoBack()" title="Change ROVs"
-                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-all shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <div id="sim-rov-tabs" class="hidden"></div>
-            </div>
-
-            <!-- RIGHT: Action groups -->
-            <div class="flex items-center gap-2 shrink-0 ml-4">
-
-                <!-- Save/Export group -->
-                <div class="flex items-center bg-gray-900/60 rounded-lg border border-gray-700/50 p-0.5 gap-0.5">
-                    <button onclick="saveSimulationJSON()" title="Save as JSON"
-                        class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                    </button>
-                    <button onclick="exportSimulationExcel()" title="Export as Excel"
-                        class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-green-400 hover:bg-green-500/10 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    </button>
-                    <button onclick="exportSimulationWord()" title="Export as Word"
-                        class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-orange-400 hover:bg-orange-500/10 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    </button>
-                </div>
-
-                <!-- Approval status area (hidden — moved to System Readiness tab) -->
-                <div id="sim-approval-area" class="hidden"></div>
-                <!-- Push to Operation (hidden — moved to System Readiness tab) -->
-                <button id="btn-push-to-operation" onclick="pushToOperation()" class="hidden" style="display:none"></button>
-            </div>
-        </div>
+        <!-- Hidden state holders: no longer rendered as a toolbar/sub-tab bar
+             (navigation lives in the sidebar now; badges mirror the sidebar
+             ones via updateSimTabBadges()), kept only because other code
+             reads/writes these ids. -->
+        <span id="sim-badge-sensors" class="hidden"></span>
+        <span id="sim-badge-sysarch" class="hidden"></span>
 
         <!-- Progress bar -->
         <div class="shrink-0" style="height:3px;background:#1f2937;">
             <div id="sim-progress-bar" style="height:100%;width:0%;background:#f39124;transition:width 0.5s;border-radius:0 2px 2px 0;"></div>
         </div>
 
-        <!-- Sub-tab bar -->
-        <div class="shrink-0 bg-gray-900/60 border-b border-gray-700 px-6 flex gap-5 items-center">
-            <button id="sim-subtab-sensors" onclick="switchSimSubTab('sensors')"
-                class="sim-subtab py-2.5 text-xs font-bold border-b-2 border-orange-500 text-white transition-all flex items-center gap-1.5">
-                Sensors &amp; Equipment <span id="sim-badge-sensors" class="text-[10px] font-mono bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full ml-1"></span>
-            </button>
-            <button id="sim-subtab-sysarch" onclick="switchSimSubTab('sysarch')"
-                class="sim-subtab py-2.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
-                Topology <span id="sim-badge-sysarch" class="text-[10px] font-mono bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full ml-1"></span>
-            </button>
-            <button id="sim-subtab-readiness" onclick="switchSimSubTab('readiness')"
-                class="sim-subtab py-2.5 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
-                System Readiness <span id="sim-badge-readiness" class="text-[10px] font-mono bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded-full ml-1"></span>
-            </button>
+        <!-- Dynamic content area. Export icons float inside it (top-right,
+             position:sticky) instead of occupying their own header bar, so
+             they read as part of the main window and stay visible while
+             scrolling regardless of which workspace sub-tab is active. -->
+        <div style="flex:1;overflow-y:auto;" class="p-6">
+            <div style="position:sticky;top:0;height:0;overflow:visible;z-index:6;">
+              <div style="position:absolute;top:0;right:0;display:flex;gap:2px;">
+                <button onclick="saveSimulationJSON()" title="Save as JSON"
+                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-blue-400 hover:bg-blue-500/10 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                </button>
+                <button onclick="exportSimulationExcel()" title="Export as Excel"
+                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+                <button onclick="exportSimulationWord()" title="Export as Word"
+                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </button>
+              </div>
+            </div>
+            <div id="sim-content-area"></div>
         </div>
-
-        <!-- Dynamic content area -->
-        <div id="sim-content-area" class="flex-1 overflow-y-auto p-6"></div>
 
     </div>
 </div>
@@ -1637,28 +1894,66 @@
         </main>
     </div>
 
-    <div id="entry-modal" class="modal-overlay"> 
+    <div id="bundle-sheet" class="modal-overlay" style="display: none; z-index: 100;">
+        <div class="modal-container max-w-md bg-[#101B2C] border border-[rgba(120,166,212,0.16)] text-left">
+            <div class="flex items-center gap-2.5 mb-5 pb-3 border-b border-[rgba(120,166,212,0.16)]">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px" class="text-[#f39124]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                <h3 class="text-sm font-bold text-white">Save as new bundle</h3>
+            </div>
+            <div class="space-y-3.5">
+                <div>
+                    <label class="block text-xs font-semibold text-[#9AB0C8] mb-1">Bundle name</label>
+                    <input id="bundle-name" type="text" placeholder="Pipeline Conventional + PRC + Sonar"
+                        class="w-full bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-white placeholder-[#6C88A6] focus:border-orange-500 outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-[#9AB0C8] mb-1">Family</label>
+                    <input id="bundle-fam" type="text" placeholder="Pipeline"
+                        class="w-full bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-white placeholder-[#6C88A6] focus:border-orange-500 outline-none"/>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-[#9AB0C8] mb-1">What it's for</label>
+                    <textarea id="bundle-note" rows="2" placeholder="Shallow-water tie-ins where sonar coverage is required."
+                        class="w-full bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-white placeholder-[#6C88A6] focus:border-orange-500 outline-none resize-none"></textarea>
+                    <small id="bundle-summary" class="block mt-1 text-[11px] text-[#6C88A6]"></small>
+                </div>
+                <label class="flex items-start gap-2.5 p-3 rounded-lg border border-[rgba(120,166,212,0.16)] bg-[#0C1727] cursor-pointer">
+                    <input type="checkbox" id="bundle-share" checked class="mt-0.5 accent-orange-500"/>
+                    <span class="text-xs text-[#9AB0C8]"><b class="block text-sm text-white font-medium mb-0.5">Publish to the shared catalog</b>Everyone in the workspace can pick this bundle on their missions.</span>
+                </label>
+            </div>
+            <div class="flex justify-end gap-2 mt-5 pt-4 border-t border-[rgba(120,166,212,0.16)]">
+                <button type="button" id="bundle-cancel" class="px-4 py-2 rounded-lg text-xs font-semibold text-[#9AB0C8] hover:text-white bg-[#16233A] hover:bg-[#1c2d47] transition-colors">Cancel</button>
+                <button type="button" id="bundle-confirm" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-[#f39124] hover:bg-orange-400 transition-colors flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Save bundle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="entry-modal" class="modal-overlay">
         <div class="modal-container">
-            <h3 id="modal-title" class="text-xl font-bold text-white mb-6 border-b border-gray-700 pb-2">Entry Details</h3>
+            <h3 id="modal-title" class="text-xl font-bold text-white mb-6 border-b border-[rgba(120,166,212,0.16)] pb-2">Entry Details</h3>
             <div id="modal-content-area" class="space-y-4"></div>
-            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-700">
-                <button onclick="closeModal()" class="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-600">Cancel</button>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-[rgba(120,166,212,0.16)]">
+                <button onclick="closeModal()" class="px-4 py-2 rounded bg-[#16233A] text-white hover:bg-[#1c2d47]">Cancel</button>
                 <button id="modal-save-btn" class="px-4 py-2 rounded bg-blue-500 text-white font-bold hover:bg-blue-600">Save Entry</button>
             </div>
         </div>
     </div>
 
     <div id="support-modal" class="modal-overlay" style="display: none; z-index: 100;">
-        <div class="modal-container max-w-md text-center bg-gray-800 border border-gray-600">
+        <div class="modal-container max-w-md text-center bg-[#101B2C] border border-[rgba(120,166,212,0.16)]">
             <div class="flex justify-center mb-4">
-                <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-3xl">  <img src= "assets/support_icon.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMi yIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0xIDE3aC-MnYxMy0xaDN6bTEuMjUtNC4xMmMuNzYuNzYgMS43NSAxLjEyIDIuNzUgMS4xMnYzYy0yLjUgMC00LjgzLS45OC02LjYtMi41OWwtMS4xNS0xLjE1Yy42MS0uNDUgMS4zNS0uNzMgMi4xNS0uNzMuNTUgMCAxLjA4LjEzIDEuNTcuMzVsMS4yOCAxem0tMS4yNS0xLjEzYy0uNTgtLjM1LTEuMjYtLjU1LTItLjU1LTEuMSAwLTIuMTIuNDMtMi44NyAxLjE5bC0xLjE1LTEuMTVDNy40MyA5LjQzIDkuNDggOCAxMiA4czQuNTggMS40MyA2LjA1IDMuMjlsLTEuMTUgMS4xNWMtLjc1LS43Ni0xLjc3LTEuMTktMi45LTEuMTl6Ii8+PC9zdmc+'" class="w-5 h-5 object-contain">
+                <div class="w-16 h-16 bg-[#16233A] rounded-full flex items-center justify-center text-3xl">  <img src= "assets/support_icon.png" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0id2hpdGUiPjxwYXRoIGQ9Ik0xMiAyQzYuNDggMi yIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0xIDE3aC-MnYxMy0xaDN6bTEuMjUtNC4xMmMuNzYuNzYgMS43NSAxLjEyIDIuNzUgMS4xMnYzYy0yLjUgMC00LjgzLS45OC02LjYtMi41OWwtMS4xNS0xLjE1Yy42MS0uNDUgMS4zNS0uNzMgMi4xNS0uNzMuNTUgMCAxLjA4LjEzIDEuNTcuMzVsMS4yOCAxem0tMS4yNS0xLjEzYy0uNTgtLjM1LTEuMjYtLjU1LTItLjU1LTEuMSAwLTIuMTIuNDMtMi44NyAxLjE5bC0xLjE1LTEuMTVDNy40MyA5LjQzIDkuNDggOCAxMiA4czQuNTggMS40MyA2LjA1IDMuMjlsLTEuMTUgMS4xNWMtLjc1LS43Ni0xLjc3LTEuMTktMi45LTEuMTl6Ii8+PC9zdmc+'" class="w-5 h-5 object-contain">
                     </div>
             </div>
             <h3 class="text-2xl font-bold text-white mb-2">Technical Support</h3>
-            <p class="text-gray-400 text-sm mb-6">For operational issues or technical assistance, please contact:</p>
-            <div class="bg-gray-900 rounded-xl p-5 text-left border border-gray-700 mb-6">
+            <p class="text-[#9AB0C8] text-sm mb-6">For operational issues or technical assistance, please contact:</p>
+            <div class="bg-[#0C1727] rounded-xl p-5 text-left border border-[rgba(120,166,212,0.16)] mb-6">
                 <p class=" py-2 text-white gap-3">Mariam Antar</p>
-                <p class="text-gray-300 text-sm mb-3">Operation & Technical Support Engineer</p>
+                <p class="text-[#9AB0C8] text-sm mb-3">Operation & Technical Support Engineer</p>
                 <div class="flex items-center gap-3 mb-2"><a href="tel:+201002983398" class="text-white hover:text-blue-400">+20 100 298 3398</a></div>
                 <div class="flex items-center gap-3"><a href="mailto:m.antar@mcsoil.com" class="text-white hover:text-blue-400">m.antar@mcsoil.com</a></div>
             </div>
@@ -1667,21 +1962,21 @@
     </div>
 
     <div id="privacy-policy-modal" class="modal-overlay" style="display: none; z-index: 100;">
-        <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600 text-left">
-            <div class="flex justify-between items-center mb-5 border-b border-gray-700 pb-4">
+        <div class="modal-container max-w-2xl bg-[#101B2C] border border-[rgba(120,166,212,0.16)] text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-[rgba(120,166,212,0.16)] pb-4">
                 <h3 class="text-xl font-bold text-white">Security &amp; Privacy Policy</h3>
-                <button onclick="closePrivacyPolicy()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                <button onclick="closePrivacyPolicy()" class="text-[#9AB0C8] hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+            <div class="space-y-4 text-[#9AB0C8] text-sm leading-relaxed">
                 <p><span class="font-bold text-white">Our Commitment to Your Data.</span> Welcome to the MiniSpector Logs Portal. This portal is designed to help you manage ROV operational data securely. We are committed to protecting the privacy of our users and the confidentiality of the operational logs stored here.</p>
 
                 <div>
                     <h4 class="text-white font-bold mb-1">1. What Data Do We Collect?</h4>
                     <p class="mb-2">We collect only the data needed to run this logging system:</p>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-gray-200">Your User Profile:</span> We collect your professional contact info (name, work email, company) to create your account and secure your access.</li>
-                        <li><span class="font-semibold text-gray-200">The Operational Logs:</span> The main purpose of the portal is to store the dive details, equipment status, and maintenance reports you enter. (For this data, your employer is the "Data Controller," and we are the "Data Processor.")</li>
-                        <li><span class="font-semibold text-gray-200">Technical Usage Info:</span> We automatically collect basic data from your web browser (like your IP address) to keep the system secure and running smoothly.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Your User Profile:</span> We collect your professional contact info (name, work email, company) to create your account and secure your access.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">The Operational Logs:</span> The main purpose of the portal is to store the dive details, equipment status, and maintenance reports you enter. (For this data, your employer is the "Data Controller," and we are the "Data Processor.")</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Technical Usage Info:</span> We automatically collect basic data from your web browser (like your IP address) to keep the system secure and running smoothly.</li>
                     </ul>
                 </div>
 
@@ -1698,9 +1993,9 @@
                 <div>
                     <h4 class="text-white font-bold mb-1">3. Data Storage and Security</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-gray-200">Secure Servers:</span> We store your data on secure servers.</li>
-                        <li><span class="font-semibold text-gray-200">Encryption:</span> We use advanced encryption to protect your data while it travels over the Internet and while it is stored in our database.</li>
-                        <li><span class="font-semibold text-gray-200">Restricted Access:</span> Access to logs is strictly limited to authorized users associated with that specific operation.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Secure Servers:</span> We store your data on secure servers.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Encryption:</span> We use advanced encryption to protect your data while it travels over the Internet and while it is stored in our database.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Restricted Access:</span> Access to logs is strictly limited to authorized users associated with that specific operation.</li>
                     </ul>
                 </div>
 
@@ -1724,19 +2019,19 @@
     </div>
 
     <div id="terms-of-service-modal" class="modal-overlay" style="display: none; z-index: 100;">
-        <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600 text-left">
-            <div class="flex justify-between items-center mb-5 border-b border-gray-700 pb-4">
+        <div class="modal-container max-w-2xl bg-[#101B2C] border border-[rgba(120,166,212,0.16)] text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-[rgba(120,166,212,0.16)] pb-4">
                 <h3 class="text-xl font-bold text-white">Terms of Service</h3>
-                <button onclick="closeTermsOfService()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                <button onclick="closeTermsOfService()" class="text-[#9AB0C8] hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+            <div class="space-y-4 text-[#9AB0C8] text-sm leading-relaxed">
                 <p><span class="font-bold text-white">By Using This Portal, You Agree to These Terms.</span> Welcome to the MiniSpector Logs Portal. These Terms are a simple agreement between you and MCS. By logging in and using this system, you agree to follow these rules.</p>
 
                 <div>
                     <h4 class="text-white font-bold mb-1">1. Using Your Account</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-gray-200">Authorized Use:</span> This portal is for authorized MCS personnel and our Clients only.</li>
-                        <li><span class="font-semibold text-gray-200">Keep Your Password Secret:</span> You are responsible for keeping your login credentials safe. Do not share your password with anyone.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Authorized Use:</span> This portal is for authorized MCS personnel and our Clients only.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Keep Your Password Secret:</span> You are responsible for keeping your login credentials safe. Do not share your password with anyone.</li>
                     </ul>
                 </div>
 
@@ -1752,16 +2047,16 @@
                 <div>
                     <h4 class="text-white font-bold mb-1">3. Operational Data and Accuracy</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-gray-200">Data Entry is Your Responsibility:</span> The accuracy and completeness of all logs, checklists, and fault reports depend entirely on you. MCS is not responsible for any incorrect data you enter.</li>
-                        <li><span class="font-semibold text-gray-200">Operational Decisions Are Yours:</span> This portal is a tool for documentation. All on-site decisions, such as a "Ready to Dive" call or safety assessment, are the sole responsibility of the on-site team (Pilot, Supervisor, etc.) and your company.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Data Entry is Your Responsibility:</span> The accuracy and completeness of all logs, checklists, and fault reports depend entirely on you. MCS is not responsible for any incorrect data you enter.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Operational Decisions Are Yours:</span> This portal is a tool for documentation. All on-site decisions, such as a "Ready to Dive" call or safety assessment, are the sole responsibility of the on-site team (Pilot, Supervisor, etc.) and your company.</li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-white font-bold mb-1">4. Important Disclaimers and Limitations</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-gray-200">"As-Is" System:</span> We provide this logging system "as-is." While we work hard to keep it available and error-free, we cannot guarantee it will never have issues.</li>
-                        <li><span class="font-semibold text-gray-200">Limitation of Liability:</span> To the maximum extent permitted by law, MCS will not be responsible for any damages or operational losses (like downtime) that may occur in connection with your use of this portal.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">"As-Is" System:</span> We provide this logging system "as-is." While we work hard to keep it available and error-free, we cannot guarantee it will never have issues.</li>
+                        <li><span class="font-semibold text-[#E9F0F8]">Limitation of Liability:</span> To the maximum extent permitted by law, MCS will not be responsible for any damages or operational losses (like downtime) that may occur in connection with your use of this portal.</li>
                     </ul>
                 </div>
 
@@ -1785,35 +2080,35 @@
     </div>
 
 <div id="standby-selector-modal" class="modal-overlay" style="display: none; z-index: 60;">
-    <div class="modal-container max-w-2xl bg-gray-800 border border-gray-600">
-        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+    <div class="modal-container max-w-2xl bg-[#101B2C] border border-[rgba(120,166,212,0.16)]">
+        <div class="flex justify-between items-center mb-6 border-b border-[rgba(120,166,212,0.16)] pb-4">
             <h3 class="text-2xl font-bold text-white">Select Standby Category</h3>
-            <button onclick="closeStandbySelector()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            <button onclick="closeStandbySelector()" class="text-[#9AB0C8] hover:text-white text-2xl">&times;</button>
         </div>
         
 
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="triggerQuickStandby('Mechanical Fault')" class="p-6 bg-gray-700  border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Mechanical Fault')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Mechanical Fault</h4>
             </button>
 
-            <button onclick="triggerQuickStandby('Vessel Operations')" class="p-6 bg-gray-700  border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Vessel Operations')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Vessel Operations</h4>
             </button>
 
-            <button onclick="triggerQuickStandby('Weather')" class="p-6 bg-gray-700  border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Weather')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Weather</h4>
             </button>
 
-            <button onclick="triggerQuickStandby('Crew Change')" class="p-6 bg-gray-700 border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Crew Change')" class="p-6 bg-[#16233A] border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Crew Change</h4>
             </button>
 
-            <button onclick="triggerQuickStandby('Maintenance')" class="p-6 bg-gray-700  border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Maintenance')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Maintenance</h4>
             </button>
 
-            <button onclick="triggerQuickStandby('Client Request')" class="p-6 bg-gray-700  border border-gray-600 hover:border-blue-400 rounded-xl transition-all group">
+            <button onclick="triggerQuickStandby('Client Request')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Client Request</h4>
             </button>
         </div>

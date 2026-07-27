@@ -9,21 +9,103 @@ export function showToast(message, type = 'info') {
     document.body.appendChild(host);
   }
   const colors = {
-    success: { bg: '#16a34a', border: '#22c55e' },
-    error:   { bg: '#dc2626', border: '#ef4444' },
-    warn:    { bg: '#d97706', border: '#f59e0b' },
-    info:    { bg: '#2563eb', border: '#3b82f6' },
+    success: '#22c55e',
+    error:   '#f87171',
+    warn:    '#f39124',
+    info:    '#459fd9',
   };
-  const c = colors[type] || colors.info;
+  const accent = colors[type] || colors.info;
   const el = document.createElement('div');
   el.textContent = message;
-  el.style.cssText = `background:${c.bg};border:1px solid ${c.border};color:white;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:auto;`;
+  el.style.cssText = `background:#101B2C;border:1px solid rgba(120,166,212,0.16);border-left:3px solid ${accent};color:#E9F0F8;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 18px 40px -24px rgba(0,0,0,0.9);pointer-events:auto;`;
   host.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
 
 export function notImplemented(feature) {
   showToast(`${feature} — coming in a later update.`, 'info');
+}
+
+// Shown at the top of Sensors/Topology once a simulation has been pushed to
+// Operation (simState.locked) — those tabs stay editable, but Pre-Op/Final
+// Setup are a snapshot taken at push time, so further edits here won't show
+// up anywhere until the simulation is pushed again.
+export function renderLockedNotice() {
+  const div = document.createElement('div');
+  div.className = 'mb-5 flex items-center gap-3 px-4 py-3 rounded-xl';
+  div.style.cssText = 'background:rgba(243,145,36,0.08);border:1px solid rgba(243,145,36,0.25);';
+  div.innerHTML = `<span style="font-size:16px;line-height:1">⚠</span>
+    <span class="text-xs" style="color:#f39124">This simulation has already been pushed to Operation. Edits made here won't appear in Pre-Op or Final Setup until you push again.</span>`;
+  return div;
+}
+
+// Toggles the active nav item within `scopeSelector` and keeps aria-current
+// in sync with the visual `.active` class so they can never disagree.
+export function setActiveNavItem(el, scopeSelector = '.nav-item') {
+  document.querySelectorAll(scopeSelector).forEach(item => {
+    item.classList.remove('active');
+    item.removeAttribute('aria-current');
+  });
+  if (el) {
+    el.classList.add('active');
+    el.setAttribute('aria-current', 'page');
+  }
+}
+
+// Sidebar user card (name + avatar initials + role). The avatar/role are
+// only visible in Simulation mode CSS; safe to call from Operation mode too.
+export function setUserCardName(name) {
+  const nameEl = document.getElementById('display-user-id');
+  if (nameEl) nameEl.innerText = name;
+  const avatarEl = document.getElementById('user-avatar');
+  if (avatarEl) {
+    const initials = String(name || '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    avatarEl.textContent = initials || '?';
+  }
+}
+
+export function setUserCardRole(role) {
+  const roleEl = document.getElementById('display-user-role');
+  if (!roleEl) return;
+  const labels = { operator: 'Operator', viewer: 'Viewer', approver: 'Approver', member: 'Member' };
+  roleEl.textContent = labels[role] || (role ? role.charAt(0).toUpperCase() + role.slice(1) : '');
+}
+
+// Shared section-card frame — used by finalSetup.js and preOp.js, which
+// both built their own near-identical version of this before the reskin.
+// `body` may be an HTML string or a DOM node; `padded` adds card padding
+// (for free-form content) vs edge-to-edge (for tables, which scroll inside
+// the card themselves).
+export function renderSectionCard(dotColor, title, subtitle, body, { padded = false } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'rcard mb-4';
+  const header = document.createElement('div');
+  header.className = 'flex items-center gap-2.5 px-5 py-3 border-b rcard-head';
+  header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#E9F0F8">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>`;
+  wrap.appendChild(header);
+  const bodyWrap = document.createElement('div');
+  bodyWrap.className = padded ? 'p-4' : '';
+  if (!padded) bodyWrap.style.overflowX = 'auto';
+  if (typeof body === 'string') bodyWrap.innerHTML = body;
+  else if (body instanceof Node) bodyWrap.appendChild(body);
+  wrap.appendChild(bodyWrap);
+  return wrap;
+}
+
+export function calBadge(ok) {
+  return ok
+    ? `<span style="padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(243,145,36,0.12);color:#f39124;border:1px solid rgba(243,145,36,0.3)">✓ CAL</span>`
+    : `<span style="padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)">✗ CAL</span>`;
+}
+export function tstBadge(ok) {
+  return ok
+    ? `<span style="padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.3)">✓ TST</span>`
+    : `<span style="padding:2px 8px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)">✗ TST</span>`;
+}
+export function rdyBadge(ok) {
+  return ok
+    ? `<span style="padding:2px 10px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(243,145,36,0.12);color:#f39124;border:1px solid rgba(243,145,36,0.3)">READY</span>`
+    : `<span style="padding:2px 10px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)">CHECK</span>`;
 }
 
 export function escapeHtml(str) {

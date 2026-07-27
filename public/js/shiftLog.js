@@ -51,13 +51,13 @@ export function openShiftModal(index = -1) {
 
   const opt = (val, cur) => `<option value="${escapeHtml(val)}"${cur === val ? ' selected' : ''}>${escapeHtml(val)}</option>`;
   const crewSection = roster.length === 0
-    ? `<p style="color:#6b7280;font-size:0.75rem;font-style:italic;padding:8px 0;">Add crew members in the Crew tab first, then they'll appear here.</p>`
+    ? `<p style="color:#6C88A6;font-size:0.75rem;font-style:italic;padding:8px 0;">Add crew members in the Crew tab first, then they'll appear here.</p>`
     : roster.map(c => {
-      const color = ROLE_COLORS_MAP[c.role] || '#6b7280';
+      const color = ROLE_COLORS_MAP[c.role] || '#6C88A6';
       return `<label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;">
         <input type="checkbox" value="${escapeHtml(c.name)}" ${selectedCrew.includes(c.name) ? 'checked' : ''} style="width:15px;height:15px;accent-color:#459fd9;flex-shrink:0;">
         <div style="width:28px;height:28px;border-radius:50%;background:${color}22;color:${color};border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.68rem;flex-shrink:0;">${getInitials(c.name)}</div>
-        <span style="font-size:0.82rem;color:#d1d5db;font-weight:500;flex:1;">${escapeHtml(c.name)}</span>
+        <span style="font-size:0.82rem;color:#E9F0F8;font-weight:500;flex:1;">${escapeHtml(c.name)}</span>
         <span style="font-size:0.68rem;color:${color};font-weight:600;">${escapeHtml(c.role)}</span>
       </label>`;
     }).join('');
@@ -65,20 +65,20 @@ export function openShiftModal(index = -1) {
   document.getElementById('modal-title').textContent = 'Shift Log Entry';
   document.getElementById('entry-modal').style.display = 'flex';
   document.getElementById('modal-content-area').innerHTML = `
-    <div class="grid-2"><div><label class="text-xs text-gray-500">Shift No.</label><input id="m_sh_no" value="${escapeHtml(String(nextNo))}"></div><div></div></div>
+    <div class="grid-2"><div><label class="text-xs font-semibold" style="color:#9AB0C8">Shift No.</label><input id="m_sh_no" value="${escapeHtml(String(nextNo))}"></div><div></div></div>
     <div class="grid-2">
-      <div><label class="text-xs text-gray-500">Start Date</label><input type="date" id="m_sh_start" value="${entry.startDate || ''}"></div>
-      <div><label class="text-xs text-gray-500">End Date</label><input type="date" id="m_sh_end" value="${entry.endDate || ''}"></div>
+      <div><label class="text-xs font-semibold" style="color:#9AB0C8">Start Date</label><input type="date" id="m_sh_start" value="${entry.startDate || ''}"></div>
+      <div><label class="text-xs font-semibold" style="color:#9AB0C8">End Date</label><input type="date" id="m_sh_end" value="${entry.endDate || ''}"></div>
     </div>
     <div class="grid-2">
-      <div><label class="text-xs text-gray-500">Weather</label><select id="m_sh_weather"><option value="">— Select —</option>${WEATHER_OPTIONS.map(w => opt(w, entry.weather)).join('')}</select></div>
-      <div><label class="text-xs text-gray-500">Visibility</label><select id="m_sh_vis"><option value="">— Select —</option>${VISIBILITY_OPTIONS.map(v => opt(v, entry.visibility)).join('')}</select></div>
+      <div><label class="text-xs font-semibold" style="color:#9AB0C8">Weather</label><select id="m_sh_weather"><option value="">— Select —</option>${WEATHER_OPTIONS.map(w => opt(w, entry.weather)).join('')}</select></div>
+      <div><label class="text-xs font-semibold" style="color:#9AB0C8">Visibility</label><select id="m_sh_vis"><option value="">— Select —</option>${VISIBILITY_OPTIONS.map(v => opt(v, entry.visibility)).join('')}</select></div>
     </div>
-    <div><label class="text-xs text-gray-500">Temperature (°C)</label><input id="m_sh_temp" value="${escapeHtml(entry.temperature || '')}"></div>
-    <div><label class="text-xs text-gray-500">Notes</label><textarea id="m_sh_notes">${escapeHtml(entry.notes || '')}</textarea></div>
+    <div><label class="text-xs font-semibold" style="color:#9AB0C8">Temperature (°C)</label><input id="m_sh_temp" value="${escapeHtml(entry.temperature || '')}"></div>
+    <div><label class="text-xs font-semibold" style="color:#9AB0C8">Notes</label><textarea id="m_sh_notes">${escapeHtml(entry.notes || '')}</textarea></div>
     <div>
-      <label class="text-xs text-gray-500" style="display:block;margin-bottom:6px;">Crew on this Shift</label>
-      <div style="border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:4px;max-height:180px;overflow-y:auto;">${crewSection}</div>
+      <label class="text-xs font-semibold" style="color:#9AB0C8;display:block;margin-bottom:6px;">Crew on this Shift</label>
+      <div style="border:1px solid rgba(120,166,212,0.12);border-radius:10px;padding:4px;max-height:180px;overflow-y:auto;">${crewSection}</div>
     </div>`;
 }
 
@@ -110,7 +110,7 @@ export function renderShiftLog() {
   if (!container) return;
   const shifts = state.currentReportData.shiftLogs || [];
   if (shifts.length === 0) {
-    container.innerHTML = `<p style="color:#4b5563;font-style:italic;text-align:center;padding:24px 0;font-size:0.875rem;">No shifts recorded yet. Click "+ Add Shift" to begin.</p>`;
+    container.innerHTML = `<p style="color:#6C88A6;font-style:italic;text-align:center;padding:24px 0;font-size:0.875rem;">No shifts recorded yet. Click "+ Add Shift" to begin.</p>`;
     syncShiftSummaryFields();
     return;
   }
@@ -121,10 +121,10 @@ export function renderShiftLog() {
   }, 0);
 
   container.innerHTML = `
-    <div style="display:flex;gap:20px;margin-bottom:14px;padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(255,255,255,0.05);">
-      <span style="font-size:0.75rem;color:#6b7280;">Total Shifts: <strong style="color:#f9fafb;">${shifts.length}</strong></span>
-      <span style="font-size:0.75rem;color:#6b7280;">Total Days Logged: <strong style="color:#f9fafb;">${totalDays}</strong></span>
-      <span style="font-size:0.75rem;color:#6b7280;">Period: <strong style="color:#f9fafb;">${shifts[0]?.startDate || '—'} → ${shifts[shifts.length - 1]?.endDate || '—'}</strong></span>
+    <div style="display:flex;gap:20px;margin-bottom:14px;padding:10px 14px;background:rgba(16,27,44,0.5);border-radius:10px;border:1px solid rgba(120,166,212,0.16);">
+      <span style="font-size:0.75rem;color:#6C88A6;">Total Shifts: <strong style="color:#E9F0F8;">${shifts.length}</strong></span>
+      <span style="font-size:0.75rem;color:#6C88A6;">Total Days Logged: <strong style="color:#E9F0F8;">${totalDays}</strong></span>
+      <span style="font-size:0.75rem;color:#6C88A6;">Period: <strong style="color:#E9F0F8;">${shifts[0]?.startDate || '—'} → ${shifts[shifts.length - 1]?.endDate || '—'}</strong></span>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;" id="shift-rows"></div>`;
 
@@ -133,25 +133,25 @@ export function renderShiftLog() {
   shifts.forEach((sh, i) => {
     const dayCount = (sh.startDate && sh.endDate) ? Math.max(0, Math.round((new Date(sh.endDate) - new Date(sh.startDate)) / 86400000) + 1) : null;
     const row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:14px;padding:14px 16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.05);border-radius:12px;';
+    row.style.cssText = 'display:grid;grid-template-columns:90px 1fr auto;align-items:center;gap:14px;padding:14px 16px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.16);border-radius:12px;';
     row.innerHTML = `
       <div style="text-align:center;background:rgba(69,159,217,0.12);border:1px solid rgba(69,159,217,0.2);border-radius:10px;padding:8px 4px;">
         <div style="font-size:0.65rem;color:#459fd9;font-weight:700;text-transform:uppercase;">Shift</div>
-        <div style="font-size:1.4rem;font-weight:800;color:#f9fafb;line-height:1.1;">${escapeHtml(String(sh.shiftNo))}</div>
-        ${dayCount !== null ? `<div style="font-size:0.6rem;color:#6b7280;margin-top:2px;">${dayCount}d</div>` : ''}
+        <div style="font-size:1.4rem;font-weight:800;color:#E9F0F8;line-height:1.1;">${escapeHtml(String(sh.shiftNo))}</div>
+        ${dayCount !== null ? `<div style="font-size:0.6rem;color:#6C88A6;margin-top:2px;">${dayCount}d</div>` : ''}
       </div>
       <div>
-        <div style="font-weight:600;color:#f9fafb;font-size:0.875rem;margin-bottom:4px;">${escapeHtml(sh.startDate || '—')} → ${escapeHtml(sh.endDate || '—')}</div>
+        <div style="font-weight:600;color:#E9F0F8;font-size:0.875rem;margin-bottom:4px;">${escapeHtml(sh.startDate || '—')} → ${escapeHtml(sh.endDate || '—')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${sh.weather ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:#9ca3af;">${WEATHER_ICON[sh.weather] || '🌡️'} ${escapeHtml(sh.weather)}</span>` : ''}
-          ${sh.visibility ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:#9ca3af;">👁 ${escapeHtml(sh.visibility)}</span>` : ''}
-          ${sh.temperature ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:#9ca3af;">🌡 ${escapeHtml(sh.temperature)}°C</span>` : ''}
+          ${sh.weather ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(120,166,212,0.12);color:#9AB0C8;">${WEATHER_ICON[sh.weather] || '🌡️'} ${escapeHtml(sh.weather)}</span>` : ''}
+          ${sh.visibility ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(120,166,212,0.12);color:#9AB0C8;">👁 ${escapeHtml(sh.visibility)}</span>` : ''}
+          ${sh.temperature ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(120,166,212,0.12);color:#9AB0C8;">🌡 ${escapeHtml(sh.temperature)}°C</span>` : ''}
         </div>
-        ${sh.crew?.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${sh.crew.map(n => { const r = roster.find(c => c.name === n); const col = ROLE_COLORS_MAP[r?.role] || '#6b7280'; return `<span style="font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${col}18;color:${col};border:1px solid ${col}33;">${escapeHtml(n)}</span>`; }).join('')}</div>` : ''}
-        ${sh.notes ? `<div style="font-size:0.72rem;color:#6b7280;margin-top:4px;font-style:italic;">${escapeHtml(sh.notes.substring(0, 80))}${sh.notes.length > 80 ? '…' : ''}</div>` : ''}
+        ${sh.crew?.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${sh.crew.map(n => { const r = roster.find(c => c.name === n); const col = ROLE_COLORS_MAP[r?.role] || '#6C88A6'; return `<span style="font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:20px;background:${col}18;color:${col};border:1px solid ${col}33;">${escapeHtml(n)}</span>`; }).join('')}</div>` : ''}
+        ${sh.notes ? `<div style="font-size:0.72rem;color:#6C88A6;margin-top:4px;font-style:italic;">${escapeHtml(sh.notes.substring(0, 80))}${sh.notes.length > 80 ? '…' : ''}</div>` : ''}
       </div>
       <div style="display:flex;gap:4px;">
-        <button type="button" class="shift-edit-btn" style="font-size:0.72rem;font-weight:600;color:#60a5fa;cursor:pointer;padding:5px 10px;border-radius:6px;background:transparent;border:none;">Edit</button>
+        <button type="button" class="shift-edit-btn" style="font-size:0.72rem;font-weight:600;color:#459fd9;cursor:pointer;padding:5px 10px;border-radius:6px;background:transparent;border:none;">Edit</button>
         <button type="button" class="shift-del-btn" style="font-size:0.72rem;font-weight:600;color:#f87171;cursor:pointer;padding:5px 10px;border-radius:6px;background:transparent;border:none;">Del</button>
       </div>`;
     row.querySelector('.shift-edit-btn').addEventListener('click', () => openShiftModal(i));

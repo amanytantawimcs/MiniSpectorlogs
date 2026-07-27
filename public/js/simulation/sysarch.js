@@ -4,7 +4,7 @@
 // and issues (new in the rebuild — the old app tracked issues in its data
 // model but never built any UI for them).
 
-import { escapeHtml } from '../ui.js';
+import { escapeHtml, renderLockedNotice } from '../ui.js';
 import { simState } from './state.js';
 import { EQUIP_CATEGORIES, EQUIP_CAT_COLORS, HARDWARE_ITEMS, MACHINE_NAMES, SOFTWARE_LIST, DEFAULT_SYSTEM_IPS } from './config.js';
 import { renderSimContent, scheduleSimSync } from './core.js';
@@ -34,11 +34,10 @@ function chevronSvg(collapsed) {
 
 function card(title, key) {
   const el = document.createElement('div');
-  el.className = 'mb-5 rounded-xl overflow-hidden';
-  el.style.cssText = 'background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.5);';
+  el.className = 'rcard mb-5';
 
   const header = document.createElement('div');
-  header.className = 'flex items-center justify-between px-6 py-3.5 border-b border-gray-700/50';
+  header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head';
 
   const titleGroup = document.createElement('div');
   titleGroup.className = 'flex items-center gap-3 cursor-pointer select-none';
@@ -138,7 +137,7 @@ function renderMachines(sa) {
 
 // ---- Equipment & Consumables (merged: replaces old sysarch.equipment + packingList) ----
 function renderEquipment(sa) {
-  const { el, header, body } = card('Equipment & Consumables', 'equipment');
+  const { el, header, body } = card('Equipment', 'equipment');
   header.appendChild(addBtn('Add Item', () => { sa.equipment.push({ batch: '', category: EQUIP_CATEGORIES[0], item: '', serial: '', qty: 1, rovAssignment: 'Shared', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -393,13 +392,28 @@ export function renderSysArchContent(area) {
   `;
 
   const wrap = document.createElement('div');
-  wrap.className = 'max-w-5xl mx-auto pb-6';
-  const title = document.createElement('h3');
-  title.className = 'text-xl font-bold text-white mb-5';
-  title.textContent = 'Topology';
-  wrap.appendChild(title);
+  wrap.className = 'mx-auto pb-6';
+  wrap.style.maxWidth = '1400px';
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'mb-6';
+  titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Topology</h3>
+    <p class="text-gray-400 mt-1 text-sm">Track system architecture, IPs, deliverables, and payload equipment for this mission.</p>`;
+  wrap.appendChild(titleWrap);
+  if (simState.locked) wrap.appendChild(renderLockedNotice());
 
-  wrap.append(renderMachines(sa), renderEquipment(sa), renderSimStatus(sa), renderDeliverables(sa), renderSystemIPs(sa), renderIssues());
+  const sectionHeading = document.createElement('div');
+  sectionHeading.className = 'text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3';
+  sectionHeading.textContent = 'Inspection Systems';
+  wrap.appendChild(sectionHeading);
+
+  wrap.append(renderMachines(sa), renderSimStatus(sa), renderDeliverables(sa), renderSystemIPs(sa), renderIssues());
+
+  const payloadsHeading = document.createElement('div');
+  payloadsHeading.className = 'text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3 mt-2';
+  payloadsHeading.textContent = 'Payloads';
+  wrap.appendChild(payloadsHeading);
+
+  wrap.append(renderEquipment(sa));
 
   area.appendChild(datalists);
   area.appendChild(wrap);

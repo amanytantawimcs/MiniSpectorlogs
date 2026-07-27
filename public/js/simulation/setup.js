@@ -1,12 +1,26 @@
-// Step 1 of the Simulation flow: Mission Info + MiniSpector (ROV) grid.
-// Ported from the old app's setup wizard, rewritten to use addEventListener on
-// dynamically-built elements instead of inline onclick strings.
+// Step 1 of the Simulation flow: Mission Info (project details + a
+// searchable, editable operation-scope catalog) and MiniSpectors (a fleet
+// picker with fit/battery/availability, filters, and auto-assign).
 
 import { state } from '../state.js';
-import { showToast } from '../ui.js';
+import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
-import { OPERATION_SCOPES, MINISPECTOR_FIXED_SENSORS } from './config.js';
-import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell } from './core.js';
+import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
+import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
+import { UNIT_META, STATE_LABEL, capsFor } from './unitMeta.js';
+import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem } from './core.js';
+
+const SENSOR_ALL = Object.keys(SENSOR_HARDWARE);
+const ROV_SVG = '<img src="assets/rov_icon.png" alt="MiniSpector"/>';
+
+// Scope-editing scratch state (what's shown/edited in the catalog detail
+// panel). simState.selectedScope only ever holds a catalog id (or null for
+// a blank/unsaved bundle) — this holds the live req/opt arrays being edited.
+let scopeSelectedId = null;
+let scopeWorking = null;
+let scopeDirty = false;
+let scopeSearchEl = null;
+let scopeFamEl = null;
 
 function rovHasDiveLogs(num) {
   const logs = state.currentReportData.diveLogs || [];
@@ -16,88 +30,203 @@ function rovHasDiveLogs(num) {
   });
 }
 
-function updateScopePreview(scopeId) {
-  const preview = document.getElementById('sim-scope-preview');
-  const reqEl = document.getElementById('scope-preview-required');
-  const optEl = document.getElementById('scope-preview-optional');
-  if (!preview || !scopeId || !OPERATION_SCOPES[scopeId]) {
-    preview?.classList.add('hidden');
-    return;
-  }
-  const scope = OPERATION_SCOPES[scopeId];
-  const required = scope.sensors.filter(s => s.status === 'required').map(s => s.name);
-  const optional = scope.sensors.filter(s => s.status === 'optional').map(s => s.name);
-  reqEl.innerText = required.join(' · ') || '—';
-  optEl.innerText = optional.join(' · ') || 'None';
-  preview.classList.remove('hidden');
+function cloneBundle(b) {
+  return { id: b.id, fam: b.fam, name: b.name, req: b.req.slice(), opt: b.opt.slice() };
 }
 
-function renderROVChips() {
-  const container = document.getElementById('sim-rov-chips');
-  if (!container) return;
-  container.innerHTML = '';
-  for (let num = 1; num <= 12; num++) {
-    const role = simState.selectedROVs.get(num);
-    const selected = role !== undefined;
-    const isMain = role === 'main';
+function syncScopeWorkingFromState() {
+  const found = simState.selectedScope ? findScope(simState.selectedScope) : null;
+  if (found) {
+    scopeSelectedId = simState.selectedScope;
+    scopeWorking = { id: found.id, fam: found.fam, name: found.name, req: found.req.slice(), opt: found.opt.slice() };
+    scopeDirty = false;
+  } else {
+    scopeSelectedId = null;
+    scopeWorking = null;
+    scopeDirty = false;
+  }
+}
 
-    const chip = document.createElement('div');
-    chip.className = `relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all select-none ${
-      selected ? 'border-orange-500 bg-orange-500/10 shadow-md shadow-orange-500/10'
-               : 'border-yellow-500/50 bg-gray-800/50 hover:bg-yellow-500/5'
-    }`;
+/* ---------------- Operation scope catalog ---------------- */
 
-    chip.innerHTML = `
-      ${selected ? `<button type="button" class="rov-remove-btn absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center rounded-full bg-gray-700 hover:bg-red-500/30 text-gray-500 hover:text-red-400 text-[10px] font-bold transition-all leading-none">&#215;</button>` : ''}
-      <div class="w-14 h-14 rounded-lg flex items-center justify-center transition-all ${selected ? 'bg-orange-500/20' : 'bg-yellow-500/10'}">
-        <img src="assets/rov_icon.png" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+function renderScopeCatalog() {
+  const term = (scopeSearchEl?.value || '').trim().toLowerCase();
+  const fam = scopeFamEl?.value || '';
+  const all = getAllBundles();
+  const list = all.filter(b => {
+    if (fam && b.fam !== fam) return false;
+    if (!term) return true;
+    return (b.name + ' ' + b.id + ' ' + b.req.join(' ') + ' ' + b.opt.join(' ')).toLowerCase().indexOf(term) > -1;
+  });
+
+  const countEl = document.getElementById('scope-cat-count');
+  if (countEl) countEl.textContent = `${list.length} of ${all.length} bundles`;
+
+  const catEl = document.getElementById('scope-catalog');
+  if (!catEl) return;
+  if (!list.length) {
+    catEl.innerHTML = '<p class="scope-empty">No bundle matches that. Try a sensor name, or start a blank bundle.</p>';
+    return;
+  }
+
+  const fams = [];
+  list.forEach(b => { if (fams.indexOf(b.fam) < 0) fams.push(b.fam); });
+  let html = '';
+  fams.forEach(f => {
+    html += `<p class="scope-fam-label">${escapeHtml(f)}</p><div class="scope-bundles-grid">`;
+    list.filter(b => b.fam === f).forEach(b => {
+      html += `<button type="button" class="scope-bundle-btn" aria-pressed="${b.id === scopeSelectedId}" data-id="${escapeHtml(b.id)}">
+        <div class="row"><span class="scope-bundle-mark"><svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+        <span><h4>${escapeHtml(b.name)}</h4></span></div>
+        ${b.custom ? '<span class="scope-bundle-tag">custom</span>' : ''}</button>`;
+    });
+    html += '</div>';
+  });
+  catEl.innerHTML = html;
+  catEl.querySelectorAll('.scope-bundle-btn').forEach(el => {
+    el.addEventListener('click', () => pickBundle(el.dataset.id));
+  });
+}
+
+function pickBundle(id) {
+  if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
+  const found = getAllBundles().find(b => b.id === id);
+  if (!found) return;
+  scopeSelectedId = id;
+  scopeWorking = cloneBundle(found);
+  scopeDirty = false;
+  simState.selectedScope = id;
+  renderScopeCatalog();
+  renderScopeDetail();
+  renderUnitGrid();
+  updateBeginBtn();
+}
+
+function chipList(names, kind) {
+  if (!names.length) return '<span class="scope-empty">None</span>';
+  return names.map(s => `<span class="scope-sensor-chip ${kind === 'req' ? 'req' : ''}">${escapeHtml(s)}
+    <button type="button" data-rm="${escapeHtml(s)}" data-kind="${kind}" aria-label="Remove ${escapeHtml(s)}">
+      <svg xmlns="http://www.w3.org/2000/svg" style="width:11px;height:11px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button></span>`).join('');
+}
+
+function sensorOptions(used) {
+  return SENSOR_ALL.filter(s => used.indexOf(s) < 0).map(s => `<option>${escapeHtml(s)}</option>`).join('');
+}
+
+function renderScopeDetail() {
+  const detEl = document.getElementById('scope-detail');
+  if (!detEl) return;
+  if (!scopeWorking) {
+    detEl.innerHTML = '<div style="padding:24px;text-align:center"><p class="scope-empty">Pick a bundle above to see and edit its sensor loadout.</p></div>';
+    return;
+  }
+  const used = scopeWorking.req.concat(scopeWorking.opt);
+  detEl.innerHTML = `<div class="scope-detail">
+    <div class="scope-detail-head"><h4>${escapeHtml(scopeWorking.name)}</h4><span class="code">${escapeHtml(scopeWorking.id)} &middot; ${escapeHtml(scopeWorking.fam)}</span>
+      <div class="scope-detail-acts">
+        <button type="button" id="scope-reset-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors">Reset</button>
+        <button type="button" id="scope-save-as-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors" style="background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.35);">Save as new bundle</button>
       </div>
-      <span class="text-xs font-bold tracking-wide ${selected ? 'text-orange-300' : 'text-white'}">MS-${num}</span>
-      ${selected
-        ? `<button type="button" class="rov-role-btn text-[9px] font-bold px-2.5 py-0.5 rounded-full transition-all ${isMain ? 'bg-orange-500 text-white cursor-default' : 'bg-gray-700 text-gray-400 hover:bg-blue-500/20 hover:text-blue-300 cursor-pointer'}" title="${isMain ? 'Main unit' : 'Click to promote to Main'}">${isMain ? 'MAIN' : 'STANDBY'}</button>`
-        : `<span class="text-[9px] text-white/60 font-medium">Available</span>`}
-    `;
+    </div>
+    <div class="scope-sensor-cols">
+      <div class="scope-scol"><h5>Required sensors<b>${scopeWorking.req.length}</b></h5><div class="scope-sensors">${chipList(scopeWorking.req, 'req')}</div>
+        <div class="scope-addrow"><select id="scope-add-req" aria-label="Add required sensor"><option value="">Add required sensor…</option>${sensorOptions(used)}</select></div></div>
+      <div class="scope-scol"><h5>Optional sensors<b>${scopeWorking.opt.length || 'none'}</b></h5><div class="scope-sensors">${chipList(scopeWorking.opt, 'opt')}</div>
+        <div class="scope-addrow"><select id="scope-add-opt" aria-label="Add optional sensor"><option value="">Add optional sensor…</option>${sensorOptions(used)}</select></div></div>
+    </div>
+    <div class="scope-dirty-bar${scopeDirty ? ' on' : ''}">
+      <span>Edited from the catalog version. Save it as a new bundle to keep these changes.</span>
+      <div class="acts"><button type="button" id="scope-revert-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors">Revert</button>
+      <button type="button" id="scope-save-dirty-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#f39124] hover:bg-orange-400 transition-colors">Save as new bundle</button></div>
+    </div>
+  </div>`;
 
-    chip.addEventListener('click', () => toggleSimROV(num));
-    chip.querySelector('.rov-remove-btn')?.addEventListener('click', (e) => { e.stopPropagation(); removeROV(num); });
-    chip.querySelector('.rov-role-btn')?.addEventListener('click', (e) => { e.stopPropagation(); if (!isMain) setROVRole(num); });
-
-    container.appendChild(chip);
-  }
+  detEl.querySelectorAll('[data-rm]').forEach(b => {
+    b.addEventListener('click', () => {
+      const k = b.dataset.kind === 'req' ? 'req' : 'opt';
+      scopeWorking[k] = scopeWorking[k].filter(s => s !== b.dataset.rm);
+      scopeDirty = true;
+      renderScopeDetail();
+      renderUnitGrid();
+      updateBeginBtn();
+    });
+  });
+  const addReq = document.getElementById('scope-add-req');
+  const addOpt = document.getElementById('scope-add-opt');
+  if (addReq) addReq.onchange = function () {
+    if (this.value) { scopeWorking.req.push(this.value); scopeDirty = true; renderScopeDetail(); renderUnitGrid(); updateBeginBtn(); }
+  };
+  if (addOpt) addOpt.onchange = function () {
+    if (this.value) { scopeWorking.opt.push(this.value); scopeDirty = true; renderScopeDetail(); }
+  };
+  const resetBtn = document.getElementById('scope-reset-btn');
+  const saveAsBtn = document.getElementById('scope-save-as-btn');
+  const revertBtn = document.getElementById('scope-revert-btn');
+  const saveDirtyBtn = document.getElementById('scope-save-dirty-btn');
+  if (resetBtn) resetBtn.onclick = revertScope;
+  if (saveAsBtn) saveAsBtn.onclick = openBundleSheet;
+  if (revertBtn) revertBtn.onclick = revertScope;
+  if (saveDirtyBtn) saveDirtyBtn.onclick = openBundleSheet;
 }
 
-function updateBeginBtn() {
-  const count = simState.selectedROVs.size;
-  const label = document.getElementById('sim-selected-label');
-  const btn = document.getElementById('btn-begin-sim');
-  const mainNum = [...simState.selectedROVs.entries()].find(([, r]) => r === 'main')?.[0];
-  if (label) {
-    label.innerText = count === 0
-      ? 'Select an operation scope and at least one MiniSpector to begin'
-      : `${count} MiniSpector${count > 1 ? 's' : ''} selected · Main: MS-${mainNum || '?'}${simState.selectedScope ? '' : ' · (scope required)'}`;
-  }
-  if (btn) btn.disabled = count === 0 || !simState.selectedScope;
-}
-
-function toggleSimROV(num) {
-  if (simState.selectedROVs.has(num)) {
-    removeROV(num);
+function revertScope() {
+  if (!scopeSelectedId) {
+    scopeWorking = null; scopeDirty = false; simState.selectedScope = null;
+    renderScopeDetail(); renderUnitGrid(); updateBeginBtn();
     return;
   }
+  const found = getAllBundles().find(b => b.id === scopeSelectedId);
+  scopeWorking = cloneBundle(found); scopeDirty = false;
+  renderScopeDetail(); renderUnitGrid(); updateBeginBtn();
+  showToast('Reverted to the catalog version', 'info');
+}
+
+function openBundleSheet() {
+  document.getElementById('bundle-name').value = scopeWorking.name === 'Untitled bundle' ? '' : scopeWorking.name + ' (edited)';
+  document.getElementById('bundle-fam').value = scopeWorking.fam;
+  document.getElementById('bundle-note').value = '';
+  document.getElementById('bundle-summary').textContent = `${scopeWorking.req.length} required · ${scopeWorking.opt.length} optional sensors will be saved.`;
+  const sheet = document.getElementById('bundle-sheet');
+  sheet.style.display = 'flex';
+  document.getElementById('bundle-name').focus();
+}
+function closeBundleSheet() {
+  document.getElementById('bundle-sheet').style.display = 'none';
+}
+
+/* ---------------- MiniSpectors (unit picker) ---------------- */
+
+function missingFor(num) {
+  if (!scopeWorking || !scopeWorking.req.length) return [];
+  const caps = capsFor(num);
+  return scopeWorking.req.filter(s => caps.indexOf(s) < 0);
+}
+
+function updateUnitsBadge() {
+  const badge = document.getElementById('sim-units-badge');
+  const count = simState.selectedROVs.size;
+  if (badge) badge.textContent = count;
+  labelNavItem('sim-nav-units', `MiniSpectors — ${count} selected`);
+}
+
+function addUnit(num) {
   const role = simState.selectedROVs.size === 0 ? 'main' : 'standby';
   simState.selectedROVs.set(num, role);
   if (!simState.shared.rovSensors[num]) {
     simState.shared.rovSensors[num] = MINISPECTOR_FIXED_SENSORS.map(s => ({
-      name: s.name, category: s.category, model: '', qty: 1, calibrated: false, tested: false, fixed: true,
+      name: s.name, category: s.category, model: '', serial: '', qty: 1,
+      calibrated: false, calibratedDate: '', tested: false, testedDate: '', fixed: true,
     }));
   }
-  renderROVChips();
+  renderUnitGrid();
   updateBeginBtn();
+  updateUnitsBadge();
 }
 
-function removeROV(num) {
+function removeUnit(num) {
   if (rovHasDiveLogs(num)) {
-    showToast(`MS-${num} has dive logs recorded against it and cannot be removed. Edit or delete those entries first.`, 'error');
+    showToast(`MiniSpector-${num} has dive logs recorded against it and cannot be removed. Edit or delete those entries first.`, 'error');
     return;
   }
   const wasMain = simState.selectedROVs.get(num) === 'main';
@@ -109,32 +238,115 @@ function removeROV(num) {
     const nextMain = [...simState.selectedROVs.keys()].sort((a, b) => a - b)[0];
     simState.selectedROVs.set(nextMain, 'main');
   }
-  renderROVChips();
+  renderUnitGrid();
   updateBeginBtn();
+  updateUnitsBadge();
 }
 
-function setROVRole(num) {
+function toggleUnit(num) {
+  const meta = UNIT_META[num];
+  if (meta && meta.state === 'busy' && !simState.selectedROVs.has(num)) {
+    showToast(`MiniSpector-${num} is committed to another mission`, 'error');
+    return;
+  }
+  if (simState.selectedROVs.has(num)) removeUnit(num); else addUnit(num);
+}
+
+function promoteUnit(num) {
   if (!simState.selectedROVs.has(num) || simState.selectedROVs.get(num) === 'main') return;
   if (rovHasDiveLogs(num)) {
-    showToast(`MS-${num} has dive logs recorded against it. Its role cannot be changed until those are removed.`, 'error');
+    showToast(`MiniSpector-${num} has dive logs recorded against it. Its role cannot be changed until those are removed.`, 'error');
     return;
   }
   for (const k of simState.selectedROVs.keys()) simState.selectedROVs.set(k, 'standby');
   simState.selectedROVs.set(num, 'main');
-  renderROVChips();
+  renderUnitGrid();
   updateBeginBtn();
+  showToast(`MiniSpector-${num} is now main`, 'success');
+}
+
+function clearUnits(silent) {
+  const kept = [];
+  [...simState.selectedROVs.keys()].forEach(num => {
+    if (rovHasDiveLogs(num)) { kept.push(num); return; }
+    simState.selectedROVs.delete(num);
+    simState.rovSerials.delete(num);
+    simState.rovDescriptions.delete(num);
+    delete simState.shared.rovSensors[num];
+  });
+  if (simState.selectedROVs.size > 0) {
+    const nextMain = [...simState.selectedROVs.keys()].sort((a, b) => a - b)[0];
+    simState.selectedROVs.set(nextMain, 'main');
+  }
+  renderUnitGrid();
+  updateBeginBtn();
+  updateUnitsBadge();
+  if (!silent && kept.length) showToast(`Kept MiniSpector-${kept.join(', MiniSpector-')} — they have dive logs recorded.`, 'warn');
+}
+
+function renderUnitGrid() {
+  const container = document.getElementById('sim-rov-chips');
+  if (!container) return;
+  const nums = Object.keys(UNIT_META).map(Number).sort((a, b) => a - b);
+
+  const hintEl = document.getElementById('units-hint');
+  if (hintEl) hintEl.textContent = `${nums.length} of ${nums.length} shown`;
+
+  container.innerHTML = nums.map(num => {
+    const meta = UNIT_META[num];
+    const role = simState.selectedROVs.get(num) || null;
+    const miss = missingFor(num);
+    const colour = role === 'main' ? '#f39124' : (role === 'standby' ? '#459fd9' : '#6b7280');
+    let fit = '';
+    if (scopeWorking && scopeWorking.req.length) {
+      fit = miss.length === 0
+        ? '<div class="unit-fitline yes"><svg xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Covers scope</div>'
+        : `<div class="unit-fitline part"><svg xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12h12"/></svg>Missing ${miss.length}</div>`;
+    }
+    return `<div class="unit-card" data-role="${role || ''}" data-state="${meta.state}">
+      ${role ? `<span class="unit-role-badge ${role}">${role}</span>` : ''}
+      <button type="button" data-hit="${num}" style="all:unset;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;cursor:${meta.state === 'busy' && !role ? 'not-allowed' : 'pointer'};">
+        <span class="unit-glyph" style="color:${colour}">${ROV_SVG}</span>
+        <h4>MiniSpector-${num}</h4>
+        <span class="unit-stat-text">${STATE_LABEL[meta.state]}</span>
+        ${fit}
+      </button>
+      ${role === 'standby' ? `<button type="button" class="unit-promote-btn" data-promote="${num}">Make main</button>` : ''}
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('[data-hit]').forEach(b => b.addEventListener('click', () => toggleUnit(Number(b.dataset.hit))));
+  container.querySelectorAll('[data-promote]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); promoteUnit(Number(b.dataset.promote)); }));
+}
+
+/* ---------------- shared footer / navigation ---------------- */
+
+function updateDescCount() {
+  const desc = document.getElementById('sim-project-desc');
+  const countEl = document.getElementById('sim-desc-count');
+  if (desc && countEl) countEl.textContent = `${desc.value.length} / 280`;
+}
+
+function updateBeginBtn() {
+  const count = simState.selectedROVs.size;
+  const btn = document.getElementById('btn-begin-sim');
+  const hasScope = !!(scopeWorking && scopeWorking.req.length);
+  if (btn) btn.disabled = count === 0 || !hasScope;
 }
 
 export function showSimSetupTab(tab) {
   ['mission', 'units'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
-  document.getElementById('sim-step1-footer')?.classList.toggle('hidden', tab !== 'units');
-  if (tab === 'units') renderROVChips();
+  if (tab === 'units') renderUnitGrid();
 }
 
 function beginSimulation() {
-  if (!simState.selectedScope || !OPERATION_SCOPES[simState.selectedScope]) {
+  if (!document.getElementById('sim-project-code')?.value.trim()) {
+    showToast('Project code is required.', 'warn');
+    return;
+  }
+  if (!scopeWorking || !scopeWorking.req.length) {
     showToast('Please select an operation scope first.', 'warn');
     return;
   }
@@ -147,15 +359,24 @@ function beginSimulation() {
     name: document.getElementById('sim-project-name')?.value.trim() || '',
     code: document.getElementById('sim-project-code')?.value.trim() || '',
     description: document.getElementById('sim-project-desc')?.value.trim() || '',
+    asset: document.getElementById('sim-project-asset')?.value || '',
+    weatherWindow: document.getElementById('sim-project-weather')?.value || '',
   };
 
-  const scopeBundle = OPERATION_SCOPES[simState.selectedScope];
+  const scopeBundle = {
+    sensors: [
+      ...scopeWorking.req.map(name => ({ name, status: 'required' })),
+      ...scopeWorking.opt.map(name => ({ name, status: 'optional' })),
+    ],
+  };
   const scopeChanged = simState.shared.scopeId && simState.shared.scopeId !== simState.selectedScope;
-  const hasWork = Array.isArray(simState.shared.sensors) && simState.shared.sensors.some(s => s.model || s.calibrated || s.tested);
+  const hasWork = Array.isArray(simState.shared.sensors) && simState.shared.sensors.some(s =>
+    s.model || s.calibrated || s.tested || (Array.isArray(s.instances) && s.instances.some(inst => inst.model || inst.calibrated || inst.tested))
+  );
 
   if (scopeChanged && hasWork) {
     const keep = confirm(
-      `You changed the scope from "${OPERATION_SCOPES[simState.shared.scopeId]?.name || 'previous'}" to "${scopeBundle.name}".\n\n` +
+      `You changed the scope from "${scopeName(simState.shared.scopeId) || 'previous'}" to "${scopeWorking.name}".\n\n` +
       `You have existing sensor data (models, calibration, testing).\n\n` +
       `Click OK to KEEP your work and merge with the new scope.\nClick Cancel to RESET and start fresh.`
     );
@@ -174,15 +395,44 @@ function beginSimulation() {
   renderWorkspaceShell();
 }
 
+// Sidebar entry point for the Sensors & Equipment / Topology / System
+// Readiness workspace tabs. If the wizard (scope + units) hasn't been
+// completed yet, this reuses beginSimulation()'s own validation/toasts
+// instead of duplicating the "scope required" / "unit required" checks —
+// on success it proceeds straight into the requested tab; on failure it
+// falls back to the Mission Info panel where the user can fix what's missing.
+function goToWorkspaceSubTab(tab, navId) {
+  const step2 = document.getElementById('sim-step-2');
+  const alreadyIn = step2 && !step2.classList.contains('hidden');
+  if (!alreadyIn) beginSimulation();
+
+  const nowIn = step2 && !step2.classList.contains('hidden');
+  if (!nowIn) {
+    window.showTab('simulation', document.getElementById('sim-nav-mission'));
+    showSimSetupTab('mission');
+    return;
+  }
+  window.showTab('simulation', document.getElementById(navId));
+  switchSimSubTab(tab);
+}
+
 function simGoBack() {
   document.getElementById('sim-step-2').classList.add('hidden');
   document.getElementById('sim-step-1').classList.remove('hidden');
   const nameEl = document.getElementById('sim-project-name');
   const codeEl = document.getElementById('sim-project-code');
   const descEl = document.getElementById('sim-project-desc');
+  const assetEl = document.getElementById('sim-project-asset');
+  const weatherEl = document.getElementById('sim-project-weather');
   if (nameEl) nameEl.value = simState.projectData.name;
   if (codeEl) codeEl.value = simState.projectData.code;
   if (descEl) descEl.value = simState.projectData.description;
+  if (assetEl) assetEl.value = simState.projectData.asset || '';
+  if (weatherEl) weatherEl.value = simState.projectData.weatherWindow || '';
+  updateDescCount();
+  syncScopeWorkingFromState();
+  renderScopeCatalog();
+  renderScopeDetail();
   showSimSetupTab('units');
 }
 
@@ -192,45 +442,82 @@ export function initSimROVGrid() {
   document.getElementById('sim-step-1').classList.remove('hidden');
   document.getElementById('sim-step-2').classList.add('hidden');
 
-  ['sim-project-name', 'sim-project-code', 'sim-project-desc'].forEach(id => {
+  ['sim-project-name', 'sim-project-code', 'sim-project-desc', 'sim-project-asset', 'sim-project-weather'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  updateDescCount();
 
-  const scopeDropdown = document.getElementById('sim-scope-dropdown');
-  if (scopeDropdown) {
-    scopeDropdown.value = '';
-    scopeDropdown.onchange = () => {
-      const val = parseInt(scopeDropdown.value, 10);
-      const newScope = val || null;
+  if (scopeSearchEl) scopeSearchEl.value = '';
+  if (scopeFamEl) scopeFamEl.value = '';
+  syncScopeWorkingFromState();
 
-      if (simState.selectedScope !== null && newScope !== simState.selectedScope) {
-        const hasData = (simState.shared.sensors?.length > 0)
-          || (simState.shared.sysarch?.machines?.length > 0)
-          || (simState.shared.sysarch?.equipment?.length > 0)
-          || (simState.selectedROVs.size > 0);
-        if (hasData) {
-          const confirmed = confirm('Changing the scope will reset all sensors, machines, equipment, and ROV selections you have configured.\n\nAre you sure?');
-          if (!confirmed) { scopeDropdown.value = simState.selectedScope ?? ''; return; }
-          simState.shared = { sensors: [], rovSensors: {}, sysarch: { diagramDataUrl: null, machines: [], equipment: [], simStatus: [], deliverables: {}, systemIPs: [] }, issues: [], thrusters: [] };
-          simState.selectedROVs = new Map();
-          renderROVChips();
-        }
-      }
-      simState.selectedScope = newScope;
-      updateScopePreview(newScope);
-      updateBeginBtn();
-    };
-  }
-
-  document.getElementById('sim-scope-preview')?.classList.add('hidden');
   showSimSetupTab('mission');
-  renderROVChips();
+  renderScopeCatalog();
+  renderScopeDetail();
+  renderUnitGrid();
   updateBeginBtn();
+  updateUnitsBadge();
 }
 
 export function installSimSetup() {
   window.showSimSetupTab = showSimSetupTab;
   window.beginSimulation = beginSimulation;
   window.simGoBack = simGoBack;
+  window.goToWorkspaceSubTab = goToWorkspaceSubTab;
+  window.__updateSimUnitsBadge = updateUnitsBadge;
+
+  scopeSearchEl = document.getElementById('scope-search');
+  scopeFamEl = document.getElementById('scope-fam-filter');
+  scopeSearchEl?.addEventListener('input', renderScopeCatalog);
+  scopeFamEl?.addEventListener('change', renderScopeCatalog);
+
+  document.getElementById('scope-blank-btn')?.addEventListener('click', () => {
+    if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
+    scopeSelectedId = null;
+    scopeWorking = { id: 'DRAFT', fam: 'Custom', name: 'Untitled bundle', req: [], opt: [] };
+    scopeDirty = true;
+    simState.selectedScope = null;
+    renderScopeCatalog();
+    renderScopeDetail();
+    updateBeginBtn();
+    document.getElementById('scope-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('sim-project-desc')?.addEventListener('input', updateDescCount);
+  document.getElementById('sim-gen-code')?.addEventListener('click', () => {
+    const alphabet = 'ABCDEFGHJKLMNPRSTVWXZ';
+    let s = '';
+    for (let i = 0; i < 3; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+    const codeEl = document.getElementById('sim-project-code');
+    if (codeEl) codeEl.value = `${s}-${Math.floor(Math.random() * 900) + 100}-26`;
+  });
+
+  document.getElementById('units-clear-btn')?.addEventListener('click', () => clearUnits(false));
+
+  const sheet = document.getElementById('bundle-sheet');
+  document.getElementById('bundle-cancel')?.addEventListener('click', closeBundleSheet);
+  sheet?.addEventListener('click', (e) => { if (e.target === sheet) closeBundleSheet(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && sheet && sheet.style.display === 'flex') closeBundleSheet(); });
+  document.getElementById('bundle-confirm')?.addEventListener('click', () => {
+    const name = document.getElementById('bundle-name').value.trim();
+    if (!name) { document.getElementById('bundle-name').focus(); return; }
+    const fam = document.getElementById('bundle-fam').value.trim() || 'Custom';
+    const shared = document.getElementById('bundle-share').checked;
+    const nb = addCustomBundle({
+      name, fam, req: scopeWorking.req, opt: scopeWorking.opt,
+      note: document.getElementById('bundle-note').value.trim(), shared,
+    });
+    if (scopeFamEl && scopeFamEl.value && scopeFamEl.value !== fam) scopeFamEl.value = '';
+    scopeSelectedId = nb.id;
+    scopeWorking = cloneBundle(nb);
+    scopeDirty = false;
+    simState.selectedScope = nb.id;
+    closeBundleSheet();
+    renderScopeCatalog();
+    renderScopeDetail();
+    renderUnitGrid();
+    updateBeginBtn();
+    showToast(shared ? 'Saved and published to the shared catalog' : 'Saved to your private bundles', 'success');
+  });
 }

@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { APPROVER_IDS } from './simulation/config.js';
+import { setActiveNavItem } from './ui.js';
 
 // Ported as-is from the old renderer.js — same behavior.
 export function showTab(tabName, navElement) {
@@ -8,15 +9,14 @@ export function showTab(tabName, navElement) {
   if (target) target.classList.remove('hidden');
 
   if (navElement && navElement.id !== 'nav-dash') {
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    navElement.classList.add('active');
+    setActiveNavItem(navElement);
     const titleText = navElement.innerText.replace(/^[0-9]+|📊/, '').trim();
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.innerText = titleText;
   } else if (navElement) {
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.innerText = 'Infographics & Analysis';
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    setActiveNavItem(null);
   }
 }
 

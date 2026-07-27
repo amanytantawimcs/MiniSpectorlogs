@@ -21,25 +21,25 @@ function nextAutoId(config, section, existingId) {
 
 function fieldRow(field, value) {
   const id = 'm_f_' + field.key;
-  const label = `<label class="text-xs text-gray-500">${escapeHtml(field.label)}</label>`;
+  const label = `<label class="text-xs font-semibold" style="color:#9AB0C8">${escapeHtml(field.label)}</label>`;
   if (field.type === 'textarea') {
     return `<div>${label}<textarea id="${id}">${escapeHtml(value || '')}</textarea></div>`;
   }
   if (field.type === 'select') {
     const opts = field.options.map(o => `<option value="${escapeHtml(o)}"${o === value ? ' selected' : ''}>${escapeHtml(field.optionLabels?.[o] || o)}</option>`).join('');
-    return `<div>${label}<select id="${id}" class="bg-gray-700 text-white p-2 rounded w-full">${opts}</select></div>`;
+    return `<div>${label}<select id="${id}">${opts}</select></div>`;
   }
   if (field.type === 'duration') {
-    return `<div>${label}<input id="${id}" value="${escapeHtml(value || '')}" readonly class="bg-gray-700 text-gray-300"></div>`;
+    return `<div>${label}<input id="${id}" value="${escapeHtml(value || '')}" readonly style="color:#6C88A6"></div>`;
   }
   if (field.type === 'photos') {
-    return `<div class="border-t border-gray-700 pt-3 mt-2">
+    return `<div class="pt-3 mt-2" style="border-top:1px solid rgba(120,166,212,0.16)">
       ${label}
-      <input type="file" id="${id}" multiple class="block w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-blue-400 hover:file:bg-gray-600">
-      <p class="text-[10px] text-gray-500 mt-1">${value?.length ? `Current: ${value.map(p => p.name).join(', ')}` : 'No photos selected'}</p>
+      <input type="file" id="${id}" multiple class="block w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold" style="color:#9AB0C8" >
+      <p class="text-[10px] mt-1" style="color:#6C88A6">${value?.length ? `Current: ${value.map(p => p.name).join(', ')}` : 'No photos selected'}</p>
     </div>`;
   }
-  const disabled = field.disabled ? ' disabled class="opacity-50 cursor-not-allowed"' : '';
+  const disabled = field.disabled ? ' disabled style="opacity:0.5;cursor:not-allowed"' : '';
   return `<div>${label}<input id="${id}" type="${field.type}" value="${escapeHtml(value || '')}"${disabled}></div>`;
 }
 
@@ -221,7 +221,7 @@ function formatColumn(section, col, log) {
     const closed = log.status === 'Closed';
     return `<span class="px-2 py-1 rounded text-xs font-bold ${closed ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}">${escapeHtml(log.status || 'Open')}</span>`;
   }
-  if (col.key === '_photos') return log.photos?.length ? `<span class="text-blue-400 italic">${log.photos.length} file(s)</span>` : `<span class="text-gray-500 italic">None</span>`;
+  if (col.key === '_photos') return log.photos?.length ? `<span class="italic" style="color:#459fd9">${log.photos.length} file(s)</span>` : `<span class="italic" style="color:#6C88A6">None</span>`;
   const val = log[col.key] ?? '';
   const text = val === '' && col.fallback ? col.fallback : escapeHtml(String(val));
   return col.accent ? `<span class="${col.accent}">${text}</span>` : text;
@@ -235,18 +235,18 @@ function renderLogTable(section) {
   if (logs.length === 0) { container.innerHTML = emptyState(config.emptyMessage); return; }
 
   container.innerHTML = `
-    <div class="overflow-x-auto bg-gray-800 rounded-lg border border-gray-700">
-      <table class="w-full text-left text-gray-300 text-sm">
-        <thead class="bg-gray-700 text-xs uppercase font-bold text-gray-400">
+    <div class="rcard" style="overflow-x:auto">
+      <table class="w-full text-left text-sm" style="color:#E9F0F8">
+        <thead class="text-xs uppercase font-bold" style="background:#16233A;color:#9AB0C8">
           <tr>${config.columns.map(c => `<th class="px-4 py-3">${escapeHtml(c.label)}</th>`).join('')}<th class="px-4 py-3 text-right">Actions</th></tr>
         </thead>
-        <tbody class="divide-y divide-gray-700">
+        <tbody>
           ${logs.map((log, i) => `
-          <tr class="hover:bg-gray-700/50 transition">
+          <tr style="border-bottom:1px solid rgba(120,166,212,0.16)">
             ${config.columns.map(c => `<td class="px-4 py-3">${formatColumn(section, c, log)}</td>`).join('')}
             <td class="px-4 py-3 text-right">
-              <button type="button" class="log-edit-btn text-blue-400 hover:text-blue-300 mr-3 font-bold" data-section="${section}" data-idx="${i}">Edit</button>
-              <button type="button" class="log-del-btn text-red-400 hover:text-red-300 font-bold" data-section="${section}" data-idx="${i}">Del</button>
+              <button type="button" class="log-edit-btn mr-3 px-2.5 py-1 rounded-lg text-xs font-bold" style="background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.3)" data-section="${section}" data-idx="${i}">Edit</button>
+              <button type="button" class="log-del-btn px-2.5 py-1 rounded-lg text-xs font-bold" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)" data-section="${section}" data-idx="${i}">Del</button>
             </td>
           </tr>`).join('')}
         </tbody>

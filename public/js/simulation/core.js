@@ -4,12 +4,33 @@
 
 import { state } from '../state.js';
 import { api } from '../api.js';
-import { showToast } from '../ui.js';
+import { showToast, setActiveNavItem } from '../ui.js';
 import { simState } from './state.js';
-import { OPERATION_SCOPES, MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
+import { MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
+import { scopeName } from './scopeCatalog.js';
+import { sensorReadinessItems } from './sensors.js';
 
 let syncDebounceTimer = null;
 let autoSaveTimer = null;
+let lastSavedAt = null;
+
+function formatAgo(ts) {
+  const s = Math.round((Date.now() - ts) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min ago`;
+  return `${Math.round(m / 60)}h ago`;
+}
+
+function updateSaveIndicator() {
+  const wrap = document.getElementById('sim-save-status');
+  const txt = document.getElementById('sim-save-text');
+  if (!wrap || !txt) return;
+  if (!lastSavedAt) { wrap.classList.remove('show'); return; }
+  txt.textContent = `Saved ${formatAgo(lastSavedAt)}`;
+  wrap.classList.add('show');
+}
 
 export function loadFreshScope(scopeBundle) {
   simState.shared.sensors = scopeBundle.sensors.map(s => ({
@@ -32,10 +53,12 @@ export function mergeWithNewScope(scopeBundle) {
       model: existing?.model || '', serialNo: existing?.serialNo || '', qty: existing?.qty || 1,
       calibrated: existing ? !!existing.calibrated : false, tested: existing ? !!existing.tested : false,
       custom: false, rovAssignment: existing?.rovAssignment || 'Shared',
+      ...(existing?.instances ? { instances: existing.instances.map(inst => ({ ...inst })) } : {}),
     };
   });
   Object.values(existingByName).forEach(s => {
-    if (s.custom || s.model || s.calibrated || s.tested) merged.push({ ...s, custom: true, status: 'custom' });
+    const hasInstanceWork = Array.isArray(s.instances) && s.instances.some(inst => inst.model || inst.calibrated || inst.tested);
+    if (s.custom || s.model || s.calibrated || s.tested || hasInstanceWork) merged.push({ ...s, custom: true, status: 'custom' });
   });
   simState.shared.sensors = merged;
 }
@@ -47,8 +70,10 @@ export function collectSimState() {
     projectName: simState.projectData.name,
     projectCode: simState.projectData.code,
     projectScope: simState.projectData.description,
+    projectAsset: simState.projectData.asset,
+    projectWeatherWindow: simState.projectData.weatherWindow,
     scopeId: simState.selectedScope,
-    scopeName: OPERATION_SCOPES[simState.selectedScope]?.name || '',
+    scopeName: scopeName(simState.selectedScope),
     rovs: [...simState.selectedROVs.entries()].map(([num, role]) => ({
       rovNumber: num, role, serial: simState.rovSerials.get(num) || '', description: simState.rovDescriptions.get(num) || '',
     })),
@@ -69,7 +94,10 @@ export function collectSimState() {
 }
 
 export function loadSimulationState(data, isSimLocked) {
-  simState.projectData = { name: data.projectName || '', code: data.projectCode || '', description: data.projectScope || '' };
+  simState.projectData = {
+    name: data.projectName || '', code: data.projectCode || '', description: data.projectScope || '',
+    asset: data.projectAsset || '', weatherWindow: data.projectWeatherWindow || '',
+  };
   simState.selectedScope = data.scopeId || null;
   simState.approval = { status: data.approvalStatus || 'draft', history: data.approvalHistory || [] };
   simState.locked = !!isSimLocked;
@@ -100,7 +128,8 @@ export function loadSimulationState(data, isSimLocked) {
   for (const [num] of simState.selectedROVs.entries()) {
     if (!simState.shared.rovSensors[num]) {
       simState.shared.rovSensors[num] = MINISPECTOR_FIXED_SENSORS.map(s => ({
-        name: s.name, category: s.category, model: '', qty: 1, calibrated: false, tested: false, fixed: true,
+        name: s.name, category: s.category, model: '', serial: '', qty: 1,
+        calibrated: false, calibratedDate: '', tested: false, testedDate: '', fixed: true,
       }));
     }
   }
@@ -108,34 +137,16 @@ export function loadSimulationState(data, isSimLocked) {
   document.getElementById('sim-step-1').classList.add('hidden');
   document.getElementById('sim-step-2').classList.remove('hidden');
   simState.activeROV = Math.min(...simState.selectedROVs.keys());
+  window.__updateSimUnitsBadge?.();
   renderWorkspaceShell();
 }
 
 export function renderWorkspaceShell() {
-  renderSimROVTabs();
   switchSimSubTab(simState.activeSubTab || 'sensors');
 }
 
-function renderSimROVTabs() {
-  const container = document.getElementById('sim-rov-tabs');
-  if (!container) return;
-  container.className = 'flex items-center overflow-x-auto';
-  container.innerHTML = '';
-  [...simState.selectedROVs.entries()].sort((a, b) => a[0] - b[0]).forEach(([num, role]) => {
-    const isMain = role === 'main';
-    const tab = document.createElement('div');
-    tab.className = `px-4 py-3 text-sm font-bold border-b-2 ${isMain ? 'border-orange-500 text-white' : 'border-gray-600 text-gray-400'} whitespace-nowrap flex items-center cursor-pointer hover:text-white transition-colors`;
-    tab.innerHTML = `MS-${num}<span style="background:${isMain ? '#f39124' : '#374151'};color:${isMain ? 'white' : '#9ca3af'};font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;letter-spacing:0.05em;">${isMain ? 'MAIN' : 'STBY'}</span>`;
-    tab.addEventListener('click', () => switchSimROV(num));
-    container.appendChild(tab);
-  });
-}
-
-function switchSimROV(num) {
-  simState.activeROV = num;
-  renderSimROVTabs();
-  if (simState.activeSubTab === 'sensors') renderSimContent();
-}
+const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology' };
+const SUBTAB_TITLES = { sensors: 'Sensors and equipment', sysarch: 'Topology' };
 
 export function switchSimSubTab(tab) {
   simState.activeSubTab = tab;
@@ -145,6 +156,14 @@ export function switchSimSubTab(tab) {
   });
   const active = document.getElementById(`sim-subtab-${tab}`);
   if (active) { active.classList.add('border-orange-500', 'text-white'); active.classList.remove('border-transparent', 'text-gray-400'); }
+
+  // Keep the sidebar's Sensors/Topology/Readiness nav items in sync regardless
+  // of whether this was triggered from the sidebar or the in-workspace toolbar.
+  const navEl = document.getElementById(SUBTAB_NAV_IDS[tab]);
+  setActiveNavItem(navEl, '#nav-simulation-section .nav-item');
+  const titleEl = document.getElementById('page-title');
+  if (titleEl && SUBTAB_TITLES[tab]) titleEl.innerText = SUBTAB_TITLES[tab];
+
   renderSimContent();
 }
 
@@ -154,9 +173,6 @@ export async function renderSimContent() {
   if (simState.activeSubTab === 'sysarch') {
     const { renderSysArchContent } = await import('./sysarch.js');
     renderSysArchContent(area);
-  } else if (simState.activeSubTab === 'readiness') {
-    const { renderReadinessContent } = await import('./readiness.js');
-    renderReadinessContent(area);
   } else {
     const { renderSensorsContent } = await import('./sensors.js');
     renderSensorsContent(area);
@@ -165,33 +181,43 @@ export async function renderSimContent() {
   updateSimProgress();
 }
 
+// Sets both the visible badge text and the accessible name (aria-label +
+// data-tooltip, read by the collapsed icon-rail tooltip) from one string so
+// the two can never drift apart.
+export function labelNavItem(navId, text) {
+  const el = document.getElementById(navId);
+  if (!el) return;
+  el.setAttribute('aria-label', text);
+  el.setAttribute('data-tooltip', text);
+}
+
 function updateSimTabBadges() {
   const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
+  const sensorItems = sensors.flatMap(sensorReadinessItems);
   const machines = simState.shared.sysarch?.machines || [];
   const equip = simState.shared.sysarch?.equipment || [];
   const sEl = document.getElementById('sim-badge-sensors');
   const aEl = document.getElementById('sim-badge-sysarch');
-  const rEl = document.getElementById('sim-badge-readiness');
-  if (sEl) sEl.innerText = sensors.length;
+  if (sEl) sEl.innerText = sensorItems.length;
   if (aEl) aEl.innerText = machines.length + equip.length;
-  if (rEl) {
-    const allActive = [...sensors, ...Object.values(simState.shared.rovSensors || {}).flat()];
-    const tot = allActive.length;
-    const rdy = allActive.filter(s => s.calibrated && s.tested && s.model).length;
-    const pct = tot > 0 ? Math.round(rdy / tot * 100) : 0;
-    rEl.innerText = pct + '%';
-    rEl.style.background = pct === 100 ? 'rgba(34,197,94,0.2)' : pct >= 60 ? 'rgba(243,145,36,0.2)' : 'rgba(239,68,68,0.2)';
-    rEl.style.color = pct === 100 ? '#22c55e' : pct >= 60 ? '#f39124' : '#f87171';
-  }
+
+  // Sensors & Equipment sidebar badge: ready/total, same `sensorItems` list
+  // the toolbar badge above already uses — one source of truth, can't
+  // disagree. Each unit of a Qty > 1 sensor line counts as its own item.
+  const sensorsReady = sensorItems.filter(s => s.calibrated && s.tested && s.model).length;
+  const navSensorsBadge = document.getElementById('sim-nav-badge-sensors');
+  if (navSensorsBadge) navSensorsBadge.textContent = `${sensorsReady}/${sensorItems.length}`;
+  labelNavItem('sim-nav-sensors', `Sensors and equipment — ${sensorsReady}/${sensorItems.length} ready`);
 }
 
 function updateSimProgress() {
   const bar = document.getElementById('sim-progress-bar');
   if (!bar) return;
   const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
-  if (sensors.length === 0) { bar.style.width = '0%'; return; }
-  const ready = sensors.filter(s => s.calibrated && s.tested && s.model).length;
-  bar.style.width = Math.round((ready / sensors.length) * 100) + '%';
+  const sensorItems = sensors.flatMap(sensorReadinessItems);
+  if (sensorItems.length === 0) { bar.style.width = '0%'; return; }
+  const ready = sensorItems.filter(s => s.calibrated && s.tested && s.model).length;
+  bar.style.width = Math.round((ready / sensorItems.length) * 100) + '%';
 }
 
 export async function saveSimulation({ silent } = {}) {
@@ -207,6 +233,8 @@ export async function saveSimulation({ silent } = {}) {
     data: collectSimState(),
   });
   if (result.success) {
+    lastSavedAt = Date.now();
+    updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
   } else if (!silent) {
     showToast('Save failed: ' + (result.error || 'unknown error'), 'error');
@@ -247,6 +275,23 @@ export function flushSimOnUnload() {
   navigator.sendBeacon('/api/projects', new Blob([payload], { type: 'application/json' }));
 }
 
+// The sidebar nav items are plain divs (styling/markup predates this pass),
+// so give them button semantics + keyboard activation once at startup rather
+// than rewriting every onclick site to a <button>.
+function installSimNavKeyboardSupport() {
+  document.querySelectorAll('#nav-simulation-section .nav-item').forEach(el => {
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      el.click();
+    });
+  });
+}
+
 export function installSimCore() {
   window.switchSimSubTab = switchSimSubTab;
+  setInterval(updateSaveIndicator, 15 * 1000);
+  installSimNavKeyboardSupport();
 }

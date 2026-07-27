@@ -8,9 +8,9 @@ export const simState = {
   rovSerials: new Map(),   // num -> serial string
   rovDescriptions: new Map(), // num -> description string
   activeROV: null,         // display-only focus, not persisted
-  activeSubTab: 'sensors', // 'sensors' | 'sysarch' | 'readiness'
-  selectedScope: null,     // numeric key into OPERATION_SCOPES
-  projectData: { name: '', code: '', description: '' },
+  activeSubTab: 'sensors', // 'sensors' | 'sysarch'
+  selectedScope: null,     // key into OPERATION_SCOPES, or a "CUS-xx" custom bundle id
+  projectData: { name: '', code: '', description: '', asset: '', weatherWindow: '' },
   approval: { status: 'draft', history: [] },
   shared: {
     sensors: [],
@@ -29,7 +29,7 @@ export function resetSimState() {
   simState.activeROV = null;
   simState.activeSubTab = 'sensors';
   simState.selectedScope = null;
-  simState.projectData = { name: '', code: '', description: '' };
+  simState.projectData = { name: '', code: '', description: '', asset: '', weatherWindow: '' };
   simState.approval = { status: 'draft', history: [] };
   simState.shared = {
     sensors: [], rovSensors: {},

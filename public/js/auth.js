@@ -1,11 +1,10 @@
 import { api } from './api.js';
 import { state, getDeviceId } from './state.js';
-import { showToast } from './ui.js';
+import { showToast, setUserCardName, setUserCardRole } from './ui.js';
 import { enterDashboard, showTab } from './navigation.js';
 import { startProjectAutoSave } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
-import { updateApprovalBadge } from './simulation/approvals.js';
 import { populateUI } from './projectData.js';
 
 function modeShowStep(id) {
@@ -29,9 +28,12 @@ async function saveSessionMeta(code, role, userName) {
 function enterOpMode(userName) {
   state.currentMode = 'operation';
   state.currentUserName = userName;
+  document.body.classList.remove('sim-mode');
   document.getElementById('mode-screen').classList.add('hidden');
   document.getElementById('nav-simulation-section').classList.add('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
+  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Operation navigation');
+  setUserCardRole(state.currentUserProjectRole);
   enterDashboard();
   startProjectAutoSave();
 }
@@ -39,6 +41,9 @@ function enterOpMode(userName) {
 function enterSimMode(userName, existingProject) {
   state.currentMode = 'simulation';
   state.currentUserName = userName;
+  document.body.classList.add('sim-mode');
+  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Simulation navigation');
+  setUserCardRole(state.currentUserProjectRole);
   document.getElementById('mode-screen').classList.add('hidden');
   document.getElementById('nav-operation-sections').classList.add('hidden');
   document.getElementById('header-operation-buttons')?.classList.add('hidden');
@@ -55,7 +60,6 @@ function enterSimMode(userName, existingProject) {
   if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
   else initSimROVGrid();
   startSimAutoSave();
-  updateApprovalBadge();
 }
 
 async function handleJoin(userName) {
@@ -253,7 +257,7 @@ export function installAuth() {
 
       state.currentUserId = userId;
       state.currentUserRole = 'member';
-      document.getElementById('display-user-id').innerText = result.name;
+      setUserCardName(result.name);
       showModeScreen(result.name);
     } catch (err) {
       console.error('Login error:', err);
@@ -285,7 +289,9 @@ export function installAuth() {
       state.currentUserId = 'reviewer';
       state.currentMode = 'operation';
       state.currentProjectCode = code;
-      document.getElementById('display-user-id').innerText = 'Reviewer';
+      document.body.classList.remove('sim-mode');
+      setUserCardName('Reviewer');
+      setUserCardRole('reviewer');
 
       enterDashboard();
       document.getElementById('nav-operation-sections').classList.remove('hidden');

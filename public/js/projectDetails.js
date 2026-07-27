@@ -30,11 +30,11 @@ function addCrewRow(name = '', role = 'ROV Supervisor', shift = 'Day', signOn = 
   const isCustom = shift !== 'Day' && shift !== 'Night' && shift !== '';
   const color = ROLE_COLORS_MAP[role] || '#6b7280';
   const initials = name ? getInitials(name) : '?';
-  const iStyle = 'background:#0f172a;border:1px solid #1e293b;color:white;padding:0 10px;border-radius:8px;width:100%;outline:none;height:36px;font-size:0.82rem;';
+  const iStyle = 'background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8;padding:0 10px;border-radius:8px;width:100%;outline:none;height:36px;font-size:0.82rem;';
 
   const div = document.createElement('div');
   div.className = 'crew-row';
-  div.style.cssText = 'display:grid;grid-template-columns:52px 1fr 1fr 110px 130px 130px 44px;gap:8px;align-items:center;padding:8px;border-radius:10px;margin-bottom:4px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.04);';
+  div.style.cssText = 'display:grid;grid-template-columns:52px 1fr 1fr 110px 130px 130px 44px;gap:8px;align-items:center;padding:8px;border-radius:10px;margin-bottom:4px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.12);';
 
   div.innerHTML = `
     <div style="display:flex;justify-content:center;">
@@ -54,8 +54,8 @@ function addCrewRow(name = '', role = 'ROV Supervisor', shift = 'Day', signOn = 
       </select>
       <input type="text" class="crew-shift-input" style="${iStyle}${isCustom ? '' : 'display:none;'}" placeholder="Shift type..." value="${isCustom ? shift : ''}">
     </div>
-    <div><input type="date" class="crew-signon-input" style="${iStyle}color:#94a3b8;" value="${signOn}"></div>
-    <div><input type="date" class="crew-signoff-input" style="${iStyle}color:#94a3b8;" value="${signOff}"></div>
+    <div><input type="date" class="crew-signon-input" style="${iStyle}color:#6C88A6;" value="${signOn}"></div>
+    <div><input type="date" class="crew-signoff-input" style="${iStyle}color:#6C88A6;" value="${signOff}"></div>
     <div style="display:flex;justify-content:center;">
       <button type="button" class="crew-remove-btn" style="background:rgba(239,68,68,0.1);border:none;width:32px;height:32px;border-radius:8px;color:#ef4444;cursor:pointer;font-size:1rem;">✕</button>
     </div>`;

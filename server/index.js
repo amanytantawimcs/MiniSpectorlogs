@@ -2,6 +2,13 @@ const path = require('path');
 const express = require('express');
 const pool = require('./db');
 
+// A rejected pool.query() in a route with no try/catch becomes an unhandled
+// rejection, which crashes the whole process (and every other in-flight
+// request) instead of just failing that one request. Log and keep serving.
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err);
+});
+
 const app = express();
 app.use(express.json({ limit: '5mb' }));
 

@@ -5,7 +5,7 @@ import { installProjectDetails, flushSaveOnUnload } from './projectDetails.js';
 import { installAdmin } from './admin.js';
 import { installSimSetup } from './simulation/setup.js';
 import { installSimCore, flushSimOnUnload } from './simulation/core.js';
-import { installApprovals } from './simulation/approvals.js';
+import { installSimSidebarUX } from './simulation/sidebarUX.js';
 import { installSensorTable } from './sensorTable.js';
 import { installPreOp } from './preOp.js';
 import { installFinalSetup } from './finalSetup.js';
@@ -14,6 +14,7 @@ import { installChecklists } from './checklists.js';
 import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
 import { installProjectsOverview } from './projectsOverview.js';
+import { installDevPreview } from './devPreviewSim.js'; // TEMPORARY — see file header
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -22,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   installAdmin();
   installSimSetup();
   installSimCore();
-  installApprovals();
+  installSimSidebarUX();
   installSensorTable();
   installPreOp();
   installFinalSetup();
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   installDashboard();
   installExport();
   installProjectsOverview();
+  installDevPreview(); // TEMPORARY — see devPreviewSim.js header
 });
 
 // Best-effort flush + warn if there's unsaved work when the tab closes/reloads.
