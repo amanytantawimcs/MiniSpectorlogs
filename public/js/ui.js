@@ -39,6 +39,23 @@ export function renderLockedNotice() {
   return div;
 }
 
+// Shown when a background staleness poll (staleCheck.js) detects the server
+// has a newer save than what this tab last knew about — e.g. a second
+// "office" device saved while this "vessel" tab was mid-edit. Deliberately a
+// manual reload, not an automatic one: auto-reloading would blow away
+// whatever the user is mid-typing here.
+let staleBannerShown = false;
+export function showStaleDataBanner() {
+  if (staleBannerShown) return;
+  staleBannerShown = true;
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9998;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 16px;background:#f39124;color:#0A111C;font-size:13px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+  div.innerHTML = `<span>⚠ Someone else saved changes to this project. Your view may be out of date.</span>
+    <button type="button" style="padding:4px 14px;border-radius:6px;background:#0A111C;color:#f39124;font-weight:700;font-size:12px;border:none;cursor:pointer;">Reload</button>`;
+  div.querySelector('button').addEventListener('click', () => window.location.reload());
+  document.body.appendChild(div);
+}
+
 // Toggles the active nav item within `scopeSelector` and keeps aria-current
 // in sync with the visual `.active` class so they can never disagree.
 export function setActiveNavItem(el, scopeSelector = '.nav-item') {

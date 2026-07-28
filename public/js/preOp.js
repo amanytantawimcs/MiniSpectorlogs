@@ -8,7 +8,7 @@ import { escapeHtml, showToast, renderSectionCard, calBadge, tstBadge, rdyBadge 
 import { api } from './api.js';
 import { state } from './state.js';
 import { enterDashboard, showTab } from './navigation.js';
-import { startProjectAutoSave } from './projectDetails.js';
+import { startProjectAutoSave, saveProject } from './projectDetails.js';
 import { addSensorRow, showSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
 import { stopSimAutoSave } from './simulation/core.js';
@@ -104,6 +104,11 @@ export async function pushToOperation() {
   const fixedTotal = Object.values(state.preOpData.rovSensors || {}).reduce((s, a) => s + a.length, 0);
   showToast(`Simulation pushed — ${state.preOpData.rovs.length} ROV(s), ${fixedTotal} fixed + ${state.preOpData.sensors.length} mission sensors loaded.`, 'success');
 
+  // Save immediately instead of waiting for the 20s operation autosave tick —
+  // otherwise projects.mode stays 'simulation' server-side for up to 20s after
+  // push, and a second device pulling the project in that window sees stale
+  // simulation data instead of what was just pushed.
+  await saveProject({ silent: true });
   if (simState.projectData.code) await api.lockSimulation(simState.projectData.code);
   simState.locked = true;
 }

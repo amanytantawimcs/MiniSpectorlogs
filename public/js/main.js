@@ -15,6 +15,7 @@ import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
 import { installProjectsOverview } from './projectsOverview.js';
 import { installDevPreview } from './devPreviewSim.js'; // TEMPORARY — see file header
+import { flushOfflineQueue } from './api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   installNavigationStubs();
@@ -33,6 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
   installExport();
   installProjectsOverview();
   installDevPreview(); // TEMPORARY — see devPreviewSim.js header
+
+  // Retry any saves that failed while offline — on startup (queue survives a
+  // reload via localStorage), when connectivity returns, and periodically as
+  // a fallback since the 'online' event doesn't fire reliably in every case
+  // (e.g. some captive-portal/proxy situations).
+  flushOfflineQueue();
+  window.addEventListener('online', flushOfflineQueue);
+  setInterval(flushOfflineQueue, 30 * 1000);
 });
 
 // Best-effort flush + warn if there's unsaved work when the tab closes/reloads.

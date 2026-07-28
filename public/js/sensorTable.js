@@ -4,6 +4,7 @@
 // scrapeTable() in projectData.js already expects — this is the write side.
 
 import { showToast } from './ui.js';
+import { state } from './state.js';
 
 const DEFAULT_CAMERA_ITEMS = ['Rear Fixed Camera', 'PRC Camera', 'PTZ Camera', 'GVI Camera', 'Front Light', 'Rear Light', 'External Light'];
 const DEFAULT_SENSOR_ITEMS = ['Depth Sensor', 'Heading / AHRS', 'Humidity Sensor', 'Temperature Sensor', 'Leak Sensor'];
@@ -17,25 +18,27 @@ export function showSensorTables() {
 export function addSensorRow(tbodyId, data = {}) {
   const container = document.getElementById(tbodyId);
   if (!container) return;
+  const readOnly = state.currentUserRole === 'reviewer';
   const tr = document.createElement('tr');
   tr.className = 'transition-colors';
   tr.addEventListener('mouseenter', () => { tr.style.background = 'rgba(20,36,58,0.6)'; });
   tr.addEventListener('mouseleave', () => { tr.style.background = ''; });
 
   const isOk = data.status === 'OK';
+  const dis = readOnly ? 'disabled' : '';
   tr.innerHTML = `
-    <td class="p-2 pl-4"><input type="text" class="row-name w-full font-bold outline-none transition-all" style="background:transparent;border:none;border-bottom:1px solid transparent;color:#E9F0F8" value="${(data.name || '').replace(/"/g, '&quot;')}" placeholder="Item Name..."></td>
+    <td class="p-2 pl-4"><input type="text" class="row-name w-full font-bold outline-none transition-all" style="background:transparent;border:none;border-bottom:1px solid transparent;color:#E9F0F8" value="${(data.name || '').replace(/"/g, '&quot;')}" placeholder="Item Name..." ${dis}></td>
     <td class="p-2">
       <label class="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" class="row-status sr-only peer" ${isOk ? 'checked' : ''}>
+        <input type="checkbox" class="row-status sr-only peer" ${isOk ? 'checked' : ''} ${dis}>
         <div class="w-11 h-4 peer-focus:outline-none rounded-full peer peer-bg after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white" style="background:rgba(120,166,212,0.28)"></div>
         <span class="row-status-label ml-3 text-sm font-bold w-12" style="color:${isOk ? '#22c55e' : '#f87171'}">${isOk ? 'OK' : 'Fault'}</span>
       </label>
     </td>
-    <td class="p-2"><input type="text" class="row-model w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.model || '').replace(/"/g, '&quot;')}" placeholder="Model..."></td>
-    <td class="p-2"><input type="date" class="row-cal w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${data.cal || ''}"></td>
-    <td class="p-2"><input type="text" class="row-notes w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.notes || '').replace(/"/g, '&quot;')}" placeholder="Notes..."></td>
-    <td class="p-2 text-center"><button type="button" class="remove-row-btn font-bold text-lg" style="color:#f87171" title="Remove Row">&times;</button></td>
+    <td class="p-2"><input type="text" class="row-model w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.model || '').replace(/"/g, '&quot;')}" placeholder="Model..." ${dis}></td>
+    <td class="p-2"><input type="date" class="row-cal w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${data.cal || ''}" ${dis}></td>
+    <td class="p-2"><input type="text" class="row-notes w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.notes || '').replace(/"/g, '&quot;')}" placeholder="Notes..." ${dis}></td>
+    <td class="p-2 text-center">${readOnly ? '' : '<button type="button" class="remove-row-btn font-bold text-lg" style="color:#f87171" title="Remove Row">&times;</button>'}</td>
   `;
   tr.querySelector('.row-status').addEventListener('change', (e) => {
     const label = tr.querySelector('.row-status-label');
@@ -43,11 +46,12 @@ export function addSensorRow(tbodyId, data = {}) {
     label.textContent = ok ? 'OK' : 'Fault';
     label.style.color = ok ? '#22c55e' : '#f87171';
   });
-  tr.querySelector('.remove-row-btn').addEventListener('click', () => tr.remove());
+  tr.querySelector('.remove-row-btn')?.addEventListener('click', () => tr.remove());
   container.appendChild(tr);
 }
 
 function resetSensorTab() {
+  if (state.currentUserRole === 'reviewer') return;
   if (!confirm('Clear all camera and sensor rows and return to setup?')) return;
   ['camLightBody', 'sensorBody'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
   document.getElementById('sensor-content')?.classList.add('hidden');
@@ -55,12 +59,14 @@ function resetSensorTab() {
 }
 
 function loadDefaultSensors() {
+  if (state.currentUserRole === 'reviewer') return;
   showSensorTables();
   DEFAULT_CAMERA_ITEMS.forEach(name => addSensorRow('camLightBody', { name, status: 'Fault' }));
   DEFAULT_SENSOR_ITEMS.forEach(name => addSensorRow('sensorBody', { name, status: 'Fault' }));
 }
 
 function importPackingJSON() {
+  if (state.currentUserRole === 'reviewer') return;
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'application/json';

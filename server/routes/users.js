@@ -2,6 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const { hashPasscode, verifyPasscode, PASSCODE_FORMAT } = require('../lib/passcode');
 const { verifyAdminCredentials } = require('../lib/adminAuth');
+const { createSession } = require('../lib/sessions');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.post('/:id/passcode', async (req, res) => {
 
   const { hash, salt } = hashPasscode(passcode);
   await pool.query('UPDATE users SET passcode_hash = $1, passcode_salt = $2 WHERE id = $3', [hash, salt, id]);
-  res.json({ success: true });
+  res.json({ success: true, token: createSession(id) });
 });
 
 router.post('/:id/verify-passcode', async (req, res) => {
@@ -34,7 +35,7 @@ router.post('/:id/verify-passcode', async (req, res) => {
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
   const ok = verifyPasscode(passcode || '', rows[0].passcode_hash, rows[0].passcode_salt);
   if (!ok) return res.status(401).json({ success: false, error: 'Incorrect passcode.' });
-  res.json({ success: true });
+  res.json({ success: true, token: createSession(id) });
 });
 
 // Self-service: a user who forgot their passcode clears it themselves from the

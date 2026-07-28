@@ -4,12 +4,30 @@ const {
   getProjectRowByCode, upsertOperationProject, upsertSimulationProject,
   buildOperationData, buildSimulationData, lockSimulation,
 } = require('../lib/projectData');
+const { requireAuth, assertCanWrite } = require('../lib/auth');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+// Without this, a rejected pool.query() inside a route with no try/catch
+// becomes an unhandled rejection: process.on('unhandledRejection') logs it
+// and keeps the server alive, but never sends a response — the request just
+// hangs forever from the client's perspective. Wrapping every handler here
+// guarantees a response (or a clean 500) no matter what the DB does.
+function asyncRoute(handler) {
+  return (req, res, next) => {
+    Promise.resolve(handler(req, res, next)).catch((e) => {
+      console.error('[projects route]', e);
+      if (!res.headersSent) res.status(500).json({ success: false, error: e.message });
+    });
+  };
+}
+
+router.post('/', requireAuth, asyncRoute(async (req, res) => {
   const { project_code, mode, created_by, project_name, data } = req.body || {};
   if (!project_code) return res.status(400).json({ success: false, error: 'project_code required' });
+  if (!(await assertCanWrite(req.userId, project_code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
 
   let client;
   try {
@@ -26,9 +44,9 @@ router.post('/', async (req, res) => {
   } finally {
     if (client) client.release();
   }
-});
+}));
 
-router.get('/', async (req, res) => {
+router.get('/', asyncRoute(async (req, res) => {
   const { mode } = req.query;
   if (mode === 'simulation') {
     // Includes approval fields so the Approvals tab can list/filter without a second round trip.
@@ -46,7 +64,7 @@ router.get('/', async (req, res) => {
     ? await pool.query('SELECT id, project_code, project_name, mode, created_by, updated_at, is_sim_locked FROM projects WHERE mode = $1 ORDER BY updated_at DESC', [mode])
     : await pool.query('SELECT id, project_code, project_name, mode, created_by, updated_at, is_sim_locked FROM projects ORDER BY updated_at DESC');
   res.json({ success: true, projects: rows });
-});
+}));
 
 // Same two privileged User IDs as the simulation approver gate
 // (APPROVER_IDS in public/js/simulation/config.js) — keep both lists in sync.
@@ -56,7 +74,7 @@ const PRIVILEGED_USER_IDS = ['1162', '1774'];
 // who created it, with its mode (operation/simulation) and creator — not to
 // be confused with the mode-filtered GET '/' above, which every user hits
 // from their own Simulation History tab.
-router.get('/overview', async (req, res) => {
+router.get('/overview', asyncRoute(async (req, res) => {
   const { userId } = req.query;
   if (!PRIVILEGED_USER_IDS.includes(String(userId))) {
     return res.status(403).json({ success: false, error: 'Not authorized.' });
@@ -66,9 +84,9 @@ router.get('/overview', async (req, res) => {
      FROM projects ORDER BY updated_at DESC`
   );
   res.json({ success: true, projects: rows });
-});
+}));
 
-router.get('/:code', async (req, res) => {
+router.get('/:code', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, notFound: true, error: 'Not found' });
   const data = project.mode === 'simulation' ? await buildSimulationData(project) : await buildOperationData(project);
@@ -84,52 +102,59 @@ router.get('/:code', async (req, res) => {
       data,
     },
   });
-});
+}));
 
 // Marks a simulation as pushed to operation — persists across reloads (projects.is_sim_locked),
 // unlike the old app's client-only lock flag which reset on every page refresh.
-router.post('/:code/lock-simulation', async (req, res) => {
+router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) => {
+  if (!(await assertCanWrite(req.userId, req.params.code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, error: 'Not found' });
   await lockSimulation(project.id);
   res.json({ success: true });
-});
+}));
 
-router.get('/:code/members', async (req, res) => {
+router.get('/:code/members', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true, members: [] });
   const { rows } = await pool.query('SELECT user_id, role, added_by, added_at FROM project_members WHERE project_id = $1', [project.id]);
   res.json({ success: true, members: rows });
-});
+}));
 
-router.post('/:code/members', async (req, res) => {
+router.post('/:code/members', requireAuth, asyncRoute(async (req, res) => {
+  if (!(await assertCanWrite(req.userId, req.params.code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
   const { userId, role, addedBy } = req.body || {};
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, error: 'Project not found' });
-  try {
-    await pool.query(
-      `INSERT INTO project_members (project_id, user_id, role, added_by) VALUES ($1,$2,$3,$4)
-       ON CONFLICT (project_id, user_id) DO UPDATE SET role = EXCLUDED.role, added_by = EXCLUDED.added_by`,
-      [project.id, userId, role || 'operator', addedBy || '']
-    );
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ success: false, error: e.message }); }
-});
+  await pool.query(
+    `INSERT INTO project_members (project_id, user_id, role, added_by) VALUES ($1,$2,$3,$4)
+     ON CONFLICT (project_id, user_id) DO UPDATE SET role = EXCLUDED.role, added_by = EXCLUDED.added_by`,
+    [project.id, userId, role || 'operator', addedBy || '']
+  );
+  res.json({ success: true });
+}));
 
-router.delete('/:code/members/:userId', async (req, res) => {
+router.delete('/:code/members/:userId', requireAuth, asyncRoute(async (req, res) => {
+  if (!(await assertCanWrite(req.userId, req.params.code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true });
   await pool.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [project.id, req.params.userId]);
   res.json({ success: true });
-});
+}));
 
-router.get('/:code/access/:userId', async (req, res) => {
+router.get('/:code/access/:userId', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ allowed: true, role: 'operator' });
   const { rows: members } = await pool.query('SELECT user_id, role FROM project_members WHERE project_id = $1', [project.id]);
   if (members.length === 0) return res.json({ allowed: true, role: 'operator' });
   const member = members.find(m => String(m.user_id) === String(req.params.userId));
   res.json(member ? { allowed: true, role: member.role } : { allowed: false });
-});
+}));
 
 module.exports = router;

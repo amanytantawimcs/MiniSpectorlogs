@@ -1,12 +1,72 @@
 // Thin fetch client — the only module that talks to the backend.
 // Same origin as the page, so no base URL or CORS config needed.
 
+import { showToast } from './ui.js';
+
+// Session token minted server-side at login (see routes/users.js). Sent on
+// every request — as a header (covers GET/DELETE) and merged into the body
+// for anything that sends one (covers navigator.sendBeacon calls, which
+// can't set custom headers) — so write routes can verify the caller is
+// actually logged in instead of trusting whatever the client claims.
+let sessionToken = null;
+export function setSessionToken(token) { sessionToken = token; }
+export function getSessionToken() { return sessionToken; }
+
+// Failed-save retry queue (localStorage-backed, survives a reload). Without
+// this, a save that fails because the network is briefly down just shows a
+// toast and is gone — no retry, no record that it needs to happen. Only
+// genuine network failures get queued (a 4xx/5xx from a reachable server is
+// a real rejection, not something blindly retrying would fix). Keyed by
+// project_code+mode so a backlog of failed autosaves for the same project
+// collapses to just the latest snapshot instead of replaying stale ones.
+const QUEUE_KEY = 'mcs_offline_queue';
+
+function readQueue() {
+  try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (e) { return []; }
+}
+function writeQueue(items) {
+  try { localStorage.setItem(QUEUE_KEY, JSON.stringify(items)); } catch (e) { /* storage full/unavailable — best effort */ }
+}
+function enqueueFailedSave(payload) {
+  const items = readQueue().filter(it => !(it.payload.project_code === payload.project_code && it.payload.mode === payload.mode));
+  items.push({ payload, queuedAt: Date.now() });
+  writeQueue(items);
+}
+
+export function getOfflineQueueSize() {
+  return readQueue().length;
+}
+
+let flushing = false;
+export async function flushOfflineQueue() {
+  if (flushing) return;
+  flushing = true;
+  try {
+    const items = readQueue();
+    if (items.length === 0) return;
+    let flushedAny = false;
+    while (true) {
+      const remaining = readQueue();
+      if (remaining.length === 0) break;
+      const item = remaining[0];
+      const r = await request('/projects', { method: 'POST', body: JSON.stringify(item.payload) });
+      if (!r.ok) break; // still offline, or now a real rejection — stop, leave the rest queued
+      writeQueue(remaining.slice(1));
+      flushedAny = true;
+    }
+    if (flushedAny) showToast('Queued changes synced.', 'success');
+  } finally {
+    flushing = false;
+  }
+}
+
 async function request(path, options = {}) {
   try {
-    const res = await fetch('/api' + path, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options,
-    });
+    const headers = { 'Content-Type': 'application/json' };
+    if (sessionToken) headers['X-Session-Token'] = sessionToken;
+    let body = options.body;
+    if (body) body = JSON.stringify({ ...JSON.parse(body), sessionToken });
+    const res = await fetch('/api' + path, { ...options, headers, body });
     let data = {};
     try { data = await res.json(); } catch (e) { /* empty body */ }
     return { ok: res.ok, status: res.status, data };
@@ -26,6 +86,7 @@ export const api = {
     const r = await request('/users/' + encodeURIComponent(userId) + '/passcode', {
       method: 'POST', body: JSON.stringify({ passcode }),
     });
+    if (r.ok && r.data.token) setSessionToken(r.data.token);
     return { success: r.ok, error: r.data.error };
   },
 
@@ -33,6 +94,7 @@ export const api = {
     const r = await request('/users/' + encodeURIComponent(userId) + '/verify-passcode', {
       method: 'POST', body: JSON.stringify({ passcode }),
     });
+    if (r.ok && r.data.token) setSessionToken(r.data.token);
     return { success: r.ok, error: r.data.error };
   },
 
@@ -43,7 +105,14 @@ export const api = {
 
   pushProject: async (payload) => {
     const r = await request('/projects', { method: 'POST', body: JSON.stringify(payload) });
-    if (!r.ok) return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false };
+    if (!r.ok) {
+      if (r.networkError) {
+        const alreadyQueued = readQueue().some(it => it.payload.project_code === payload.project_code && it.payload.mode === payload.mode);
+        enqueueFailedSave(payload);
+        if (!alreadyQueued) showToast('Offline — save queued, will retry automatically.', 'warn');
+      }
+      return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false };
+    }
     return { success: true, updated_at: r.data.updated_at };
   },
 

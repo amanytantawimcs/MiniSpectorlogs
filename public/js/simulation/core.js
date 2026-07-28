@@ -3,7 +3,8 @@
 // collectAllData()/populateUI() from the Operation side.
 
 import { state } from '../state.js';
-import { api } from '../api.js';
+import { api, getSessionToken } from '../api.js';
+import { noteSavedUpdatedAt } from '../staleCheck.js';
 import { showToast, setActiveNavItem } from '../ui.js';
 import { simState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
@@ -177,6 +178,14 @@ export async function renderSimContent() {
     const { renderSensorsContent } = await import('./sensors.js');
     renderSensorsContent(area);
   }
+  // Sensors/Topology have dozens of individual inline inputs/toggles with no
+  // single choke point to gate — locking interaction here, once, covers all
+  // of them instead of threading a disabled-state through every builder.
+  // The server already rejects a reviewer's writes (assertCanWrite), this
+  // just stops the UI from pretending the edit did anything.
+  const readOnly = state.currentUserRole === 'reviewer';
+  area.style.pointerEvents = readOnly ? 'none' : '';
+  area.style.opacity = readOnly ? '0.6' : '';
   updateSimTabBadges();
   updateSimProgress();
 }
@@ -234,6 +243,7 @@ export async function saveSimulation({ silent } = {}) {
   });
   if (result.success) {
     lastSavedAt = Date.now();
+    noteSavedUpdatedAt(result.updated_at);
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
   } else if (!silent) {
@@ -271,6 +281,7 @@ export function flushSimOnUnload() {
     created_by: state.currentUserName,
     project_name: simState.projectData.name || simState.projectData.code,
     data: collectSimState(),
+    sessionToken: getSessionToken(),
   });
   navigator.sendBeacon('/api/projects', new Blob([payload], { type: 'application/json' }));
 }

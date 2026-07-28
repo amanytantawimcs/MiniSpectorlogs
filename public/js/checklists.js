@@ -41,16 +41,19 @@ function clEnsureItem(type, diveKey, itemId) {
 }
 
 function clCheck(type, diveKey, itemId, val) {
+  if (state.currentUserRole === 'reviewer') return;
   clEnsureItem(type, diveKey, itemId).checked = val;
   state.isDirty = true;
   renderChecklistsTab();
 }
 function clSetObs(type, diveKey, itemId, val) {
+  if (state.currentUserRole === 'reviewer') return;
   clEnsureItem(type, diveKey, itemId).obs = val;
   state.isDirty = true;
   updateChecklistBadge();
 }
 function clSetReading(type, diveKey, itemId, val) {
+  if (state.currentUserRole === 'reviewer') return;
   clEnsureItem(type, diveKey, itemId).reading = val;
   state.isDirty = true;
 }
@@ -98,6 +101,7 @@ function switchChecklistDive(type, key) {
 }
 
 function addChecklistDive(type) {
+  if (state.currentUserRole === 'reviewer') return;
   const map = state.currentReportData.checklists?.[type] || {};
   const existingNos = Object.keys(map).map(Number).filter(n => !isNaN(n) && n > 0);
   const next = existingNos.length > 0 ? Math.max(...existingNos) + 1 : (Object.keys(map).length + 2);
@@ -106,6 +110,7 @@ function addChecklistDive(type) {
 }
 
 function clResetChecklist(type, diveKey) {
+  if (state.currentUserRole === 'reviewer') return;
   if (!confirm('Reset all items in this checklist? This cannot be undone.')) return;
   ensureChecklistsState();
   const cl = CHECKLISTS[type];
@@ -123,6 +128,7 @@ export function renderChecklistsTab() {
   if (!container) return;
   ensureChecklistsState();
 
+  const readOnly = state.currentUserRole === 'reviewer';
   const type = state.activeChecklistType;
   const cl = CHECKLISTS[type];
   const isPerDive = !!cl.perDive;
@@ -141,7 +147,7 @@ export function renderChecklistsTab() {
         <select id="cl-dive-select" class="text-sm rounded-lg px-2 py-1.5 cursor-pointer">
             ${allKeys.map(k => `<option value="${escapeHtml(k)}" ${k === diveKey ? 'selected' : ''}>${escapeHtml(k)}</option>`).join('')}
         </select>
-        <button id="cl-add-dive-btn" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors hover:bg-[#459fd9]/10" style="color:#459fd9;border:1px solid rgba(69,159,217,0.3);">+ New Dive</button>
+        ${readOnly ? '' : `<button id="cl-add-dive-btn" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors hover:bg-[#459fd9]/10" style="color:#459fd9;border:1px solid rgba(69,159,217,0.3);">+ New Dive</button>`}
     </div>`;
   }
 
@@ -159,7 +165,7 @@ export function renderChecklistsTab() {
       return `
       <div class="flex gap-3 items-start py-2.5 px-3 rounded-lg transition-colors hover:bg-white/[0.03] ${st.checked ? 'opacity-55' : ''}">
           <div class="flex-shrink-0 mt-[3px]">
-              <input type="checkbox" id="${ckId}" data-item-id="${item.id}" ${st.checked ? 'checked' : ''} class="cl-check-input w-4 h-4 rounded cursor-pointer accent-[#f39124]">
+              <input type="checkbox" id="${ckId}" data-item-id="${item.id}" ${st.checked ? 'checked' : ''} ${readOnly ? 'disabled' : ''} class="cl-check-input w-4 h-4 rounded cursor-pointer accent-[#f39124]">
           </div>
           <div class="flex-1 min-w-0">
               <label for="${ckId}" class="block text-sm leading-relaxed cursor-pointer select-none" style="${st.checked ? 'text-decoration:line-through;color:#6C88A6' : 'color:#E9F0F8'}">
@@ -167,12 +173,12 @@ export function renderChecklistsTab() {
               </label>
               ${item.reading ? `<div class="mt-2 flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-semibold text-[#f39124]">${escapeHtml(item.readingLabel)}:</span>
-                  <input type="text" value="${escapeHtml(st.reading || '')}" placeholder="${escapeHtml(item.readingHint || 'Enter reading...')}"
+                  <input type="text" value="${escapeHtml(st.reading || '')}" placeholder="${escapeHtml(item.readingHint || 'Enter reading...')}" ${readOnly ? 'disabled' : ''}
                          data-item-id="${item.id}" class="cl-reading-input rounded-lg px-2.5 py-1 text-sm w-40 focus:outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8">
               </div>` : ''}
           </div>
           <div class="flex-shrink-0 min-w-[140px]">
-              <input type="text" value="${escapeHtml(st.obs || '')}" placeholder="Observation..." data-item-id="${item.id}"
+              <input type="text" value="${escapeHtml(st.obs || '')}" placeholder="Observation..." data-item-id="${item.id}" ${readOnly ? 'disabled' : ''}
                      class="cl-obs-input w-full text-xs py-0.5 transition-colors focus:outline-none" style="background:transparent;color:#9AB0C8;border:none;border-bottom:1px solid rgba(120,166,212,0.16)">
           </div>
       </div>`;
@@ -196,7 +202,7 @@ export function renderChecklistsTab() {
           <p class="text-xs mt-0.5" style="color:#6C88A6">${isPerDive ? 'Completed per dive — select dive number below' : 'Completed once per job/session'}</p>
       </div>
       <div class="flex items-center gap-4">
-          <button id="cl-reset-btn" type="button" class="px-3 py-1.5 text-xs rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors" style="border:1px solid rgba(120,166,212,0.16);color:#9AB0C8">Reset</button>
+          ${readOnly ? '' : `<button id="cl-reset-btn" type="button" class="px-3 py-1.5 text-xs rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors" style="border:1px solid rgba(120,166,212,0.16);color:#9AB0C8">Reset</button>`}
           <div class="text-right">
               <div class="text-sm font-bold" style="color:${allDone ? '#22c55e' : '#E9F0F8'}">${totalDone} / ${totalItems}</div>
               <div class="text-xs" style="color:#6C88A6">${pct}% complete</div>

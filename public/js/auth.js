@@ -6,6 +6,7 @@ import { startProjectAutoSave } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
 import { populateUI } from './projectData.js';
+import { startStaleCheck, noteSavedUpdatedAt } from './staleCheck.js';
 
 function modeShowStep(id) {
   ['mode-step1', 'mode-step2-new', 'mode-step2-join'].forEach(s =>
@@ -36,6 +37,7 @@ function enterOpMode(userName) {
   setUserCardRole(state.currentUserProjectRole);
   enterDashboard();
   startProjectAutoSave();
+  startStaleCheck();
 }
 
 function enterSimMode(userName, existingProject) {
@@ -60,6 +62,7 @@ function enterSimMode(userName, existingProject) {
   if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
   else initSimROVGrid();
   startSimAutoSave();
+  startStaleCheck();
 }
 
 async function handleJoin(userName) {
@@ -102,6 +105,7 @@ async function handleJoin(userName) {
     state.currentProjectCode = code;
     state.currentDeviceRole = 'office';
     const project = result.project;
+    noteSavedUpdatedAt(project.updated_at);
 
     if (project.mode === 'simulation') {
       enterSimMode(userName, project);

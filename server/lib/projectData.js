@@ -160,12 +160,23 @@ async function upsertOperationProject(client, { project_code, project_name, crea
 
 async function upsertSimulationProject(client, { project_code, project_name, created_by, data }) {
   const d = data || {};
+  // Once a simulation has been pushed to Operation (is_sim_locked), later edits
+  // to Sensors/Topology — which the UI deliberately leaves open for reference/
+  // correction after push — must still save (nothing the user typed should be
+  // silently lost), but must NOT flip projects.mode back to 'simulation'.
+  // Sensors/Topology sync every ~2s on edit and Operation autosaves every 20s;
+  // without this guard the two loops fight over `mode` and whichever last
+  // reaches the server decides whether GET /:code returns operation data
+  // (crew, logs, everything) or stale simulation data to any device that
+  // pulls the project in that window. `projects.is_sim_locked` and `mode`
+  // referenced unqualified below are the pre-existing row's current values,
+  // not the row being inserted (that's what EXCLUDED is for).
   const { rows } = await client.query(
     `INSERT INTO projects (project_code, project_name, mode, created_by, scope)
      VALUES ($1,$2,'simulation',$3,$4)
      ON CONFLICT (project_code) DO UPDATE SET
        project_name = EXCLUDED.project_name,
-       mode = 'simulation',
+       mode = CASE WHEN projects.is_sim_locked THEN projects.mode ELSE 'simulation' END,
        created_by = EXCLUDED.created_by,
        scope = EXCLUDED.scope
      RETURNING id, updated_at`,

@@ -54,8 +54,10 @@ export function renderFinalSetupTab() {
   const preOpData = state.preOpData;
   const fs = ensureFinalSetup();
   const isLocked = !!fs.lockedAt;
-  const dis = isLocked;
-  const inputStyleStr = isLocked
+  // Reviewers (viewer-role project members) get the same read-only treatment
+  // as a locked setup — same mechanism, just an additional reason for it.
+  const readOnly = isLocked || state.currentUserRole === 'reviewer';
+  const inputStyleStr = readOnly
     ? 'background:rgba(12,23,39,0.4);color:#6C88A6;border:1px solid rgba(120,166,212,0.16);cursor:not-allowed'
     : 'background:rgba(12,23,39,0.6);color:#E9F0F8;border:1px solid rgba(120,166,212,0.16)';
 
@@ -118,11 +120,11 @@ export function renderFinalSetupTab() {
     const active = r.rovNumber === fs.activeROVNum;
     const isMain = r.role === 'main';
     const card = document.createElement('div');
-    card.style.cssText = `cursor:${isLocked ? 'default' : 'pointer'};border-radius:12px;padding:16px 24px;border:1px solid ${active ? 'rgba(243,145,36,0.5)' : 'rgba(120,166,212,0.16)'};background:${active ? 'rgba(243,145,36,0.08)' : 'rgba(16,27,44,0.4)'};text-align:center;min-width:110px;`;
+    card.style.cssText = `cursor:${readOnly ? 'default' : 'pointer'};border-radius:12px;padding:16px 24px;border:1px solid ${active ? 'rgba(243,145,36,0.5)' : 'rgba(120,166,212,0.16)'};background:${active ? 'rgba(243,145,36,0.08)' : 'rgba(16,27,44,0.4)'};text-align:center;min-width:110px;`;
     card.innerHTML = `<div style="font-size:22px;font-weight:900;color:${active ? '#f39124' : '#6C88A6'}">MS-${r.rovNumber}</div>
       <div style="font-size:9px;font-weight:700;margin-top:4px;padding:2px 8px;border-radius:4px;display:inline-block;background:${isMain ? 'rgba(243,145,36,0.15)' : 'rgba(120,166,212,0.16)'};color:${isMain ? '#f39124' : '#9AB0C8'}">${r.role.toUpperCase()}</div>
       ${active ? `<div style="font-size:9px;color:#459fd9;margin-top:6px;font-weight:600">ACTIVE UNIT</div>` : ''}`;
-    if (!isLocked) card.addEventListener('click', () => { fs.activeROVNum = r.rovNumber; renderFinalSetupTab(); });
+    if (!readOnly) card.addEventListener('click', () => { fs.activeROVNum = r.rovNumber; renderFinalSetupTab(); });
     rovBody.appendChild(card);
   });
   el.appendChild(renderSectionCard('#f39124', 'Operated Unit', 'Select the MiniSpector unit for this operation', rovBody, { padded: true }));
@@ -137,7 +139,7 @@ export function renderFinalSetupTab() {
   const addSensorRow = (s, idx) => {
     const tr = document.createElement('tr');
     const tdCheck = document.createElement('td'); tdCheck.className = 'px-3 py-2.5 text-center';
-    tdCheck.appendChild(checkbox(s.confirmed, isLocked, () => { s.confirmed = !s.confirmed; renderFinalSetupTab(); }));
+    tdCheck.appendChild(checkbox(s.confirmed, readOnly, () => { s.confirmed = !s.confirmed; renderFinalSetupTab(); }));
     const tdName = document.createElement('td'); tdName.className = 'px-3 py-2.5 text-sm font-medium text-[#E9F0F8]'; tdName.textContent = s.name;
     const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5 text-xs text-[#9AB0C8]'; tdModel.textContent = s.model || '—';
     const tdQty = document.createElement('td'); tdQty.className = 'px-3 py-2.5 text-center text-sm text-[#9AB0C8]'; tdQty.textContent = s.qty || 1;
@@ -145,7 +147,7 @@ export function renderFinalSetupTab() {
     const tdTest = document.createElement('td'); tdTest.className = 'px-3 py-2.5 text-center'; tdTest.innerHTML = tstBadge(s.tested);
     const tdNote = document.createElement('td'); tdNote.className = 'px-3 py-2.5';
     const noteInput = document.createElement('input');
-    noteInput.type = 'text'; noteInput.placeholder = 'Note…'; noteInput.value = s.opNote || ''; noteInput.disabled = isLocked;
+    noteInput.type = 'text'; noteInput.placeholder = 'Note…'; noteInput.value = s.opNote || ''; noteInput.disabled = readOnly;
     noteInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;width:100%;outline:none`;
     noteInput.addEventListener('input', () => { s.opNote = noteInput.value; });
     tdNote.appendChild(noteInput);
@@ -182,12 +184,12 @@ export function renderFinalSetupTab() {
     fs.thrusters.forEach((t) => {
       const tr = document.createElement('tr');
       const tdCheck = document.createElement('td'); tdCheck.className = 'px-3 py-2.5 text-center';
-      tdCheck.appendChild(checkbox(t.confirmed, isLocked, () => { t.confirmed = !t.confirmed; renderFinalSetupTab(); }));
+      tdCheck.appendChild(checkbox(t.confirmed, readOnly, () => { t.confirmed = !t.confirmed; renderFinalSetupTab(); }));
       const tdNum = document.createElement('td'); tdNum.className = 'px-3 py-2.5 text-sm text-[#E9F0F8] font-mono'; tdNum.textContent = t.number || '—';
       const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5 text-xs text-[#9AB0C8] font-mono'; tdSerial.textContent = t.serial || '—';
       const tdPos = document.createElement('td'); tdPos.className = 'px-3 py-2.5';
       const posInput = document.createElement('input');
-      posInput.type = 'text'; posInput.placeholder = 'e.g. Port Horizontal'; posInput.value = t.position || ''; posInput.disabled = isLocked;
+      posInput.type = 'text'; posInput.placeholder = 'e.g. Port Horizontal'; posInput.value = t.position || ''; posInput.disabled = readOnly;
       posInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;width:100%;outline:none`;
       posInput.addEventListener('input', () => { t.position = posInput.value; });
       tdPos.appendChild(posInput);
@@ -219,7 +221,7 @@ export function renderFinalSetupTab() {
       const tdIp = document.createElement('td'); tdIp.className = 'px-3 py-2'; tdIp.style.width = '160px';
       if (dev.hasIP !== false) {
         const ipInput = document.createElement('input');
-        ipInput.type = 'text'; ipInput.placeholder = '0.0.0.0'; ipInput.value = dev.ip || ''; ipInput.disabled = isLocked;
+        ipInput.type = 'text'; ipInput.placeholder = '0.0.0.0'; ipInput.value = dev.ip || ''; ipInput.disabled = readOnly;
         ipInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace;width:100%;outline:none;text-align:center`;
         ipInput.addEventListener('input', () => { dev.ip = ipInput.value; });
         tdIp.appendChild(ipInput);
@@ -227,7 +229,7 @@ export function renderFinalSetupTab() {
       const tdPort = document.createElement('td'); tdPort.className = 'px-3 py-2'; tdPort.style.width = '100px';
       if (dev.hasPort !== false) {
         const portInput = document.createElement('input');
-        portInput.type = 'text'; portInput.placeholder = '0000'; portInput.value = dev.port || ''; portInput.disabled = isLocked;
+        portInput.type = 'text'; portInput.placeholder = '0000'; portInput.value = dev.port || ''; portInput.disabled = readOnly;
         portInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace;width:100%;outline:none;text-align:center`;
         portInput.addEventListener('input', () => { dev.port = portInput.value; });
         tdPort.appendChild(portInput);
@@ -242,7 +244,7 @@ export function renderFinalSetupTab() {
   // 5. Setup Notes
   const notesArea = document.createElement('textarea');
   notesArea.placeholder = 'Enter any setup notes, deviations from plan, or field observations…';
-  notesArea.disabled = isLocked;
+  notesArea.disabled = readOnly;
   notesArea.value = fs.notes || '';
   notesArea.style.cssText = `${inputStyleStr};border-radius:8px;padding:10px 12px;font-size:12px;width:100%;min-height:90px;outline:none;resize:vertical;line-height:1.5`;
   notesArea.addEventListener('input', () => { fs.notes = notesArea.value; });
@@ -287,6 +289,7 @@ export function renderFinalSetupTab() {
 }
 
 function lockFinalSetup() {
+  if (state.currentUserRole === 'reviewer') return;
   const fs = state.currentReportData.finalSetup;
   if (!fs) return;
   fs.lockedAt = new Date().toISOString();
@@ -296,6 +299,7 @@ function lockFinalSetup() {
 }
 
 function startFinalChange() {
+  if (state.currentUserRole === 'reviewer') return;
   const fs = state.currentReportData.finalSetup;
   if (!fs) return;
   fs.lockedAt = null;
@@ -305,6 +309,7 @@ function startFinalChange() {
 }
 
 function commitFinalChange() {
+  if (state.currentUserRole === 'reviewer') return;
   const fs = state.currentReportData.finalSetup;
   if (!fs) return;
   const reason = document.getElementById('final-change-reason')?.value?.trim() || 'No reason provided';
@@ -317,6 +322,7 @@ function commitFinalChange() {
 }
 
 function cancelFinalChange() {
+  if (state.currentUserRole === 'reviewer') return;
   const fs = state.currentReportData.finalSetup;
   if (!fs) return;
   fs._pendingChange = false;

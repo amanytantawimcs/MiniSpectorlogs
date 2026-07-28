@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { showToast } from './ui.js';
-import { api } from './api.js';
+import { api, getSessionToken } from './api.js';
+import { noteSavedUpdatedAt } from './staleCheck.js';
 import { collectAllData, populateUI } from './projectData.js';
 
 export const ROLE_COLORS_MAP = {
@@ -100,7 +101,7 @@ function showSyncIndicator(syncState) {
   label.textContent = s.label;
 }
 
-async function saveProject({ silent } = {}) {
+export async function saveProject({ silent } = {}) {
   if (state.currentUserRole === 'reviewer') return;
   const data = collectAllData();
   const projectCode = data.projectCode;
@@ -119,6 +120,7 @@ async function saveProject({ silent } = {}) {
   });
   if (result.success) {
     state.isDirty = false;
+    noteSavedUpdatedAt(result.updated_at);
     showSyncIndicator('synced');
     if (!silent) {
       const ind = document.getElementById('save-indicator');
@@ -154,6 +156,7 @@ export function flushSaveOnUnload() {
     created_by: state.currentUserName,
     project_name: data.projectName || projectCode,
     data,
+    sessionToken: getSessionToken(),
   });
   navigator.sendBeacon('/api/projects', new Blob([payload], { type: 'application/json' }));
 }
