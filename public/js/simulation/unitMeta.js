@@ -31,14 +31,14 @@ export const UNIT_META = {
   2: { cls: 'insp', batt: 88, state: 'free' },
   3: { cls: 'work', batt: 74, state: 'free' },
   4: { cls: 'survey', batt: 91, state: 'free' },
-  5: { cls: 'work', batt: 23, state: 'charging' },
+  5: { cls: 'work', batt: 23, state: 'free' },
   6: { cls: 'metro', batt: 67, state: 'free' },
   7: { cls: 'insp', batt: 54, state: 'free' },
   8: { cls: 'survey', batt: 80, state: 'free' },
-  9: { cls: 'work', batt: 45, state: 'busy' },
+  9: { cls: 'work', batt: 45, state: 'free' },
   10: { cls: 'metro', batt: 99, state: 'free' },
   11: { cls: 'survey', batt: 31, state: 'free' },
-  12: { cls: 'insp', batt: 12, state: 'busy' },
+  12: { cls: 'insp', batt: 12, state: 'free' },
 };
 
 export function capsFor(num) {
