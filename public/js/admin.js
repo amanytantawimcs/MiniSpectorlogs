@@ -1,14 +1,10 @@
-import { api } from './api.js';
+import { api, clearAdminSessionToken } from './api.js';
 import { showToast, escapeHtml, notImplemented } from './ui.js';
 
-// In-memory only — never persisted. Lets the admin panel re-authenticate
-// sensitive actions (like resetting a user's passcode) without a session/token.
-let adminCreds = null;
-
-async function hashPassword(password) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
+// Actual auth is the admin session token held inside api.js (minted by the
+// server at login). This is just a display/UX flag — "am I currently showing
+// the admin panel as logged in" — not a security boundary.
+let isAdminLoggedIn = false;
 
 async function showAdminLogin() {
   const modal = document.getElementById('admin-login-modal');
@@ -44,10 +40,9 @@ async function doAdminLogin() {
   const errEl = document.getElementById('admin-login-error');
   if (!username || !password) { errEl.textContent = 'Enter username and password.'; errEl.classList.remove('hidden'); return; }
   errEl.classList.add('hidden');
-  const hash = await hashPassword(password);
-  const result = await api.adminLogin(username, hash);
+  const result = await api.adminLogin(username, password);
   if (result.success) {
-    adminCreds = { username, passwordHash: hash };
+    isAdminLoggedIn = true;
     hideAdminLogin();
     openAdminPanel();
   } else {
@@ -64,10 +59,9 @@ async function doAdminSetup() {
   if (!username || !password) { errEl.textContent = 'Fill in both fields.'; errEl.classList.remove('hidden'); return; }
   if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.classList.remove('hidden'); return; }
   errEl.classList.add('hidden');
-  const hash = await hashPassword(password);
-  const result = await api.setupAdmin(username, hash);
+  const result = await api.setupAdmin(username, password);
   if (result.success) {
-    adminCreds = { username, passwordHash: hash };
+    isAdminLoggedIn = true;
     hideAdminLogin();
     openAdminPanel();
   } else {
@@ -85,7 +79,14 @@ function openAdminPanel() {
 function exitAdminPanel() {
   document.getElementById('admin-panel-screen').classList.add('hidden');
   document.getElementById('admin-panel-screen').style.display = 'none';
-  adminCreds = null;
+  isAdminLoggedIn = false;
+  clearAdminSessionToken();
+}
+
+function handleAdminSessionExpired() {
+  showToast('Admin session expired — log in again.', 'error');
+  exitAdminPanel();
+  showAdminLogin();
 }
 
 function showAdminTab(tab) {
@@ -113,7 +114,8 @@ async function renderAdminUsersTab() {
   const el = document.getElementById('admin-content-users');
   if (!el) return;
   el.innerHTML = `<div class="text-sm py-8 text-center" style="color:#6C88A6">Loading users...</div>`;
-  const result = await api.getUsers(adminCreds?.username, adminCreds?.passwordHash);
+  const result = await api.getUsers();
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
   const users = result.users || [];
   el.innerHTML = `
     <div class="max-w-2xl">
@@ -158,21 +160,23 @@ async function renderAdminUsersTab() {
 }
 
 async function adminAddUser() {
-  if (!adminCreds) { showToast('Admin session expired — log in again.', 'error'); exitAdminPanel(); showAdminLogin(); return; }
+  if (!isAdminLoggedIn) { handleAdminSessionExpired(); return; }
   const id = document.getElementById('new-user-id')?.value?.trim();
   const name = document.getElementById('new-user-name')?.value?.trim();
   const err = document.getElementById('admin-user-error');
   if (!id || !name) { err.textContent = 'Both ID and name are required.'; err.classList.remove('hidden'); return; }
   err.classList.add('hidden');
-  const result = await api.addUser({ id, name }, adminCreds.username, adminCreds.passwordHash);
+  const result = await api.addUser({ id, name });
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
   if (result.success) { renderAdminUsersTab(); }
   else { err.textContent = result.error || 'Failed to add user.'; err.classList.remove('hidden'); }
 }
 
 async function adminDeleteUser(userId) {
-  if (!adminCreds) { showToast('Admin session expired — log in again.', 'error'); exitAdminPanel(); showAdminLogin(); return; }
+  if (!isAdminLoggedIn) { handleAdminSessionExpired(); return; }
   if (!confirm(`Remove user "${userId}"? This does not remove them from existing projects.`)) return;
-  const result = await api.deleteUser(userId, adminCreds.username, adminCreds.passwordHash);
+  const result = await api.deleteUser(userId);
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
   if (result.success === false) { showToast(result.error || 'Failed to remove user.', 'error'); return; }
   renderAdminUsersTab();
 }

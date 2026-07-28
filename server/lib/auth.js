@@ -18,6 +18,14 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function requireAdminAuth(req, res, next) {
+  const token = req.get('X-Admin-Session-Token');
+  const session = getSession(token);
+  if (!session || session.type !== 'admin') return res.status(401).json({ success: false, error: 'Admin authentication required.' });
+  req.adminUsername = session.userId;
+  next();
+}
+
 async function assertCanWrite(userId, projectCode) {
   const project = await getProjectRowByCode(projectCode);
   if (!project) return true; // new project — any logged-in user may create it
@@ -26,4 +34,4 @@ async function assertCanWrite(userId, projectCode) {
   return rows[0].role !== 'viewer';
 }
 
-module.exports = { requireAuth, assertCanWrite };
+module.exports = { requireAuth, requireAdminAuth, assertCanWrite };

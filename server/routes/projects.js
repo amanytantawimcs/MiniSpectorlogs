@@ -5,22 +5,13 @@ const {
   buildOperationData, buildSimulationData, lockSimulation,
 } = require('../lib/projectData');
 const { requireAuth, assertCanWrite } = require('../lib/auth');
+const { asyncRoute } = require('../lib/asyncRoute');
 
 const router = express.Router();
 
-// Without this, a rejected pool.query() inside a route with no try/catch
-// becomes an unhandled rejection: process.on('unhandledRejection') logs it
-// and keeps the server alive, but never sends a response — the request just
-// hangs forever from the client's perspective. Wrapping every handler here
-// guarantees a response (or a clean 500) no matter what the DB does.
-function asyncRoute(handler) {
-  return (req, res, next) => {
-    Promise.resolve(handler(req, res, next)).catch((e) => {
-      console.error('[projects route]', e);
-      if (!res.headersSent) res.status(500).json({ success: false, error: e.message });
-    });
-  };
-}
+// Same two privileged User IDs as the simulation approver gate
+// (APPROVER_IDS in public/js/simulation/config.js) — keep both lists in sync.
+const PRIVILEGED_USER_IDS = ['1162', '1774'];
 
 router.post('/', requireAuth, asyncRoute(async (req, res) => {
   const { project_code, mode, created_by, project_name, data } = req.body || {};
@@ -40,13 +31,22 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {
     if (client) await client.query('ROLLBACK');
-    res.status(500).json({ success: false, error: e.message });
+    console.error('[projects route]', e);
+    res.status(500).json({ success: false, error: 'Save failed. Please try again.' });
   } finally {
     if (client) client.release();
   }
 }));
 
-router.get('/', asyncRoute(async (req, res) => {
+// Returns every project in the system regardless of who created it — same
+// sensitivity as /overview below, so it gets the same privileged-user gate.
+// (Nothing in the client actually calls this today; api.js's listProjects()
+// has zero callers — kept for completeness, but locked down rather than left
+// open just because it happens to be unused.)
+router.get('/', requireAuth, asyncRoute(async (req, res) => {
+  if (!PRIVILEGED_USER_IDS.includes(String(req.userId))) {
+    return res.status(403).json({ success: false, error: 'Not authorized.' });
+  }
   const { mode } = req.query;
   if (mode === 'simulation') {
     // Includes approval fields so the Approvals tab can list/filter without a second round trip.
@@ -66,17 +66,16 @@ router.get('/', asyncRoute(async (req, res) => {
   res.json({ success: true, projects: rows });
 }));
 
-// Same two privileged User IDs as the simulation approver gate
-// (APPROVER_IDS in public/js/simulation/config.js) — keep both lists in sync.
-const PRIVILEGED_USER_IDS = ['1162', '1774'];
-
 // Cross-project directory for those two users: every project regardless of
 // who created it, with its mode (operation/simulation) and creator — not to
 // be confused with the mode-filtered GET '/' above, which every user hits
 // from their own Simulation History tab.
-router.get('/overview', asyncRoute(async (req, res) => {
-  const { userId } = req.query;
-  if (!PRIVILEGED_USER_IDS.includes(String(userId))) {
+// requireAuth + comparing req.userId (from the session, not the query string)
+// against the privileged list — previously this only checked the userId
+// *claimed* in the query string, so anyone who knew a privileged ID (visible
+// in this file's source) could call the endpoint directly with no login at all.
+router.get('/overview', requireAuth, asyncRoute(async (req, res) => {
+  if (!PRIVILEGED_USER_IDS.includes(String(req.userId))) {
     return res.status(403).json({ success: false, error: 'Not authorized.' });
   }
   const { rows } = await pool.query(

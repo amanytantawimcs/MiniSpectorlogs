@@ -10,6 +10,26 @@ process.on('unhandledRejection', (err) => {
 });
 
 const app = express();
+
+// Required for the rate limiter (server/lib/rateLimit.js) to see the real
+// client IP instead of Railway's own proxy IP for every request — without
+// this every request looks like it comes from the same address and the
+// limiter effectively becomes global instead of per-client.
+app.set('trust proxy', 1);
+
+// Railway terminates TLS at its edge and forwards plain HTTP internally,
+// setting x-forwarded-proto so the app can tell which the client actually
+// used. Force HTTPS rather than just assuming the platform default holds —
+// passcodes and session tokens go out on every request, and this is the one
+// place that actually decides whether those go over the wire in the clear.
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== 'development' && req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
+  }
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
+
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/api/health', async (req, res) => {

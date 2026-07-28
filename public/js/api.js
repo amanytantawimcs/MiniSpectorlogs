@@ -2,6 +2,7 @@
 // Same origin as the page, so no base URL or CORS config needed.
 
 import { showToast } from './ui.js';
+import { state } from './state.js';
 
 // Session token minted server-side at login (see routes/users.js). Sent on
 // every request — as a header (covers GET/DELETE) and merged into the body
@@ -12,6 +13,12 @@ let sessionToken = null;
 export function setSessionToken(token) { sessionToken = token; }
 export function getSessionToken() { return sessionToken; }
 
+// Separate token/header for the admin panel — kept independent of the
+// regular user session so the two can never be confused with each other.
+let adminSessionToken = null;
+export function setAdminSessionToken(token) { adminSessionToken = token; }
+export function clearAdminSessionToken() { adminSessionToken = null; }
+
 // Failed-save retry queue (localStorage-backed, survives a reload). Without
 // this, a save that fails because the network is briefly down just shows a
 // toast and is gone — no retry, no record that it needs to happen. Only
@@ -19,6 +26,17 @@ export function getSessionToken() { return sessionToken; }
 // a real rejection, not something blindly retrying would fix). Keyed by
 // project_code+mode so a backlog of failed autosaves for the same project
 // collapses to just the latest snapshot instead of replaying stale ones.
+//
+// Tagged with queuedByUserId: this app can run on a shared vessel/office
+// computer where different people log in with their own User ID over time.
+// Without the tag, a flush triggered while Person B is logged in would
+// resend Person A's still-queued edit under Person B's session — silently
+// misattributing a save that never touched Person B's screen. Scoping flush
+// to the currently logged-in user means each person's queued work only ever
+// goes out while THEY are the one signed in, and it also means a queued item
+// can't be read out and inspected by simply being on the same shared browser
+// under a different login — flushOfflineQueue() ignores anything that isn't
+// the current user's own.
 const QUEUE_KEY = 'mcs_offline_queue';
 
 function readQueue() {
@@ -29,12 +47,12 @@ function writeQueue(items) {
 }
 function enqueueFailedSave(payload) {
   const items = readQueue().filter(it => !(it.payload.project_code === payload.project_code && it.payload.mode === payload.mode));
-  items.push({ payload, queuedAt: Date.now() });
+  items.push({ payload, queuedAt: Date.now(), queuedByUserId: state.currentUserId });
   writeQueue(items);
 }
 
 export function getOfflineQueueSize() {
-  return readQueue().length;
+  return readQueue().filter(it => it.queuedByUserId === state.currentUserId).length;
 }
 
 let flushing = false;
@@ -42,16 +60,14 @@ export async function flushOfflineQueue() {
   if (flushing) return;
   flushing = true;
   try {
-    const items = readQueue();
-    if (items.length === 0) return;
     let flushedAny = false;
     while (true) {
       const remaining = readQueue();
-      if (remaining.length === 0) break;
-      const item = remaining[0];
-      const r = await request('/projects', { method: 'POST', body: JSON.stringify(item.payload) });
+      const next = remaining.find(it => it.queuedByUserId === state.currentUserId);
+      if (!next) break; // nothing left that belongs to whoever is currently logged in
+      const r = await request('/projects', { method: 'POST', body: JSON.stringify(next.payload) });
       if (!r.ok) break; // still offline, or now a real rejection — stop, leave the rest queued
-      writeQueue(remaining.slice(1));
+      writeQueue(remaining.filter(it => it !== next));
       flushedAny = true;
     }
     if (flushedAny) showToast('Queued changes synced.', 'success');
@@ -64,6 +80,7 @@ async function request(path, options = {}) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (sessionToken) headers['X-Session-Token'] = sessionToken;
+    if (adminSessionToken) headers['X-Admin-Session-Token'] = adminSessionToken;
     let body = options.body;
     if (body) body = JSON.stringify({ ...JSON.parse(body), sessionToken });
     const res = await fetch('/api' + path, { ...options, headers, body });
@@ -128,8 +145,10 @@ export const api = {
     return { success: r.ok };
   },
 
-  getProjectsOverview: async (userId) => {
-    const r = await request('/projects/overview?userId=' + encodeURIComponent(userId));
+  // Server now identifies the caller from the session token (see requireAuth
+  // in server/lib/auth.js), not a userId query param the client could claim.
+  getProjectsOverview: async () => {
+    const r = await request('/projects/overview');
     if (!r.ok) return { success: false, error: r.data.error || 'Request failed', projects: [] };
     return { success: true, projects: r.data.projects || [] };
   },
@@ -181,33 +200,40 @@ export const api = {
     return { exists: !!r.data.exists };
   },
 
-  adminLogin: async (username, passwordHash) => {
-    const r = await request('/admin/login', { method: 'POST', body: JSON.stringify({ username, passwordHash }) });
+  // `password` is sent raw over HTTPS in the body (same as regular passcode
+  // login) — the server salts+hashes it. Previously the browser computed an
+  // unsalted SHA-256 itself and sent THAT as the "password", which meant the
+  // hash was a permanent bearer credential rather than a real hash.
+  adminLogin: async (username, password) => {
+    const r = await request('/admin/login', { method: 'POST', body: JSON.stringify({ username, password }) });
     if (!r.ok) return { success: false, error: r.data.error || 'Invalid credentials' };
+    setAdminSessionToken(r.data.token);
     return { success: true };
   },
 
-  setupAdmin: async (username, passwordHash) => {
-    const r = await request('/admin/setup', { method: 'POST', body: JSON.stringify({ username, passwordHash }) });
+  setupAdmin: async (username, password) => {
+    const r = await request('/admin/setup', { method: 'POST', body: JSON.stringify({ username, password }) });
     if (!r.ok) return { success: false, error: r.data.error || 'Setup failed' };
+    setAdminSessionToken(r.data.token);
     return { success: true };
   },
 
-  getUsers: async (adminUsername, adminPasswordHash) => {
-    const qs = '?adminUsername=' + encodeURIComponent(adminUsername) + '&adminPasswordHash=' + encodeURIComponent(adminPasswordHash);
-    const r = await request('/users' + qs);
-    if (!r.ok) return { success: false, users: [] };
+  // Auth is now the admin session token (sent as a header by request()), not
+  // credentials re-sent on every call — the old version put them in the URL
+  // query string, visible in the Network tab and browser history.
+  getUsers: async () => {
+    const r = await request('/users');
+    if (!r.ok) return { success: false, users: [], unauthorized: r.status === 401 };
     return { success: true, users: r.data.users || [] };
   },
 
-  addUser: async (user, adminUsername, adminPasswordHash) => {
-    const r = await request('/users', { method: 'POST', body: JSON.stringify({ ...user, adminUsername, adminPasswordHash }) });
-    return { success: r.ok, error: r.data.error };
+  addUser: async (user) => {
+    const r = await request('/users', { method: 'POST', body: JSON.stringify(user) });
+    return { success: r.ok, error: r.data.error, unauthorized: r.status === 401 };
   },
 
-  deleteUser: async (userId, adminUsername, adminPasswordHash) => {
-    const qs = '?adminUsername=' + encodeURIComponent(adminUsername) + '&adminPasswordHash=' + encodeURIComponent(adminPasswordHash);
-    const r = await request('/users/' + encodeURIComponent(userId) + qs, { method: 'DELETE' });
-    return { success: r.ok };
+  deleteUser: async (userId) => {
+    const r = await request('/users/' + encodeURIComponent(userId), { method: 'DELETE' });
+    return { success: r.ok, unauthorized: r.status === 401 };
   },
 };

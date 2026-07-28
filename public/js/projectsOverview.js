@@ -3,7 +3,6 @@
 // project in the database regardless of who created it, with its mode
 // (operation/simulation) and creator, via GET /api/projects/overview
 // (server-side gated on the same two IDs, not just hidden client-side).
-import { state } from './state.js';
 import { api } from './api.js';
 import { escapeHtml } from './ui.js';
 
@@ -12,7 +11,7 @@ export async function renderProjectsOverviewTab() {
   if (!el) return;
   el.innerHTML = `<div class="text-sm py-8 text-center" style="color:#6C88A6">Loading projects...</div>`;
 
-  const result = await api.getProjectsOverview(state.currentUserId);
+  const result = await api.getProjectsOverview();
   if (!result.success) {
     el.innerHTML = `<div class="text-red-400 text-sm py-8 text-center">${escapeHtml(result.error || 'Failed to load projects.')}</div>`;
     return;
