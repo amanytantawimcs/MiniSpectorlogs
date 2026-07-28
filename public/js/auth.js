@@ -151,38 +151,19 @@ function setLoginPasscodeMode(hasPasscode) {
   }
 }
 
-async function requestPasscodeReset() {
+// Passcode reset is admin-only now (server/routes/users.js) — this used to
+// perform the reset directly from here with no proof of identity beyond
+// knowing someone's User ID, which is a short guessable number. Now it just
+// points the person at whoever can actually verify who they are.
+function showPasscodeResetGuidance() {
   const idInput = document.getElementById('login-id-input');
   const errEl = document.getElementById('login-error');
   const userId = idInput.value.trim();
-  errEl.classList.add('hidden');
-
-  if (!userId) {
-    errEl.innerText = 'Enter your User ID above first, then click Reset Passcode.';
-    errEl.classList.remove('hidden');
-    return;
-  }
-
-  const lookup = await api.getUserName(userId);
-  if (!lookup.success) {
-    errEl.innerText = 'User ID not found.';
-    errEl.classList.remove('hidden');
-    return;
-  }
-
-  if (!confirm(`Reset the passcode for ${lookup.name} (ID ${userId})? You'll set a new one right after.`)) return;
-
-  const result = await api.resetPasscode(userId);
-  if (!result.success) {
-    errEl.innerText = result.error || 'Could not reset passcode. Try again.';
-    errEl.classList.remove('hidden');
-    return;
-  }
-
-  setLoginPasscodeMode(false);
-  document.getElementById('login-pin-input').value = '';
-  document.getElementById('login-pin-confirm-input').value = '';
-  showToast('Passcode reset. Set a new one below and log in.', 'success');
+  errEl.style.color = '#9ca3af';
+  errEl.innerText = userId
+    ? `Ask your admin to reset the passcode for User ID ${userId} from the Admin Panel.`
+    : 'Ask your admin to reset your passcode from the Admin Panel.';
+  errEl.classList.remove('hidden');
 }
 
 export function installAuth() {
@@ -203,7 +184,7 @@ export function installAuth() {
     if (result.success) setLoginPasscodeMode(result.hasPasscode);
   });
 
-  document.getElementById('btn-reset-passcode')?.addEventListener('click', requestPasscodeReset);
+  document.getElementById('btn-reset-passcode')?.addEventListener('click', showPasscodeResetGuidance);
 
   document.getElementById('btn-login').addEventListener('click', async () => {
     const userId = idInput.value.trim();

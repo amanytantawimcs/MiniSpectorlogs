@@ -139,6 +139,7 @@ async function renderAdminUsersTab() {
                             <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(String(u.id))}</td>
                             <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(u.name || '')}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
+                                <button onclick="adminResetPasscode('${escapeHtml(String(u.id))}')" class="text-xs text-[#459fd9] hover:text-[#7cc0ee] transition-colors px-2 py-1 rounded hover:bg-[#459fd9]/10 mr-1">Reset Passcode</button>
                                 <button onclick="adminDeleteUser('${escapeHtml(String(u.id))}')" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-900/20">Remove</button>
                             </td>
                         </tr>`).join('')}
@@ -171,6 +172,15 @@ async function adminAddUser() {
   if (result.unauthorized) { handleAdminSessionExpired(); return; }
   if (result.success) { renderAdminUsersTab(); }
   else { err.textContent = result.error || 'Failed to add user.'; err.classList.remove('hidden'); }
+}
+
+async function adminResetPasscode(userId) {
+  if (!isAdminLoggedIn) { handleAdminSessionExpired(); return; }
+  if (!confirm(`Reset the passcode for User ID ${userId}? They'll set a new one next time they log in.`)) return;
+  const result = await api.resetPasscode(userId);
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
+  if (result.success) showToast(`Passcode reset for ${userId}.`, 'success');
+  else showToast(result.error || 'Failed to reset passcode.', 'error');
 }
 
 async function adminDeleteUser(userId) {
@@ -240,4 +250,5 @@ export function installAdmin() {
   window.showAdminTab = showAdminTab;
   window.adminAddUser = adminAddUser;
   window.adminDeleteUser = adminDeleteUser;
+  window.adminResetPasscode = adminResetPasscode;
 }

@@ -47,11 +47,14 @@ router.post('/:id/verify-passcode', passcodeLimiter, asyncRoute(async (req, res)
   res.json({ success: true, token: createSession(id) });
 }));
 
-// Self-service: a user who forgot their passcode clears it themselves from the
-// login screen, then goes through first-time setup again on their next attempt.
-// No admin gate here on purpose — that's the whole point of moving it off the admin tab.
-// Rate-limited so it can't be used to spam-lock other users out of their accounts.
-router.post('/:id/reset-passcode', resetLimiter, asyncRoute(async (req, res) => {
+// Admin-only. This used to be self-service from the login screen with no
+// identity check at all beyond knowing someone's User ID — since IDs are
+// short sequential numbers, that meant anyone could clear a coworker's
+// passcode and set their own before the real person noticed. There's no
+// email or second factor in this app to verify identity another way, so
+// requiring an admin (who already proved who they are) is the only real fix.
+// Rate-limited too, defense in depth against a compromised admin session.
+router.post('/:id/reset-passcode', requireAdminAuth, resetLimiter, asyncRoute(async (req, res) => {
   const id = req.params.id.trim();
   const { rowCount } = await pool.query('UPDATE users SET passcode_hash = NULL, passcode_salt = NULL WHERE id = $1', [id]);
   if (!rowCount) return res.status(404).json({ success: false, error: 'User not found' });

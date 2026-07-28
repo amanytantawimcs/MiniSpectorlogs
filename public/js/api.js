@@ -115,9 +115,12 @@ export const api = {
     return { success: r.ok, error: r.data.error };
   },
 
+  // Admin-only now (see server/routes/users.js) — sent via the admin session
+  // token like the other admin-gated calls, not by anyone who just knows a
+  // User ID.
   resetPasscode: async (userId) => {
     const r = await request('/users/' + encodeURIComponent(userId) + '/reset-passcode', { method: 'POST' });
-    return { success: r.ok, error: r.data.error };
+    return { success: r.ok, error: r.data.error, unauthorized: r.status === 401 };
   },
 
   pushProject: async (payload) => {
