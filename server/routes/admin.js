@@ -4,6 +4,8 @@ const { verifyAdminCredentials, hashAdminPassword } = require('../lib/adminAuth'
 const { createSession } = require('../lib/sessions');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
+const { requireAdminAuth } = require('../lib/auth');
+const { recordLogin, getRecentLogins } = require('../lib/loginLog');
 
 const router = express.Router();
 const loginLimiter = rateLimit({ windowMs: 60_000, max: 8 });
@@ -21,6 +23,7 @@ router.post('/login', loginLimiter, asyncRoute(async (req, res) => {
   const { username, password } = req.body || {};
   const ok = await verifyAdminCredentials(pool, username, password);
   if (!ok) return res.status(401).json({ success: false, error: 'Invalid credentials' });
+  recordLogin(pool, { userId: username, userName: username, role: 'admin' });
   res.json({ success: true, token: createSession(username, 'admin') });
 }));
 
@@ -29,11 +32,18 @@ router.post('/setup', loginLimiter, asyncRoute(async (req, res) => {
   if (!username || !password) return res.status(400).json({ success: false, error: 'username and password required' });
   try {
     await pool.query('INSERT INTO admins (username, password_hash) VALUES ($1,$2)', [username, hashAdminPassword(password)]);
+    recordLogin(pool, { userId: username, userName: username, role: 'admin' });
     res.json({ success: true, token: createSession(username, 'admin') });
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ success: false, error: 'That admin username already exists.' });
     throw e; // not a duplicate-username conflict — let asyncRoute log it and return a generic 500
   }
+}));
+
+// Admin-gated: who signed into the app, when, and as which kind of account.
+router.get('/login-log', requireAdminAuth, asyncRoute(async (req, res) => {
+  const logs = await getRecentLogins(pool, 100);
+  res.json({ success: true, logs });
 }));
 
 module.exports = router;

@@ -5,6 +5,7 @@ const { createSession } = require('../lib/sessions');
 const { requireAdminAuth } = require('../lib/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
+const { recordLogin } = require('../lib/loginLog');
 
 const router = express.Router();
 const passcodeLimiter = rateLimit({ windowMs: 60_000, max: 8 });
@@ -23,12 +24,13 @@ router.post('/:id/passcode', asyncRoute(async (req, res) => {
   if (!PASSCODE_FORMAT.test(passcode || '')) {
     return res.status(400).json({ success: false, error: 'Passcode must be 4-6 digits.' });
   }
-  const { rows } = await pool.query('SELECT passcode_hash FROM users WHERE id = $1', [id]);
+  const { rows } = await pool.query('SELECT name, passcode_hash FROM users WHERE id = $1', [id]);
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
   if (rows[0].passcode_hash) return res.status(409).json({ success: false, error: 'Passcode already set.' });
 
   const { hash, salt } = hashPasscode(passcode);
   await pool.query('UPDATE users SET passcode_hash = $1, passcode_salt = $2 WHERE id = $3', [hash, salt, id]);
+  recordLogin(pool, { userId: id, userName: rows[0].name, role: 'user' });
   res.json({ success: true, token: createSession(id) });
 }));
 
@@ -37,10 +39,11 @@ router.post('/:id/passcode', asyncRoute(async (req, res) => {
 router.post('/:id/verify-passcode', passcodeLimiter, asyncRoute(async (req, res) => {
   const id = req.params.id.trim();
   const { passcode } = req.body || {};
-  const { rows } = await pool.query('SELECT passcode_hash, passcode_salt FROM users WHERE id = $1', [id]);
+  const { rows } = await pool.query('SELECT name, passcode_hash, passcode_salt FROM users WHERE id = $1', [id]);
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
   const ok = verifyPasscode(passcode || '', rows[0].passcode_hash, rows[0].passcode_salt);
   if (!ok) return res.status(401).json({ success: false, error: 'Incorrect passcode.' });
+  recordLogin(pool, { userId: id, userName: rows[0].name, role: 'user' });
   res.json({ success: true, token: createSession(id) });
 }));
 

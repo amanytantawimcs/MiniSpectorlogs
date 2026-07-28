@@ -90,7 +90,7 @@ function handleAdminSessionExpired() {
 }
 
 function showAdminTab(tab) {
-  ['users', 'projects'].forEach(t => {
+  ['users', 'projects', 'activity'].forEach(t => {
     const content = document.getElementById('admin-content-' + t);
     const btn = document.getElementById('admin-tab-btn-' + t);
     if (!content || !btn) return;
@@ -108,6 +108,7 @@ function showAdminTab(tab) {
   });
   if (tab === 'users') renderAdminUsersTab();
   if (tab === 'projects') renderAdminProjectsTab();
+  if (tab === 'activity') renderAdminActivityTab();
 }
 
 async function renderAdminUsersTab() {
@@ -179,6 +180,49 @@ async function adminDeleteUser(userId) {
   if (result.unauthorized) { handleAdminSessionExpired(); return; }
   if (result.success === false) { showToast(result.error || 'Failed to remove user.', 'error'); return; }
   renderAdminUsersTab();
+}
+
+function formatLoginTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function renderAdminActivityTab() {
+  const el = document.getElementById('admin-content-activity');
+  if (!el) return;
+  el.innerHTML = `<div class="text-sm py-8 text-center" style="color:#6C88A6">Loading activity...</div>`;
+  const result = await api.getLoginLog();
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
+  const logs = result.logs || [];
+  el.innerHTML = `
+    <div class="max-w-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-bold" style="color:#E9F0F8">Login Activity</h2>
+            <span class="text-xs" style="color:#6C88A6">Most recent ${logs.length}</span>
+        </div>
+        <div class="rcard mb-4">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Name / ID</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Account</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Signed In</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${logs.length === 0 ? `<tr><td colspan="3" class="text-center py-6 text-sm" style="color:#6C88A6">No logins recorded yet.</td></tr>` :
+                        logs.map(l => `
+                        <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
+                            <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(l.user_name || l.user_id || 'Unknown')}</td>
+                            <td class="px-4 py-3">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="${l.role === 'admin' ? 'background:rgba(243,145,36,0.15);color:#f39124' : 'background:rgba(69,159,217,0.15);color:#459fd9'}">${l.role === 'admin' ? 'ADMIN' : 'USER'}</span>
+                            </td>
+                            <td class="px-4 py-3 text-xs" style="color:#9AB0C8">${formatLoginTime(l.logged_in_at)}</td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>`;
 }
 
 function renderAdminProjectsTab() {

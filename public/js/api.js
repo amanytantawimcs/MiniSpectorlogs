@@ -218,6 +218,12 @@ export const api = {
     return { success: true };
   },
 
+  getLoginLog: async () => {
+    const r = await request('/admin/login-log');
+    if (!r.ok) return { success: false, logs: [], unauthorized: r.status === 401 };
+    return { success: true, logs: r.data.logs || [] };
+  },
+
   // Auth is now the admin session token (sent as a header by request()), not
   // credentials re-sent on every call — the old version put them in the URL
   // query string, visible in the Network tab and browser history.

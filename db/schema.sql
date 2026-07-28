@@ -35,6 +35,18 @@ CREATE TABLE admins (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Login activity, surfaced in the admin panel's Activity tab. user_name is
+-- denormalized at login time (not a join to users.name) so history survives
+-- a user being renamed or deleted later.
+CREATE TABLE login_log (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      TEXT,
+  user_name    TEXT,
+  role         TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  logged_in_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_login_log_logged_in_at ON login_log(logged_in_at DESC);
+
 -- ============================================================
 -- PROJECTS — the central row (one per operation OR simulation-only project)
 -- ============================================================
