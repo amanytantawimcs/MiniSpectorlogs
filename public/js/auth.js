@@ -161,8 +161,8 @@ function showPasscodeResetGuidance() {
   const userId = idInput.value.trim();
   errEl.style.color = '#9ca3af';
   errEl.innerText = userId
-    ? `Ask your admin to reset the passcode for User ID ${userId} from the Admin Panel.`
-    : 'Ask your admin to reset your passcode from the Admin Panel.';
+    ? `Ask your admin to reset the passcode for User ID ${userId}.`
+    : 'Ask your admin to reset your passcode.';
   errEl.classList.remove('hidden');
 }
 
