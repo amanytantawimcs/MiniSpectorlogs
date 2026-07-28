@@ -289,6 +289,7 @@ export function installAuth() {
         return;
       }
 
+      const project = result.project;
       state.currentUserRole = 'reviewer';
       state.currentUserId = 'reviewer';
       state.currentMode = 'operation';
@@ -301,7 +302,18 @@ export function installAuth() {
       document.getElementById('nav-operation-sections').classList.remove('hidden');
       document.getElementById('header-operation-buttons')?.classList.remove('hidden');
       document.getElementById('nav-simulation-section').classList.add('hidden');
-      showToast(`Loaded project ${code} (read-only) — Project Details view lands in a later update.`, 'info');
+
+      if (project.mode === 'simulation') {
+        // The pulled data here is the shape saveSimulation() writes, not what
+        // populateUI() (an Operation-shape reader) expects — showing it as an
+        // empty Operation dashboard would be just as misleading as before, so
+        // say plainly that this project doesn't have a review view yet rather
+        // than silently rendering nothing.
+        showToast(`Loaded project ${code} — this is a Simulation-mode project; a read-only Simulation view isn't built yet.`, 'info');
+      } else {
+        populateUI(project.data);
+        showToast(`Loaded project ${code} (read-only).`, 'info');
+      }
     } catch (err) {
       errEl.innerText = 'Unexpected error. Try again.';
       errEl.classList.remove('hidden');
