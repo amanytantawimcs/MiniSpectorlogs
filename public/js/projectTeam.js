@@ -85,7 +85,7 @@ export async function renderProjectTeam(containerId, projectCode) {
 
   container.innerHTML = `
     ${explainerHTML(members.length > 0, isPending)}
-    <div class="grid grid-cols-1 ${readOnly ? '' : 'md:grid-cols-2'} gap-4 items-start">
+    <div class="grid grid-cols-1 ${readOnly ? '' : 'md:grid-cols-2'} gap-4 items-stretch">
       ${readOnly ? '' : `
       <div class="rcard">
         <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
