@@ -14,6 +14,7 @@ import { installChecklists } from './checklists.js';
 import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
 import { installProjectsOverview } from './projectsOverview.js';
+import { installProjectTeam } from './projectTeam.js';
 import { installDevPreview } from './devPreviewSim.js'; // TEMPORARY — see file header
 import { flushOfflineQueue } from './api.js';
 
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   installDashboard();
   installExport();
   installProjectsOverview();
+  installProjectTeam();
   installDevPreview(); // TEMPORARY — see devPreviewSim.js header
 
   // Retry any saves that failed while offline — on startup (queue survives a

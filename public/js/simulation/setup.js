@@ -8,6 +8,7 @@ import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
 import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
 import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem } from './core.js';
+import { renderProjectTeam } from '../projectTeam.js';
 
 const SENSOR_ALL = Object.keys(SENSOR_HARDWARE);
 const ROV_SVG = '<img src="assets/rov_icon.png" alt="MiniSpector"/>';
@@ -314,10 +315,11 @@ function updateBeginBtn() {
 }
 
 export function showSimSetupTab(tab) {
-  ['mission', 'units'].forEach(t => {
+  ['mission', 'units', 'team'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
   if (tab === 'units') renderUnitGrid();
+  if (tab === 'team') renderProjectTeam('team-container-sim');
 }
 
 function beginSimulation() {

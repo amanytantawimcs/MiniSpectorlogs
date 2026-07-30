@@ -865,6 +865,7 @@
     <!-- ── Project ───────────────────────────────────── -->
     <div onclick="showTab('project', this)" class="nav-item active">Project Details</div>
     <div onclick="showTab('crew', this)" class="nav-item">Crew &amp; Shifts</div>
+    <div onclick="showTab('team', this); renderProjectTeamOp();" class="nav-item">Project Team</div>
 
     <!-- Packing List & Equipment (visible; content populated after simulation push) -->
     <div id="nav-preop-item" onclick="showTab('preop', this); renderPreOpTab();" class="nav-item flex items-center gap-2" style="background:rgba(243,145,36,0.06);border-left:2px solid rgba(243,145,36,0.5);">
@@ -963,6 +964,10 @@
             <i class="ti ti-anchor nav-item-ic" aria-hidden="true"></i>
             <span>MiniSpectors</span>
             <span id="sim-units-badge" class="nav-tag">0</span>
+        </div>
+        <div onclick="showTab('simulation', this); showSimSetupTab('team'); document.getElementById('page-title').innerText='Project Team';" class="nav-item flex items-center gap-2" id="sim-nav-team" data-tooltip="Project Team">
+            <i class="ti ti-users nav-item-ic" aria-hidden="true"></i>
+            <span>Project Team</span>
         </div>
         </div>
 
@@ -1436,6 +1441,9 @@
         </div>
     </div>
 </div>
+<div id="tab-team" class="tab-content hidden max-w-full w-full" style="max-width:900px;">
+    <div id="team-container-op"></div>
+</div>
 
 <div id="tab-sensors" class="tab-content hidden max-w-full w-full h-full flex flex-col">
     
@@ -1843,6 +1851,18 @@
                         <div id="sim-rov-chips" class="units-grid"></div>
                     </div>
                 </div>
+
+            </div>
+
+            <!-- PANEL: Project Team -->
+            <div id="sim-setup-team" class="hidden" style="max-width:900px;margin:0 auto;">
+
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-white tracking-tight">Project Team</h3>
+                    <p class="text-[#9AB0C8] mt-1 text-sm">Pick who else can edit this project. Anyone not listed can still open it, read-only.</p>
+                </div>
+
+                <div id="team-container-sim"></div>
 
             </div>
 

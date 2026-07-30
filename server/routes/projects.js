@@ -118,7 +118,12 @@ router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) =
 router.get('/:code/members', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true, members: [] });
-  const { rows } = await pool.query('SELECT user_id, role, added_by, added_at FROM project_members WHERE project_id = $1', [project.id]);
+  const { rows } = await pool.query(
+    `SELECT pm.user_id, pm.role, pm.added_by, pm.added_at, u.name
+     FROM project_members pm LEFT JOIN users u ON u.id = pm.user_id
+     WHERE pm.project_id = $1 ORDER BY pm.added_at`,
+    [project.id]
+  );
   res.json({ success: true, members: rows });
 }));
 
@@ -129,6 +134,21 @@ router.post('/:code/members', requireAuth, asyncRoute(async (req, res) => {
   const { userId, role, addedBy } = req.body || {};
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, error: 'Project not found' });
+
+  // The moment a project gets its first team member, it flips from "open to
+  // everyone" to "allowlist-only" (assertCanWrite). If the person doing the
+  // adding isn't in that first batch themselves, they'd lock themselves out
+  // of their own project on the very next save — so make sure they're on
+  // the team too, as an operator, before the restriction takes effect.
+  const { rows: existing } = await pool.query('SELECT user_id FROM project_members WHERE project_id = $1', [project.id]);
+  if (existing.length === 0 && String(userId) !== String(req.userId)) {
+    await pool.query(
+      `INSERT INTO project_members (project_id, user_id, role, added_by) VALUES ($1,$2,'operator',$3)
+       ON CONFLICT (project_id, user_id) DO NOTHING`,
+      [project.id, req.userId, addedBy || '']
+    );
+  }
+
   await pool.query(
     `INSERT INTO project_members (project_id, user_id, role, added_by) VALUES ($1,$2,$3,$4)
      ON CONFLICT (project_id, user_id) DO UPDATE SET role = EXCLUDED.role, added_by = EXCLUDED.added_by`,
@@ -147,13 +167,17 @@ router.delete('/:code/members/:userId', requireAuth, asyncRoute(async (req, res)
   res.json({ success: true });
 }));
 
+// A configured team is an allowlist for *write* access, not for entry —
+// anyone can still open the project, they just land as a viewer if they
+// aren't on the team. { allowed: false } is reserved for a code that
+// doesn't resolve to a project at all (handled above the members check).
 router.get('/:code/access/:userId', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ allowed: true, role: 'operator' });
   const { rows: members } = await pool.query('SELECT user_id, role FROM project_members WHERE project_id = $1', [project.id]);
-  if (members.length === 0) return res.json({ allowed: true, role: 'operator' });
+  if (members.length === 0) return res.json({ allowed: true, role: 'operator' }); // no team configured — open project
   const member = members.find(m => String(m.user_id) === String(req.params.userId));
-  res.json(member ? { allowed: true, role: member.role } : { allowed: false });
+  res.json({ allowed: true, role: member ? member.role : 'viewer' });
 }));
 
 module.exports = router;

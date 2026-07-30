@@ -169,6 +169,14 @@ export const api = {
     return r.data;
   },
 
+  searchUsers: async (query) => {
+    const q = (query || '').trim();
+    if (!q) return { success: true, users: [] };
+    const r = await request('/users/search?q=' + encodeURIComponent(q));
+    if (!r.ok) return { success: false, users: [] };
+    return { success: true, users: r.data.users || [] };
+  },
+
   getProjectMembers: async (projectCode) => {
     const r = await request('/projects/' + encodeURIComponent(projectCode) + '/members');
     if (!r.ok) return { success: false, members: [] };

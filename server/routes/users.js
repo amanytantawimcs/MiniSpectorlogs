@@ -2,7 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const { hashPasscode, verifyPasscode, PASSCODE_FORMAT } = require('../lib/passcode');
 const { createSession } = require('../lib/sessions');
-const { requireAdminAuth } = require('../lib/auth');
+const { requireAuth, requireAdminAuth } = require('../lib/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
 const { recordLogin } = require('../lib/loginLog');
@@ -10,6 +10,19 @@ const { recordLogin } = require('../lib/loginLog');
 const router = express.Router();
 const passcodeLimiter = rateLimit({ windowMs: 60_000, max: 8 });
 const resetLimiter = rateLimit({ windowMs: 60_000, max: 5 });
+
+// Lightweight directory lookup for the Project Team picker — any logged-in
+// user can search by id/name to find teammates to add, but only gets back
+// id+name (no role, no passcode state), unlike the admin-only GET '/' below.
+router.get('/search', requireAuth, asyncRoute(async (req, res) => {
+  const q = (req.query.q || '').trim();
+  if (!q) return res.json({ success: true, users: [] });
+  const { rows } = await pool.query(
+    `SELECT id, name FROM users WHERE id ILIKE $1 OR name ILIKE $1 ORDER BY name LIMIT 15`,
+    [`%${q}%`]
+  );
+  res.json({ success: true, users: rows });
+}));
 
 router.get('/:id', asyncRoute(async (req, res) => {
   const { rows } = await pool.query('SELECT id, name, role, passcode_hash FROM users WHERE id = $1', [req.params.id.trim()]);
