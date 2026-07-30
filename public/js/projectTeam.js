@@ -88,7 +88,7 @@ export async function renderProjectTeam(containerId, projectCode) {
       <div class="rcard">
         <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
           <span class="rcard-bar"></span>
-          <span class="rcard-title">Add someone</span>
+          <span class="rcard-title">Add Team Member</span>
         </div>
         <div class="p-4">
           <input id="team-search-input" type="text" class="w-full rfield" placeholder="Search by name or User ID..." autocomplete="off"/>
