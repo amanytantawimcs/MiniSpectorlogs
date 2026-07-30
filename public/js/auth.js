@@ -5,8 +5,10 @@ import { enterDashboard, showTab } from './navigation.js';
 import { startProjectAutoSave } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
+import { simState } from './simulation/state.js';
 import { populateUI } from './projectData.js';
 import { startStaleCheck, noteSavedUpdatedAt } from './staleCheck.js';
+import { renderProjectTeam } from './projectTeam.js';
 
 function modeShowStep(id) {
   ['mode-step1', 'mode-step2-new', 'mode-step2-join'].forEach(s =>
@@ -38,6 +40,7 @@ function enterOpMode(userName) {
   enterDashboard();
   startProjectAutoSave();
   startStaleCheck();
+  renderProjectTeam('team-container-op', state.currentProjectCode);
 }
 
 function enterSimMode(userName, existingProject) {
@@ -63,6 +66,7 @@ function enterSimMode(userName, existingProject) {
   else initSimROVGrid();
   startSimAutoSave();
   startStaleCheck();
+  renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
 async function handleJoin(userName) {

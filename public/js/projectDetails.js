@@ -3,6 +3,7 @@ import { showToast } from './ui.js';
 import { api, getSessionToken } from './api.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
 import { collectAllData, populateUI } from './projectData.js';
+import { renderProjectTeam } from './projectTeam.js';
 
 export const ROLE_COLORS_MAP = {
   'ROV Supervisor': '#f39124', 'ROV Operator': '#459fd9', 'ROV Technician': '#10b981',
@@ -109,6 +110,10 @@ export async function saveProject({ silent } = {}) {
     if (!silent) showToast('Set a Project Code before saving.', 'warn');
     return;
   }
+  // Only re-render the embedded Project Team section on the save that first
+  // gives this project a code — not on every 20s autosave after that, which
+  // would otherwise wipe out an in-progress search the user is typing there.
+  const isFirstSave = !state.currentProjectCode;
   state.currentProjectCode = projectCode;
   showSyncIndicator('saving');
   const result = await api.pushProject({
@@ -121,6 +126,7 @@ export async function saveProject({ silent } = {}) {
   if (result.success) {
     state.isDirty = false;
     noteSavedUpdatedAt(result.updated_at);
+    if (isFirstSave) renderProjectTeam('team-container-op', projectCode);
     showSyncIndicator('synced');
     if (!silent) {
       const ind = document.getElementById('save-indicator');

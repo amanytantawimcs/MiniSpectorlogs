@@ -10,6 +10,7 @@ import { simState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
 import { scopeName } from './scopeCatalog.js';
 import { sensorReadinessItems } from './sensors.js';
+import { renderProjectTeam } from '../projectTeam.js';
 
 let syncDebounceTimer = null;
 let autoSaveTimer = null;
@@ -242,8 +243,14 @@ export async function saveSimulation({ silent } = {}) {
     data: collectSimState(),
   });
   if (result.success) {
+    // Same reasoning as projectDetails.js's isFirstSave: only refresh the
+    // embedded Project Team section on the save that first persists this
+    // project server-side, not on every 20s autosave after that, which
+    // would otherwise wipe out an in-progress search mid-keystroke.
+    const isFirstSave = !lastSavedAt;
     lastSavedAt = Date.now();
     noteSavedUpdatedAt(result.updated_at);
+    if (isFirstSave) renderProjectTeam('team-container-sim', simState.projectData.code);
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
   } else if (!silent) {

@@ -6,9 +6,11 @@
 //   - team has 1+ people -> only listed people can edit; everyone else who
 //     opens the project (Join flow) lands as a read-only viewer
 //
-// Operation's #tab-team and Simulation's #sim-setup-team panel each call
-// renderProjectTeam(containerId, projectCode) with their own container id
-// and whatever holds their project code.
+// Embedded directly in each mode's project-identity card: Operation's
+// Project Details tab (#team-container-op) and Simulation's Mission Info
+// "Project details" card (#team-container-sim). Each caller resolves
+// whatever holds its own project code and calls
+// renderProjectTeam(containerId, projectCode).
 
 import { state } from './state.js';
 import { api } from './api.js';

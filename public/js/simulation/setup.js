@@ -315,11 +315,11 @@ function updateBeginBtn() {
 }
 
 export function showSimSetupTab(tab) {
-  ['mission', 'units', 'team'].forEach(t => {
+  ['mission', 'units'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
   if (tab === 'units') renderUnitGrid();
-  if (tab === 'team') renderProjectTeam('team-container-sim');
+  if (tab === 'mission') renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
 function beginSimulation() {
