@@ -316,6 +316,9 @@ export function showSimSetupTab(tab) {
   ['mission', 'units'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
+  // Step 1 (Mission Info / MiniSpectors) never shows the header's Push to
+  // Operation button — only switchSimSubTab('sysarch') in core.js does.
+  document.getElementById('header-push-to-operation-btn')?.classList.add('hidden');
   if (tab === 'units') renderUnitGrid();
   if (tab === 'mission') renderProjectTeam('team-container-sim', simState.projectData.code);
 }

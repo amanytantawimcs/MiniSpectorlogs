@@ -35,6 +35,7 @@ function enterOpMode(userName) {
   document.getElementById('mode-screen').classList.add('hidden');
   document.getElementById('nav-simulation-section').classList.add('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
+  document.getElementById('header-push-to-operation-btn')?.classList.add('hidden');
   document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Operation navigation');
   setUserCardRole(state.currentUserProjectRole);
   if (state.currentProjectCode) clearPendingTeam(); // joining an existing project — drop any stale staged picks

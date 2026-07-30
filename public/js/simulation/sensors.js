@@ -481,11 +481,12 @@ function kpi(value, label, color) {
   return div;
 }
 
-// Readiness rollup + Push to Operation — formerly its own "System Readiness"
-// tab (with an approval gate in front of the push button); both the
-// approval cycle and the dedicated tab were removed, so this card now lives
-// at the bottom of Sensors and equipment and the push is always available.
-function renderReadinessAndPushCard() {
+// Readiness rollup — formerly its own "System Readiness" tab (with an
+// approval gate and the Push to Operation button); the approval cycle and
+// dedicated tab are gone, and Push to Operation now lives in the top header
+// bar (visible on the Topology tab, see switchSimSubTab() in core.js)
+// instead of here — this card is just the stats now.
+function renderReadinessCard() {
   const sensors = simState.shared.sensors || [];
   const scopeActive = sensors.filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
   const scopeActiveItems = scopeActive.flatMap(sensorReadinessItems);
@@ -527,26 +528,6 @@ function renderReadinessAndPushCard() {
     kpi(total, 'Total Active', '#9ca3af'),
   );
   card.appendChild(kpiRow);
-
-  const footer = document.createElement('div');
-  footer.className = 'flex items-center justify-between gap-4 flex-wrap px-6 py-4 border-t border-gray-700/40';
-  const desc = document.createElement('p');
-  desc.className = 'text-xs text-gray-400 flex-1';
-  desc.style.minWidth = '200px';
-  desc.textContent = 'Transfers sensors, machines and equipment into Operation and pre-fills Project Details.';
-  footer.appendChild(desc);
-
-  const pushBtn = document.createElement('button');
-  pushBtn.type = 'button';
-  pushBtn.textContent = 'Push to Operation';
-  pushBtn.className = 'px-4 py-2 rounded-lg text-xs font-bold';
-  pushBtn.style.cssText = 'background:#f39124;color:#fff;border:2px solid #f39124;cursor:pointer;';
-  pushBtn.addEventListener('click', async () => {
-    const { pushToOperation } = await import('../preOp.js');
-    pushToOperation();
-  });
-  footer.appendChild(pushBtn);
-  card.appendChild(footer);
 
   return card;
 }
@@ -629,7 +610,7 @@ export function renderSensorsContent(area) {
   const optional = renderOptionalSensors();
   if (optional) wrap.appendChild(optional);
   wrap.appendChild(renderThrustersSection());
-  wrap.appendChild(renderReadinessAndPushCard());
+  wrap.appendChild(renderReadinessCard());
 
   area.appendChild(wrap);
 }

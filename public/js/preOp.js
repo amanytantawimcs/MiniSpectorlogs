@@ -70,6 +70,7 @@ export async function pushToOperation() {
   document.getElementById('nav-prep-group')?.classList.add('hidden');
   document.getElementById('nav-operation-sections').classList.remove('hidden');
   document.getElementById('header-operation-buttons')?.classList.remove('hidden');
+  document.getElementById('header-push-to-operation-btn')?.classList.add('hidden');
   const contentArea = document.getElementById('main-content-area');
   if (contentArea) { contentArea.style.padding = ''; contentArea.style.overflow = ''; contentArea.style.position = ''; }
 

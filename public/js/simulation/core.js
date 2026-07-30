@@ -166,6 +166,13 @@ export function switchSimSubTab(tab) {
   const titleEl = document.getElementById('page-title');
   if (titleEl && SUBTAB_TITLES[tab]) titleEl.innerText = SUBTAB_TITLES[tab];
 
+  // Push to Operation lives in the top header bar, visible only on Topology
+  // — not a standing header button across every sim tab, and not buried in
+  // Sensors and equipment's page body like it used to be. pushToOperation()
+  // itself already no-ops for a reviewer; hiding it here too so it's not a
+  // visible dead button for view-only access.
+  document.getElementById('header-push-to-operation-btn')?.classList.toggle('hidden', tab !== 'sysarch' || state.currentUserRole === 'reviewer');
+
   renderSimContent();
 }
 
