@@ -10,7 +10,7 @@ import { simState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
 import { scopeName } from './scopeCatalog.js';
 import { sensorReadinessItems } from './sensors.js';
-import { renderProjectTeam } from '../projectTeam.js';
+import { renderProjectTeam, flushPendingTeam } from '../projectTeam.js';
 
 let syncDebounceTimer = null;
 let autoSaveTimer = null;
@@ -250,7 +250,7 @@ export async function saveSimulation({ silent } = {}) {
     const isFirstSave = !lastSavedAt;
     lastSavedAt = Date.now();
     noteSavedUpdatedAt(result.updated_at);
-    if (isFirstSave) renderProjectTeam('team-container-sim', simState.projectData.code);
+    if (isFirstSave) { await flushPendingTeam(simState.projectData.code); renderProjectTeam('team-container-sim', simState.projectData.code); }
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
   } else if (!silent) {

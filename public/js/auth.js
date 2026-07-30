@@ -8,7 +8,7 @@ import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
 import { simState } from './simulation/state.js';
 import { populateUI } from './projectData.js';
 import { startStaleCheck, noteSavedUpdatedAt } from './staleCheck.js';
-import { renderProjectTeam } from './projectTeam.js';
+import { renderProjectTeam, clearPendingTeam } from './projectTeam.js';
 
 function modeShowStep(id) {
   ['mode-step1', 'mode-step2-new', 'mode-step2-join'].forEach(s =>
@@ -37,6 +37,7 @@ function enterOpMode(userName) {
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
   document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Operation navigation');
   setUserCardRole(state.currentUserProjectRole);
+  if (state.currentProjectCode) clearPendingTeam(); // joining an existing project — drop any stale staged picks
   enterDashboard();
   startProjectAutoSave();
   startStaleCheck();
@@ -64,6 +65,7 @@ function enterSimMode(userName, existingProject) {
 
   if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
   else initSimROVGrid();
+  if (existingProject) clearPendingTeam(); // joining an existing project — drop any stale staged picks
   startSimAutoSave();
   startStaleCheck();
   renderProjectTeam('team-container-sim', simState.projectData.code);

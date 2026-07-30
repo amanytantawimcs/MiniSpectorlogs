@@ -3,7 +3,7 @@ import { showToast } from './ui.js';
 import { api, getSessionToken } from './api.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
 import { collectAllData, populateUI } from './projectData.js';
-import { renderProjectTeam } from './projectTeam.js';
+import { renderProjectTeam, flushPendingTeam } from './projectTeam.js';
 
 export const ROLE_COLORS_MAP = {
   'ROV Supervisor': '#f39124', 'ROV Operator': '#459fd9', 'ROV Technician': '#10b981',
@@ -126,7 +126,7 @@ export async function saveProject({ silent } = {}) {
   if (result.success) {
     state.isDirty = false;
     noteSavedUpdatedAt(result.updated_at);
-    if (isFirstSave) renderProjectTeam('team-container-op', projectCode);
+    if (isFirstSave) { await flushPendingTeam(projectCode); renderProjectTeam('team-container-op', projectCode); }
     showSyncIndicator('synced');
     if (!silent) {
       const ind = document.getElementById('save-indicator');

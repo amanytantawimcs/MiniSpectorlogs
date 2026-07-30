@@ -19,6 +19,13 @@ import { showToast, escapeHtml } from './ui.js';
 let searchDebounce = null;
 let lastSearchResults = [];
 
+// People picked before the project has ever been saved — project_members
+// rows need a real project_id, which doesn't exist yet. Held here instead
+// and pushed to the server by flushPendingTeam() the moment the project is
+// first saved (see the isFirstSave hooks in projectDetails.js/simulation
+// core.js), so picking a team doesn't have to wait for a save round-trip.
+let pendingMembers = [];
+
 // Registered once at module load rather than per-render — the search box
 // and results dropdown are looked up fresh on every click instead of
 // captured in a closure, so this stays correct across re-renders without
@@ -29,15 +36,10 @@ document.addEventListener('click', (e) => {
   if (resultsBox && !resultsBox.contains(e.target) && e.target !== searchInput) resultsBox.classList.add('hidden');
 });
 
-function unsavedNoticeHTML() {
-  return `<div class="rcard">
-    <div class="p-6 text-center" style="color:#6C88A6;font-size:13px;">
-      Save the project once (set a Project Code and save) before you can manage who's on the team.
-    </div>
-  </div>`;
-}
-
-function explainerHTML(hasTeam) {
+function explainerHTML(hasTeam, isPending) {
+  if (isPending) {
+    return `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">This project hasn't been saved yet — anyone you add here joins the team the moment you save.${hasTeam ? ' Once saved, only the people below can edit it; everyone else sees it read-only.' : ''}</div>`;
+  }
   return hasTeam
     ? `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">Only the people listed below can edit this project. Anyone else who opens it — including with the project code — sees it as a read-only viewer.</div>`
     : `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">This project is currently open — anyone logged in can edit it. Add people below to restrict editing to just them; everyone else will still be able to view the project, read-only.</div>`;
@@ -70,18 +72,19 @@ export async function renderProjectTeam(containerId, projectCode) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  if (!projectCode) {
-    container.innerHTML = unsavedNoticeHTML();
-    return;
+  const isPending = !projectCode;
+  let members;
+  if (isPending) {
+    members = pendingMembers;
+  } else {
+    container.innerHTML = `<div class="p-6" style="color:#6C88A6;font-size:13px;">Loading team…</div>`;
+    const result = await api.getProjectMembers(projectCode);
+    members = result.members || [];
   }
-
-  container.innerHTML = `<div class="p-6" style="color:#6C88A6;font-size:13px;">Loading team…</div>`;
-  const result = await api.getProjectMembers(projectCode);
-  const members = result.members || [];
   const readOnly = state.currentUserRole === 'reviewer';
 
   container.innerHTML = `
-    ${explainerHTML(members.length > 0)}
+    ${explainerHTML(members.length > 0, isPending)}
     ${readOnly ? '' : `
     <div class="rcard mb-4">
       <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
@@ -97,7 +100,7 @@ export async function renderProjectTeam(containerId, projectCode) {
       <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
         <span class="rcard-bar"></span>
         <span class="rcard-title">Team</span>
-        <span class="rcard-hint">${members.length} ${members.length === 1 ? 'person' : 'people'}</span>
+        <span class="rcard-hint">${members.length} ${members.length === 1 ? 'person' : 'people'}${isPending && members.length ? ' · pending save' : ''}</span>
       </div>
       <div class="p-4" id="team-member-list">
         ${members.length
@@ -132,8 +135,15 @@ export async function renderProjectTeam(containerId, projectCode) {
           hit.addEventListener('mouseleave', () => { hit.style.background = ''; });
           hit.addEventListener('click', async () => {
             const userId = hit.dataset.userId;
+            const hitUser = lastSearchResults.find(u => String(u.id) === String(userId));
             resultsBox.classList.add('hidden');
             searchInput.value = '';
+            if (isPending) {
+              pendingMembers.push({ user_id: userId, name: hitUser?.name || userId, role: 'operator' });
+              showToast('Added — will be saved with the project.', 'success');
+              renderProjectTeam(containerId, projectCode);
+              return;
+            }
             const addRes = await api.setProjectMember(projectCode, userId, 'operator', state.currentUserName);
             if (addRes.success) { showToast('Added to project team.', 'success'); renderProjectTeam(containerId, projectCode); }
             else showToast('Could not add: ' + (addRes.error || 'unknown error'), 'error');
@@ -153,6 +163,12 @@ export async function renderProjectTeam(containerId, projectCode) {
         const proceed = confirm('This removes your own edit access to this project — you will only be able to view it afterward. Continue?');
         if (!proceed) { sel.value = 'operator'; return; }
       }
+      if (isPending) {
+        const m = pendingMembers.find(p => String(p.user_id) === String(userId));
+        if (m) m.role = newRole;
+        renderProjectTeam(containerId, projectCode);
+        return;
+      }
       const r = await api.setProjectMember(projectCode, userId, newRole, state.currentUserName);
       if (r.success) { showToast('Role updated.', 'success'); renderProjectTeam(containerId, projectCode); }
       else { showToast('Could not update role: ' + (r.error || 'unknown error'), 'error'); renderProjectTeam(containerId, projectCode); }
@@ -162,6 +178,11 @@ export async function renderProjectTeam(containerId, projectCode) {
   container.querySelectorAll('.team-remove-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const userId = btn.dataset.userId;
+      if (isPending) {
+        pendingMembers = pendingMembers.filter(p => String(p.user_id) !== String(userId));
+        renderProjectTeam(containerId, projectCode);
+        return;
+      }
       const isSelf = String(userId) === String(state.currentUserId);
       const msg = isSelf
         ? 'This removes you from the project team — if other operators remain, you will lose edit access. Continue?'
@@ -172,6 +193,31 @@ export async function renderProjectTeam(containerId, projectCode) {
       else showToast('Could not remove member.', 'error');
     });
   });
+}
+
+// Called right after a project's first successful save (see the
+// isFirstSave hooks in projectDetails.js and simulation/core.js) — pushes
+// whatever was picked before the project existed server-side. Failed
+// pushes are put back on the pending list rather than silently dropped, so
+// they show up again (and can be retried) instead of just vanishing.
+export async function flushPendingTeam(projectCode) {
+  if (!pendingMembers.length) return;
+  const toFlush = pendingMembers.splice(0, pendingMembers.length);
+  const outcomes = await Promise.all(toFlush.map(async m => ({
+    m, r: await api.setProjectMember(projectCode, m.user_id, m.role, state.currentUserName),
+  })));
+  const failed = outcomes.filter(o => !o.r.success);
+  if (failed.length) {
+    pendingMembers.push(...failed.map(o => o.m));
+    showToast(`${failed.length} team member(s) could not be saved — try adding them again.`, 'error');
+  }
+}
+
+// Guards against a leftover staged pick from an abandoned new-project
+// attempt bleeding into a different, already-existing project opened later
+// in the same session (module state, so it otherwise outlives one attempt).
+export function clearPendingTeam() {
+  pendingMembers = [];
 }
 
 export function installProjectTeam() {
