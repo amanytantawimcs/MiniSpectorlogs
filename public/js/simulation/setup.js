@@ -199,9 +199,7 @@ function closeBundleSheet() {
 /* ---------------- MiniSpectors (unit picker) ---------------- */
 
 function updateUnitsBadge() {
-  const badge = document.getElementById('sim-units-badge');
   const count = simState.selectedROVs.size;
-  if (badge) badge.textContent = count;
   labelNavItem('sim-nav-units', `MiniSpectors — ${count} selected`);
 }
 
