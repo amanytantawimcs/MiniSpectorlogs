@@ -92,9 +92,9 @@ export async function renderProjectTeam(containerId, projectCode) {
           <span class="rcard-bar"></span>
           <span class="rcard-title">Add someone</span>
         </div>
-        <div class="p-4" style="position:relative;">
+        <div class="p-4">
           <input id="team-search-input" type="text" class="w-full rfield" placeholder="Search by name or User ID..." autocomplete="off"/>
-          <div id="team-search-results" class="hidden" style="position:absolute;left:16px;right:16px;top:60px;background:#0C1727;border:1px solid rgba(120,166,212,0.24);border-radius:10px;max-height:220px;overflow-y:auto;z-index:20;box-shadow:0 18px 40px -18px rgba(0,0,0,0.9);"></div>
+          <div id="team-search-results" class="hidden" style="margin-top:8px;background:#0C1727;border:1px solid rgba(120,166,212,0.24);border-radius:10px;max-height:220px;overflow-y:auto;"></div>
         </div>
       </div>`}
       <div class="rcard">
