@@ -14,6 +14,7 @@ import { simState } from './simulation/state.js';
 import { stopSimAutoSave } from './simulation/core.js';
 import { PREOP_CHECKLIST } from './simulation/config.js';
 import { scopeName } from './simulation/scopeCatalog.js';
+import { noteSavedUpdatedAt } from './staleCheck.js';
 
 // Bridges the shared DOM-based renderSectionCard() into this file's
 // string-concatenation table-building flow.
@@ -109,7 +110,10 @@ export async function pushToOperation() {
   // push, and a second device pulling the project in that window sees stale
   // simulation data instead of what was just pushed.
   await saveProject({ silent: true });
-  if (simState.projectData.code) await api.lockSimulation(simState.projectData.code);
+  if (simState.projectData.code) {
+    const lockResult = await api.lockSimulation(simState.projectData.code);
+    noteSavedUpdatedAt(lockResult.updated_at);
+  }
   simState.locked = true;
 }
 

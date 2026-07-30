@@ -111,8 +111,8 @@ router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) =
   }
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, error: 'Not found' });
-  await lockSimulation(project.id);
-  res.json({ success: true });
+  const updatedAt = await lockSimulation(project.id);
+  res.json({ success: true, updated_at: updatedAt });
 }));
 
 router.get('/:code/members', asyncRoute(async (req, res) => {

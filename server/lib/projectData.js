@@ -324,8 +324,9 @@ async function buildSimulationData(project) {
 }
 
 async function lockSimulation(projectId) {
-  await pool.query('UPDATE projects SET is_sim_locked = true WHERE id = $1', [projectId]);
+  const { rows } = await pool.query('UPDATE projects SET is_sim_locked = true WHERE id = $1 RETURNING updated_at', [projectId]);
   await pool.query('UPDATE simulations SET pushed_at = now() WHERE project_id = $1', [projectId]);
+  return rows[0]?.updated_at;
 }
 
 module.exports = {

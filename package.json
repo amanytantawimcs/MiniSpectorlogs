@@ -6,7 +6,8 @@
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "migrate": "node server/migrate.js"
+    "migrate": "node server/migrate.js",
+    "test": "node --test test/**/*.test.js"
   },
   "dependencies": {
     "docx": "^9.7.1",

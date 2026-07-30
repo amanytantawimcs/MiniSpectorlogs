@@ -145,7 +145,7 @@ export const api = {
 
   lockSimulation: async (projectCode) => {
     const r = await request('/projects/' + encodeURIComponent(projectCode) + '/lock-simulation', { method: 'POST' });
-    return { success: r.ok };
+    return { success: r.ok, updated_at: r.data && r.data.updated_at };
   },
 
   // Server now identifies the caller from the session token (see requireAuth
