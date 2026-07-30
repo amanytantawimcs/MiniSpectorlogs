@@ -1,17 +1,17 @@
 // Step 1 of the Simulation flow: Mission Info (project details + a
 // searchable, editable operation-scope catalog) and MiniSpectors (a fleet
-// picker with fit/battery/availability, filters, and auto-assign).
+// picker with role assignment and auto-assign).
 
 import { state } from '../state.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
 import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
-import { UNIT_META, STATE_LABEL, capsFor } from './unitMeta.js';
 import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem } from './core.js';
 
 const SENSOR_ALL = Object.keys(SENSOR_HARDWARE);
 const ROV_SVG = '<img src="assets/rov_icon.png" alt="MiniSpector"/>';
+const FLEET_SIZE = 12;
 
 // Scope-editing scratch state (what's shown/edited in the catalog detail
 // panel). simState.selectedScope only ever holds a catalog id (or null for
@@ -197,12 +197,6 @@ function closeBundleSheet() {
 
 /* ---------------- MiniSpectors (unit picker) ---------------- */
 
-function missingFor(num) {
-  if (!scopeWorking || !scopeWorking.req.length) return [];
-  const caps = capsFor(num);
-  return scopeWorking.req.filter(s => caps.indexOf(s) < 0);
-}
-
 function updateUnitsBadge() {
   const badge = document.getElementById('sim-units-badge');
   const count = simState.selectedROVs.size;
@@ -244,11 +238,6 @@ function removeUnit(num) {
 }
 
 function toggleUnit(num) {
-  const meta = UNIT_META[num];
-  if (meta && meta.state === 'busy' && !simState.selectedROVs.has(num)) {
-    showToast(`MiniSpector-${num} is committed to another mission`, 'error');
-    return;
-  }
   if (simState.selectedROVs.has(num)) removeUnit(num); else addUnit(num);
 }
 
@@ -287,29 +276,19 @@ function clearUnits(silent) {
 function renderUnitGrid() {
   const container = document.getElementById('sim-rov-chips');
   if (!container) return;
-  const nums = Object.keys(UNIT_META).map(Number).sort((a, b) => a - b);
+  const nums = Array.from({ length: FLEET_SIZE }, (_, i) => i + 1);
 
   const hintEl = document.getElementById('units-hint');
   if (hintEl) hintEl.textContent = `${nums.length} of ${nums.length} shown`;
 
   container.innerHTML = nums.map(num => {
-    const meta = UNIT_META[num];
     const role = simState.selectedROVs.get(num) || null;
-    const miss = missingFor(num);
     const colour = role === 'main' ? '#f39124' : (role === 'standby' ? '#459fd9' : '#6b7280');
-    let fit = '';
-    if (scopeWorking && scopeWorking.req.length) {
-      fit = miss.length === 0
-        ? '<div class="unit-fitline yes"><svg xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Covers scope</div>'
-        : `<div class="unit-fitline part"><svg xmlns="http://www.w3.org/2000/svg" style="width:13px;height:13px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12h12"/></svg>Missing ${miss.length}</div>`;
-    }
-    return `<div class="unit-card" data-role="${role || ''}" data-state="${meta.state}">
+    return `<div class="unit-card" data-role="${role || ''}">
       ${role ? `<span class="unit-role-badge ${role}">${role}</span>` : ''}
-      <button type="button" data-hit="${num}" style="all:unset;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;cursor:${meta.state === 'busy' && !role ? 'not-allowed' : 'pointer'};">
+      <button type="button" data-hit="${num}" style="all:unset;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;cursor:pointer;">
         <span class="unit-glyph" style="color:${colour}">${ROV_SVG}</span>
         <h4>MiniSpector-${num}</h4>
-        <span class="unit-stat-text">${STATE_LABEL[meta.state]}</span>
-        ${fit}
       </button>
       ${role === 'standby' ? `<button type="button" class="unit-promote-btn" data-promote="${num}">Make main</button>` : ''}
     </div>`;
