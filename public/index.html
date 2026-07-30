@@ -73,6 +73,19 @@
         }
         .nav-item:focus-visible { outline: 2px solid #47A3DC; outline-offset: -2px; }
 
+        /* Sidebar entries that need a project code before they can be opened
+           (Sensors and equipment / Topology) — dimmed with a "not-allowed"
+           cursor instead of being removed entirely, so the requirement stays
+           visible/discoverable rather than the item just disappearing. */
+        .nav-item.nav-item-disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .nav-item.nav-item-disabled:hover {
+            background: transparent;
+            color: #9AB0C8;
+        }
+
         .nav-icon {
             display: flex; align-items: center; justify-content: center;
             width: 22px; height: 18px; border-radius: 5px;

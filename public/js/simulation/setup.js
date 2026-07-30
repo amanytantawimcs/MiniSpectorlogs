@@ -320,6 +320,21 @@ export function showSimSetupTab(tab) {
   if (tab === 'mission') renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
+// Sensors and equipment / Topology open the Step 2 workspace, which needs a
+// project code (beginSimulation() requires one). Dims those two sidebar
+// entries and swaps the cursor to not-allowed while there's no code yet, so
+// the requirement is visible before the click instead of only after it via
+// the toast. Once already inside the workspace (including a joined existing
+// project, which skips Step 1/beginSimulation entirely) they're always live.
+function updateWorkspaceNavAvailability() {
+  const step2 = document.getElementById('sim-step-2');
+  const inWorkspace = step2 && !step2.classList.contains('hidden');
+  const hasCode = inWorkspace || !!document.getElementById('sim-project-code')?.value.trim();
+  ['sim-nav-sensors', 'sim-nav-topology'].forEach(id => {
+    document.getElementById(id)?.classList.toggle('nav-item-disabled', !hasCode);
+  });
+}
+
 function beginSimulation() {
   if (!document.getElementById('sim-project-code')?.value.trim()) {
     showToast('Project code is required.', 'warn');
@@ -372,6 +387,7 @@ function beginSimulation() {
   document.getElementById('sim-step-2').classList.remove('hidden');
 
   renderWorkspaceShell();
+  updateWorkspaceNavAvailability();
 }
 
 // Sidebar entry point for the Sensors & Equipment / Topology / System
@@ -413,6 +429,7 @@ function simGoBack() {
   renderScopeCatalog();
   renderScopeDetail();
   showSimSetupTab('units');
+  updateWorkspaceNavAvailability();
 }
 
 export function initSimROVGrid() {
@@ -437,6 +454,7 @@ export function initSimROVGrid() {
   renderUnitGrid();
   updateBeginBtn();
   updateUnitsBadge();
+  updateWorkspaceNavAvailability();
 }
 
 export function installSimSetup() {
@@ -450,6 +468,8 @@ export function installSimSetup() {
   scopeFamEl = document.getElementById('scope-fam-filter');
   scopeSearchEl?.addEventListener('input', renderScopeCatalog);
   scopeFamEl?.addEventListener('change', renderScopeCatalog);
+
+  document.getElementById('sim-project-code')?.addEventListener('input', updateWorkspaceNavAvailability);
 
   document.getElementById('scope-blank-btn')?.addEventListener('click', () => {
     if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
