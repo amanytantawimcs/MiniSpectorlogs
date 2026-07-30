@@ -37,9 +37,7 @@ document.addEventListener('click', (e) => {
 });
 
 function explainerHTML(hasTeam, isPending) {
-  if (isPending) {
-    return `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">This project hasn't been saved yet — anyone you add here joins the team the moment you save.${hasTeam ? ' Once saved, only the people below can edit it; everyone else sees it read-only.' : ''}</div>`;
-  }
+  if (isPending) return '';
   return hasTeam
     ? `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">Only the people listed below can edit this project. Anyone else who opens it — including with the project code — sees it as a read-only viewer.</div>`
     : `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">This project is currently open — anyone logged in can edit it. Add people below to restrict editing to just them; everyone else will still be able to view the project, read-only.</div>`;
