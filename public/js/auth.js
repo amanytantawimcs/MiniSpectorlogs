@@ -11,7 +11,7 @@ import { startStaleCheck, noteSavedUpdatedAt } from './staleCheck.js';
 import { renderProjectTeam, clearPendingTeam } from './projectTeam.js';
 
 function modeShowStep(id) {
-  ['mode-step1', 'mode-step2-new', 'mode-step2-join'].forEach(s =>
+  ['mode-step1', 'mode-step2-join'].forEach(s =>
     document.getElementById(s).classList.toggle('hidden', s !== id)
   );
 }
@@ -134,11 +134,9 @@ function showModeScreen(userName) {
   document.getElementById('mode-screen').classList.remove('hidden');
   modeShowStep('mode-step1');
 
-  document.getElementById('btn-mode-new').onclick = () => modeShowStep('mode-step2-new');
+  document.getElementById('btn-mode-new').onclick = () => enterSimMode(userName);
   document.getElementById('btn-mode-join-btn').onclick = () => modeShowStep('mode-step2-join');
-  document.getElementById('btn-start-sim').onclick = () => enterSimMode(userName);
-  document.getElementById('btn-start-op').onclick = () => enterOpMode(userName);
-  document.getElementById('btn-back-new').onclick = () => modeShowStep('mode-step1');
+  document.getElementById('btn-skip-to-op').onclick = () => enterOpMode(userName);
   document.getElementById('btn-back-join').onclick = () => modeShowStep('mode-step1');
   document.getElementById('btn-join-confirm').onclick = () => handleJoin(userName);
 }
