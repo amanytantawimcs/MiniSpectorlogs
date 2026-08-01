@@ -24,8 +24,20 @@ const sensorKey = s => `${s._type}:${s.rovNum ?? '-'}:${s.name}`;
 const deviceKey = d => `${d.category ?? '-'}:${d.name}`;
 const thrusterKey = t => `${t.number ?? '-'}:${t.serial ?? '-'}`;
 
+// pending = nobody has looked. ok = verified on deck. flag = present but faulty.
+// na = deliberately not in play this dive. flag and na both require a written reason.
+const STATUS = { PENDING: 'pending', OK: 'ok', FLAG: 'flag', NA: 'na' };
+
 function blankSensor(s) {
-  return { ...s, confirmed: false, flagged: false, opNote: '' };
+  return { ...s, status: STATUS.PENDING, opNote: '' };
+}
+
+/** v2 rows stored confirmed/flagged booleans. Fold them into one status. */
+function migrateStatus(o) {
+  if (o.status) return o;
+  o.status = o.flagged ? STATUS.FLAG : o.confirmed ? STATUS.OK : STATUS.PENDING;
+  delete o.confirmed; delete o.flagged;
+  return o;
 }
 
 /**
@@ -51,14 +63,15 @@ function ensureFinalSetup() {
     // physically laid eyes on the item on deck. Pre-ticking defeats the point.
     state.currentReportData.finalSetup = {
       _initialized: true,
-      _version: 2,
+      _version: 3,
       activeROVNum: preOp.rovs?.find(r => r.role === 'main')?.rovNumber ?? preOp.rovs?.[0]?.rovNumber ?? null,
       sensors: incomingSensors.map(blankSensor),
-      thrusters: incomingThrusters.map(t => ({ ...t, confirmed: false, flagged: false, opNote: '' })),
+      thrusters: incomingThrusters.map(t => ({ ...t, status: STATUS.PENDING, opNote: '' })),
       systemIPs: incomingDevices,
       notes: '',
       lockedAt: null,
       lockedBy: null,
+      lockSummary: null,
       reconfirmedAt: null,
       revisions: [],
       _pending: null,
@@ -74,7 +87,7 @@ function ensureFinalSetup() {
   const byKey = new Map(fs.sensors.map(s => [sensorKey(s), s]));
   fs.sensors = incomingSensors.map(inc => {
     const prev = byKey.get(sensorKey(inc));
-    if (prev) { byKey.delete(sensorKey(inc)); return { ...inc, confirmed: prev.confirmed, flagged: prev.flagged, opNote: prev.opNote }; }
+    if (prev) { byKey.delete(sensorKey(inc)); return { ...inc, status: migrateStatus(prev).status, opNote: prev.opNote }; }
     added.push(inc.name); return blankSensor(inc);
   });
   byKey.forEach(s => removed.push(s.name));
@@ -82,8 +95,8 @@ function ensureFinalSetup() {
   const thrByKey = new Map(fs.thrusters.map(t => [thrusterKey(t), t]));
   fs.thrusters = incomingThrusters.map(inc => {
     const prev = thrByKey.get(thrusterKey(inc));
-    if (prev) { thrByKey.delete(thrusterKey(inc)); return { ...inc, confirmed: prev.confirmed, flagged: prev.flagged, opNote: prev.opNote, position: prev.position }; }
-    added.push(`Thruster ${inc.number ?? ''}`.trim()); return { ...inc, confirmed: false, flagged: false, opNote: '' };
+    if (prev) { thrByKey.delete(thrusterKey(inc)); return { ...inc, status: migrateStatus(prev).status, opNote: prev.opNote, position: prev.position }; }
+    added.push(`Thruster ${inc.number ?? ''}`.trim()); return { ...inc, status: STATUS.PENDING, opNote: '' };
   });
   thrByKey.forEach(t => removed.push(`Thruster ${t.number ?? ''}`.trim()));
 
@@ -112,8 +125,37 @@ const IPV4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]
 const validIP = v => !v || IPV4.test(String(v).trim());
 const validPort = v => !v || (/^\d{1,5}$/.test(String(v).trim()) && +v > 0 && +v < 65536);
 
-/** An item counts as dealt with if it's confirmed, or flagged with a written reason. */
-const settled = it => it.confirmed || (it.flagged && String(it.opNote || '').trim().length > 0);
+const hasReason = it => String(it.opNote || '').trim().length > 0;
+const isVerified = it => it.status === STATUS.OK;
+
+/** A flag or an N/A only counts as a decision once someone has written why. */
+const isDecided = it => it.status === STATUS.OK ||
+  ((it.status === STATUS.FLAG || it.status === STATUS.NA) && hasReason(it));
+
+/**
+ * The short list that actually stops a dive, derived from the operation scope so
+ * a PRC job gates on the manipulator and a plain visual job doesn't. Everything
+ * outside this list is soft: it shows up in the summary, it never blocks a lock.
+ * Bulk actions deliberately skip these — a critical item has to be touched.
+ */
+const CRITICAL_RULES = [
+  { re: /^navigation$/i },
+  { re: /^gyro$/i },
+  { re: /^depth$/i },
+  { re: /^altimeter$/i },
+  { re: /^(front\/boom|front|boom) camera$/i },
+  { re: /^manipulator$/i,         scope: /prc/i },
+  { re: /^(scan|sbes|profiler)/i, scope: /sbes|profiler/i },
+  { re: /^cp$/i,                  scope: /\bcp\b|cathodic/i },
+];
+const CRITICAL_DEVICES = [/^minispector server$/i, /piloting pc/i];
+
+const scopeText = () => `${state.preOpData?.scopeName || ''} ${state.preOpData?.projectName || ''}`;
+function isCritical(it) {
+  const name = it.name || '';
+  const scope = scopeText();
+  return CRITICAL_RULES.some(r => r.re.test(name) && (!r.scope || r.scope.test(scope)));
+}
 
 const deviceAddressed = d =>
   (d.hasIP === false || (d.ip && validIP(d.ip))) &&
@@ -132,30 +174,58 @@ function duplicateIPs(fs) {
 
 function progress(fs) {
   const items = [...fs.sensors, ...fs.thrusters];
+  const count = st => items.filter(i => i.status === st).length;
   return {
-    sensorsDone: fs.sensors.filter(s => s.confirmed).length,
+    sensorsDone: fs.sensors.filter(isVerified).length,
     sensorsTotal: fs.sensors.length,
-    thrustersDone: fs.thrusters.filter(t => t.confirmed).length,
+    thrustersDone: fs.thrusters.filter(isVerified).length,
     thrustersTotal: fs.thrusters.length,
     netDone: fs.systemIPs.filter(deviceAddressed).length,
     netTotal: fs.systemIPs.length,
-    flagged: items.filter(i => i.flagged).length,
+    verified: count(STATUS.OK), flagged: count(STATUS.FLAG),
+    na: count(STATUS.NA), pending: count(STATUS.PENDING),
+    items: items.length,
     total: items.length + fs.systemIPs.length,
-    done: items.filter(i => i.confirmed).length + fs.systemIPs.filter(deviceAddressed).length,
+    done: count(STATUS.OK) + fs.systemIPs.filter(deviceAddressed).length,
   };
 }
 
-/** Everything standing between the operator and a lockable setup. */
+/** One line of truth — goes on the pill, into the audit entry, onto the export. */
+function lockSummary(fs) {
+  const p = progress(fs), bits = [`${p.verified} of ${p.items} verified`];
+  if (p.flagged) bits.push(`${p.flagged} flagged`);
+  if (p.na) bits.push(`${p.na} not applicable`);
+  if (p.pending) bits.push(`${p.pending} not checked`);
+  bits.push(`${p.netDone}/${p.netTotal} devices addressed`);
+  return bits.join(' · ');
+}
+
+/**
+ * Hard stops only. An unchecked non-critical item is not a blocker — it gets
+ * recorded honestly as unchecked instead. What does block: a critical item
+ * nobody has touched, a flag or N/A with no reason, and wrong values.
+ */
 function blockers(fs) {
   const out = [];
-  fs.sensors.forEach(s => { if (!settled(s)) out.push({ pane: 'sensors', label: s.name, why: s.flagged ? 'flagged, needs a reason' : 'not checked' }); });
-  fs.thrusters.forEach(t => { if (!settled(t)) out.push({ pane: 'thrusters', label: `Thruster ${t.number ?? ''}`.trim(), why: t.flagged ? 'flagged, needs a reason' : 'not checked' }); });
+  const paneOf = it => fs.sensors.includes(it) ? 'sensors' : 'thrusters';
+  const nameOf = it => it.name || `Thruster ${it.number ?? ''}`.trim();
+
+  [...fs.sensors, ...fs.thrusters].forEach(it => {
+    const critical = isCritical(it);
+    if (it.status === STATUS.PENDING) {
+      if (critical) out.push({ pane: paneOf(it), label: nameOf(it), critical: true,
+        why: 'critical — check it, flag it, or mark it N/A' });
+    } else if (!isDecided(it)) {
+      out.push({ pane: paneOf(it), label: nameOf(it), critical,
+        why: `${it.status === STATUS.NA ? 'marked N/A' : 'flagged'} — needs a reason` });
+    }
+  });
+
   fs.systemIPs.forEach(d => {
-    if (deviceAddressed(d)) return;
-    let why = 'address missing';
-    if (d.ip && !validIP(d.ip)) why = 'IP is not a valid IPv4 value';
-    else if (d.port && !validPort(d.port)) why = 'port must be 1–65535';
-    out.push({ pane: 'network', label: d.name, why });
+    if (d.ip && !validIP(d.ip)) out.push({ pane: 'network', label: d.name, why: 'IP is not a valid IPv4 value' });
+    else if (d.port && !validPort(d.port)) out.push({ pane: 'network', label: d.name, why: 'port must be 1–65535' });
+    else if (CRITICAL_DEVICES.some(re => re.test(d.name)) && !deviceAddressed(d))
+      out.push({ pane: 'network', label: d.name, critical: true, why: 'critical — address required' });
   });
   duplicateIPs(fs).forEach(v => out.push({ pane: 'network', label: v, why: 'assigned to more than one device' }));
   return out;
@@ -217,9 +287,19 @@ function injectStyles() {
 .mfs-group .lbl.warm{color:#f39124}
 .mfs-group .rule{flex:1;height:1px;background:rgba(120,166,212,.16)}
 .mfs-group .mini{font-size:10px;color:#6C88A6;font-variant-numeric:tabular-nums}
-.mfs-row{display:grid;grid-template-columns:40px minmax(140px,1.4fr) 96px 44px 64px 64px minmax(130px,1.2fr) 36px;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid rgba(120,166,212,.16)}
+.mfs-row{display:grid;grid-template-columns:40px minmax(140px,1.3fr) 88px 40px 60px 60px minmax(120px,1fr) 32px 42px;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid rgba(120,166,212,.16)}
 .mfs-row:hover{background:rgba(120,166,212,.04)}
 .mfs-row.flagged{background:rgba(226,87,76,.05)}
+.mfs-row.na{opacity:.5}
+.mfs-na{font-size:9px;font-weight:800;letter-spacing:.04em;padding:4px 6px;border-radius:6px;border:1px solid rgba(120,166,212,.2);background:none;color:#6C88A6;cursor:pointer;transition:.14s}
+.mfs-na:hover{border-color:rgba(120,166,212,.45);color:#9AB0C8}
+.mfs-na[aria-pressed="true"]{background:rgba(120,166,212,.14);border-color:rgba(120,166,212,.4);color:#E9F0F8}
+.mfs-tick.na{background:rgba(120,166,212,.34);height:8px}
+.mfs-gbtn{font-size:10px;font-weight:700;color:#6C88A6;background:none;border:1px solid rgba(120,166,212,.2);border-radius:6px;padding:3px 9px;cursor:pointer}
+.mfs-gbtn:hover{color:#E9F0F8;border-color:rgba(120,166,212,.45)}
+.mfs-sum{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.mfs-sum span{font-size:11px;padding:3px 9px;border-radius:6px;background:rgba(120,166,212,.09);color:#9AB0C8}
+.mfs-sum b{font-variant-numeric:tabular-nums}
 .mfs-nm{font-size:13px;font-weight:500;color:#E9F0F8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mfs-row.done .mfs-nm{color:#9AB0C8}
 .mfs-md{font-size:11px;color:#6C88A6;font-family:ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -396,19 +476,19 @@ function paintHeader() {
   const p = progress(fs);
   const bl = blockers(fs);
   refs.pct.textContent = p.total ? Math.round(p.done / p.total * 100) + '%' : '—';
-  refs.of.textContent = `${p.done} of ${p.total} items checked`
-    + (p.flagged ? ` · ${p.flagged} flagged` : '')
-    + ` · ${Math.max(0, p.total - p.done - p.flagged)} pending`;
+  refs.of.textContent = lockSummary(fs);
 
   // tick strip: one bar per physical item, sensors+thrusters, gap, then network
   refs.strip.innerHTML = '';
-  const left = [...fs.sensors, ...fs.thrusters].map(i => ({ name: i.name || `Thruster ${i.number}`, done: i.confirmed, flag: i.flagged, pane: fs.sensors.includes(i) ? 'sensors' : 'thrusters' }));
-  const right = fs.systemIPs.map(d => ({ name: d.name, done: deviceAddressed(d), flag: false, pane: 'network' }));
+  const left = [...fs.sensors, ...fs.thrusters].map(i => ({ name: i.name || `Thruster ${i.number}`, st: i.status, pane: fs.sensors.includes(i) ? 'sensors' : 'thrusters' }));
+  const right = fs.systemIPs.map(d => ({ name: d.name, st: deviceAddressed(d) ? STATUS.OK : STATUS.PENDING, pane: 'network' }));
   [left, right].forEach((set, gi) => {
     set.forEach(x => {
-      const b = el('button', 'mfs-tick' + (x.flag ? ' flag' : x.done ? ' done' : ''));
+      const cls = { [STATUS.OK]: ' done', [STATUS.FLAG]: ' flag', [STATUS.NA]: ' na' }[x.st] || '';
+      const word = { [STATUS.OK]: 'verified', [STATUS.FLAG]: 'flagged', [STATUS.NA]: 'not applicable' }[x.st] || 'not checked';
+      const b = el('button', 'mfs-tick' + cls);
       b.type = 'button';
-      b.title = `${x.name} — ${x.flag ? 'flagged' : x.done ? 'checked' : 'pending'}`;
+      b.title = `${x.name} — ${word}`;
       b.setAttribute('aria-label', b.title);
       b.addEventListener('click', () => showPane(x.pane));
       refs.strip.appendChild(b);
@@ -430,12 +510,14 @@ function paintHeader() {
     refs.action.disabled = state.currentUserRole === 'reviewer';
   } else {
     refs.pill.className = 'mfs-pill draft';
-    refs.pill.textContent = bl.length ? `${bl.length} outstanding` : 'Ready to lock';
+    refs.pill.textContent = bl.length ? `${bl.length} to resolve` : 'Ready to lock';
     refs.action.className = 'mfs-btn primary';
     refs.action.textContent = 'Confirm & lock';
     refs.action.disabled = bl.length > 0 || state.currentUserRole === 'reviewer';
   }
-  refs.action.title = refs.action.disabled && bl.length ? `Resolve ${bl.length} outstanding item${bl.length > 1 ? 's' : ''} first` : '';
+  refs.action.title = refs.action.disabled && bl.length
+    ? `${bl.length} item${bl.length > 1 ? 's' : ''} must be resolved first — critical gear, missing reasons and bad values only`
+    : 'Unchecked items are allowed. They are recorded as unchecked.';
   paintSegs();
   touch();
 }
@@ -484,7 +566,24 @@ function paintUnits(preOp) {
 
 /* ---------------------------------------------------------- item rows */
 
-const FILTERS = [['all', 'All'], ['pending', 'Pending'], ['confirmed', 'Checked'], ['flagged', 'Flagged']];
+/**
+ * Bulk verify, scoped to one group and skipping anything critical. The whole
+ * point of the critical list is that those items get looked at individually,
+ * so no bulk control is allowed to satisfy them.
+ */
+function verifyGroup(items, noun, repaint) {
+  let n = 0, skipped = 0;
+  items.forEach(it => {
+    if (it.status !== STATUS.PENDING) return;
+    if (isCritical(it)) { skipped++; return; }
+    it.status = STATUS.OK; n++;
+  });
+  repaint(); paintHeader();
+  const tail = skipped ? ` ${skipped} critical item${skipped > 1 ? 's' : ''} left for you to check individually.` : '';
+  showToast(n ? `Verified ${n} ${noun}${n > 1 ? 's' : ''}.${tail}` : `Nothing untouched here.${tail}`, n ? 'success' : 'info');
+}
+
+const FILTERS = [['all', 'All'], ['pending', 'Not checked'], ['ok', 'Verified'], ['flag', 'Flagged'], ['na', 'N/A']];
 
 function chipBar(current, onPick) {
   const wrap = el('div', 'mfs-chips');
@@ -502,10 +601,8 @@ function chipBar(current, onPick) {
 function matchesFilter(it, filter, q) {
   const name = it.name || `Thruster ${it.number ?? ''}`;
   if (q && !name.toLowerCase().includes(q.toLowerCase())) return false;
-  if (filter === 'pending') return !it.confirmed && !it.flagged;
-  if (filter === 'confirmed') return it.confirmed;
-  if (filter === 'flagged') return it.flagged;
-  return true;
+  if (filter === 'all') return true;
+  return it.status === filter;
 }
 
 /**
@@ -514,21 +611,30 @@ function matchesFilter(it, filter, q) {
  */
 function itemRow(it, repaint) {
   const name = it.name || `Thruster ${it.number ?? ''}`.trim();
-  const row = el('div', 'mfs-row' + (it.flagged ? ' flagged' : it.confirmed ? ' done' : ''));
+  const critical = isCritical(it);
+  const row = el('div', 'mfs-row' + (it.status === STATUS.FLAG ? ' flagged'
+    : it.status === STATUS.NA ? ' na' : it.status === STATUS.OK ? ' done' : ''));
+
+  const set = next => { it.status = it.status === next ? STATUS.PENDING : next; repaint(); };
 
   const chk = el('button', 'mfs-chk', '✓');
   chk.type = 'button';
   chk.setAttribute('role', 'checkbox');
-  chk.setAttribute('aria-checked', String(!!it.confirmed));
-  chk.setAttribute('aria-label', 'Confirm ' + name);
+  chk.setAttribute('aria-checked', String(it.status === STATUS.OK));
+  chk.setAttribute('aria-label', 'Verify ' + name);
   chk.disabled = readOnly;
-  chk.addEventListener('click', () => {
-    it.confirmed = !it.confirmed;
-    if (it.confirmed) it.flagged = false;
-    repaint();
-  });
+  chk.addEventListener('click', () => set(STATUS.OK));
 
-  const nm = el('div', 'mfs-nm', name); nm.title = name;
+  const nm = el('div', 'mfs-nm');
+  nm.title = name + (critical ? ' — critical for this scope' : '');
+  nm.textContent = name;
+  if (critical) {
+    const dot = el('span', null, '•');
+    dot.style.cssText = 'color:#f39124;margin-right:6px;font-weight:900';
+    dot.title = 'Critical for this operation scope';
+    nm.prepend(dot);
+  }
+
   const md = el('div', 'mfs-md', it.model || it.serial || '—');
   const qt = el('div', 'mfs-qt', it.qty ?? '—');
   const cal = el('div', 'mfs-cal mfs-badge-wrap');
@@ -536,40 +642,54 @@ function itemRow(it, repaint) {
   if ('calibrated' in it) cal.innerHTML = calBadge(it.calibrated);
   if ('tested' in it) tst.innerHTML = tstBadge(it.tested);
 
+  const needsReason = (it.status === STATUS.FLAG || it.status === STATUS.NA) && !hasReason(it);
   const noteWrap = el('div', 'mfs-notewrap');
-  const note = el('input', 'mfs-input' + (it.flagged && !String(it.opNote || '').trim() ? ' req' : ''));
+  const note = el('input', 'mfs-input' + (needsReason ? ' req' : ''));
   note.type = 'text';
   note.disabled = readOnly;
   note.value = it.position !== undefined ? (it.position || '') : (it.opNote || '');
-  note.placeholder = it.flagged ? 'Reason required…' : (it.position !== undefined ? 'Position, e.g. Port horizontal' : 'Note…');
+  note.placeholder = it.status === STATUS.FLAG ? 'What is wrong?…'
+    : it.status === STATUS.NA ? 'Why not in play?…'
+    : (it.position !== undefined ? 'Position, e.g. Port horizontal' : 'Note…');
   note.setAttribute('aria-label', 'Note for ' + name);
   note.addEventListener('input', () => {
     if (it.position !== undefined) it.position = note.value;
     it.opNote = note.value;
-    note.classList.toggle('req', it.flagged && !note.value.trim());
-    paintHeader();                       // header only — the row keeps its focus
+    note.classList.toggle('req', (it.status === STATUS.FLAG || it.status === STATUS.NA) && !note.value.trim());
+    paintHeader();
   });
   noteWrap.appendChild(note);
 
   const flag = el('button', 'mfs-flag', '⚑');
   flag.type = 'button';
-  flag.setAttribute('aria-pressed', String(!!it.flagged));
-  flag.setAttribute('aria-label', 'Flag ' + name + ' as an issue');
-  flag.title = 'Flag an issue — carries through to Technical / Faults';
+  flag.setAttribute('aria-pressed', String(it.status === STATUS.FLAG));
+  flag.setAttribute('aria-label', 'Flag ' + name + ' as faulty');
+  flag.title = 'Present but faulty — carries through to Technical / Faults';
   flag.disabled = readOnly;
-  flag.addEventListener('click', () => {
-    it.flagged = !it.flagged;
-    if (it.flagged) it.confirmed = false;
-    repaint();
-  });
+  flag.addEventListener('click', () => set(STATUS.FLAG));
 
-  row.append(chk, nm, md, qt, cal, tst, noteWrap, flag);
+  const na = el('button', 'mfs-na', 'N/A');
+  na.type = 'button';
+  na.setAttribute('aria-pressed', String(it.status === STATUS.NA));
+  na.setAttribute('aria-label', 'Mark ' + name + ' not applicable');
+  na.title = 'Not in play this dive — recorded, not counted as a fault';
+  na.disabled = readOnly;
+  na.addEventListener('click', () => set(STATUS.NA));
+
+  row.append(chk, nm, md, qt, cal, tst, noteWrap, flag, na);
   return row;
 }
 
-function groupHead(label, warm, done, total) {
+function groupHead(label, warm, done, total, onConfirmGroup) {
   const g = el('div', 'mfs-group');
   g.innerHTML = `<span class="lbl ${warm ? 'warm' : ''}">${escapeHtml(label)}</span><span class="rule"></span><span class="mini">${done}/${total}</span>`;
+  if (onConfirmGroup && !readOnly) {
+    const b = el('button', 'mfs-gbtn', 'Verify group');
+    b.type = 'button';
+    b.title = 'Marks the untouched items in this group verified. Critical items are skipped.';
+    b.addEventListener('click', onConfirmGroup);
+    g.appendChild(b);
+  }
   return g;
 }
 
@@ -595,18 +715,6 @@ function paintSensors() {
   search.setAttribute('aria-label', 'Filter sensors');
   search.addEventListener('input', () => { ui.q.sensors = search.value; paintSensors(); refs.pane_sensors.querySelector('.mfs-search')?.focus(); });
   bar.append(search, chipBar(ui.sensorFilter, k => { ui.sensorFilter = k; paintSensors(); }), el('div', 'mfs-spacer'));
-
-  if (!readOnly) {
-    const bulk = el('button', 'mfs-btn ghost', 'Confirm all shown');
-    bulk.type = 'button';
-    bulk.addEventListener('click', () => {
-      let n = 0;
-      fs.sensors.forEach(s => { if (matchesFilter(s, ui.sensorFilter, ui.q.sensors) && !s.confirmed && !s.flagged) { s.confirmed = true; n++; } });
-      paintSensors(); paintHeader();
-      showToast(n ? `Checked ${n} sensor${n > 1 ? 's' : ''}.` : 'Nothing left to check here.', n ? 'success' : 'info');
-    });
-    bar.appendChild(bulk);
-  }
   pane.appendChild(bar);
 
   const card = el('div', 'mfs-card');
@@ -621,7 +729,8 @@ function paintSensors() {
     if (label !== last) {
       last = label;
       const peers = fs.sensors.filter(x => (x._type === 'fixed' ? `MS-${x.rovNum} standard equipment` : 'Mission sensors') === label);
-      card.appendChild(groupHead(label, s._type === 'fixed', peers.filter(x => x.confirmed).length, peers.length));
+      card.appendChild(groupHead(label, s._type === 'fixed', peers.filter(isVerified).length, peers.length,
+        () => verifyGroup(peers, 'sensor', repaint)));
     }
     card.appendChild(itemRow(s, repaint));
   });
@@ -636,24 +745,10 @@ function paintThrusters() {
   pane.innerHTML = '';
   if (!fs.thrusters.length) { pane.innerHTML = '<div class="mfs-empty">No thrusters in this configuration.</div>'; return; }
 
-  const bar = el('div', 'mfs-toolbar');
-  bar.appendChild(el('div', 'mfs-spacer'));
-  if (!readOnly) {
-    const bulk = el('button', 'mfs-btn ghost', 'Confirm all');
-    bulk.type = 'button';
-    bulk.addEventListener('click', () => {
-      let n = 0;
-      fs.thrusters.forEach(t => { if (!t.confirmed && !t.flagged) { t.confirmed = true; n++; } });
-      paintThrusters(); paintHeader();
-      showToast(n ? `Checked ${n} thruster${n > 1 ? 's' : ''}.` : 'Nothing left to check here.', n ? 'success' : 'info');
-    });
-    bar.appendChild(bulk);
-  }
-  pane.appendChild(bar);
-
   const card = el('div', 'mfs-card');
-  card.appendChild(groupHead('Thruster positions', true, fs.thrusters.filter(t => t.confirmed).length, fs.thrusters.length));
   const repaint = () => { paintThrusters(); paintHeader(); };
+  card.appendChild(groupHead('Thruster positions', true, fs.thrusters.filter(isVerified).length, fs.thrusters.length,
+    () => verifyGroup(fs.thrusters, 'thruster', repaint)));
   fs.thrusters.forEach(t => card.appendChild(itemRow(t, repaint)));
   pane.appendChild(card);
 }
@@ -693,8 +788,8 @@ function paintNetwork() {
     if (q && !d.name.toLowerCase().includes(q) && !String(d.ip || '').includes(q)) return;
     const done = deviceAddressed(d);
     if (ui.netFilter === 'pending' && done) return;
-    if (ui.netFilter === 'confirmed' && !done) return;
-    if (ui.netFilter === 'flagged' && !((d.ip && !validIP(d.ip)) || dups.has(String(d.ip || '').trim()))) return;
+    if (ui.netFilter === 'ok' && !done) return;
+    if ((ui.netFilter === 'flag' || ui.netFilter === 'na') && !((d.ip && !validIP(d.ip)) || dups.has(String(d.ip || '').trim()))) return;
     shown++;
 
     if (d.category !== last) {
@@ -752,17 +847,29 @@ function paintSignoff() {
   const leftCol = el('div');
   const readiness = el('div', 'mfs-card mfs-block');
   readiness.innerHTML = `<h3>Readiness</h3>
-    <p class="mfs-hint">Every item has to be either checked or flagged with a reason before the setup can be locked. Flagged items carry forward to Technical / Faults.</p>`;
+    <p class="mfs-hint">You can lock at any time. Unchecked items are recorded as unchecked rather than blocking you — only critical gear, missing reasons and invalid values have to be resolved.</p>`;
   const bl = blockers(fs);
+  const pr = progress(fs);
+  const sum = el('div', 'mfs-sum');
+  sum.innerHTML = `<span><b>${pr.verified}</b> verified</span>`
+    + (pr.flagged ? `<span style="color:#e2574c"><b>${pr.flagged}</b> flagged</span>` : '')
+    + (pr.na ? `<span><b>${pr.na}</b> N/A</span>` : '')
+    + (pr.pending ? `<span style="color:#f6c68a"><b>${pr.pending}</b> not checked</span>` : '')
+    + `<span><b>${pr.netDone}/${pr.netTotal}</b> addressed</span>`;
+  readiness.appendChild(sum);
+  readiness.insertAdjacentHTML('beforeend',
+    `<p class="mfs-hint" style="margin:12px 0 0">This is what the locked sheet will say.</p>`);
+
   if (!bl.length) {
     const ok = el('div', 'mfs-clear');
-    ok.innerHTML = `<span>✓</span><div>All ${progress(fs).total} items are checked or flagged with a reason. The setup can be locked.</div>`;
+    ok.style.marginTop = '12px';
+    ok.innerHTML = `<span>✓</span><div>Nothing is blocking the lock.${pr.pending ? ` ${pr.pending} item${pr.pending > 1 ? 's are' : ' is'} still unchecked and will be recorded that way.` : ''}</div>`;
     readiness.appendChild(ok);
   } else {
     const ul = el('ul', 'mfs-blockers');
     bl.slice(0, 10).forEach(b => {
       const li = el('li');
-      li.innerHTML = `<span class="dot"></span><span class="who"><b style="color:#E9F0F8">${escapeHtml(b.label)}</b> — ${escapeHtml(b.why)}</span>`;
+      li.innerHTML = `<span class="dot" style="background:${b.critical ? '#f39124' : '#e2574c'}"></span><span class="who"><b style="color:#E9F0F8">${escapeHtml(b.label)}</b> — ${escapeHtml(b.why)}</span>`;
       const jump = el('button', 'mfs-jump', 'Open →');
       jump.type = 'button';
       jump.addEventListener('click', () => showPane(b.pane));
@@ -802,7 +909,7 @@ function paintSignoff() {
   const history = el('div', 'mfs-card mfs-block');
   history.innerHTML = `<h3>Change history</h3><p class="mfs-hint">Append-only. Each entry records which values moved, not just that something did.</p>`;
   const entries = [
-    ...(fs.lockedAt || fs.revisions.length ? [{ t: 'Initial confirmation', by: fs.lockedBy, at: fs.lockedAt, txt: 'Setup confirmed for operation.', diff: null, c: '#f39124' }] : []),
+    ...(fs.lockedAt || fs.revisions.length ? [{ t: 'Initial confirmation', by: fs.lockedBy, at: fs.lockedAt, txt: fs.lockSummary || 'Setup confirmed for operation.', diff: null, c: '#f39124' }] : []),
     ...fs.revisions.map((r, i) => ({ t: 'Change #' + (i + 1), by: r.by, at: r.at, txt: r.reason, diff: r.diff, c: '#459fd9' })),
   ].filter(e => e.at);
 
@@ -832,8 +939,8 @@ function paintSignoff() {
 function snap() {
   return JSON.stringify({
     rov: fs.activeROVNum,
-    s: fs.sensors.map(x => [x.name, x.confirmed, x.flagged, x.opNote]),
-    t: fs.thrusters.map(x => [x.number, x.confirmed, x.flagged, x.position, x.opNote]),
+    s: fs.sensors.map(x => [x.name, x.status, x.opNote]),
+    t: fs.thrusters.map(x => [x.number, x.status, x.position, x.opNote]),
     n: fs.systemIPs.map(x => [x.name, x.ip, x.port]),
     notes: fs.notes,
   });
@@ -842,17 +949,17 @@ function snap() {
 /** Human-readable list of what actually moved between two snapshots. */
 function diff(beforeJSON, afterJSON) {
   const a = JSON.parse(beforeJSON), b = JSON.parse(afterJSON), out = [];
-  const st = x => x[2] ? 'flagged' : x[1] ? 'checked' : 'pending';
+  const word = st => ({ ok: 'verified', flag: 'flagged', na: 'N/A', pending: 'not checked' }[st] || st);
   if (a.rov !== b.rov) out.push(`operated unit  MS-${a.rov} → MS-${b.rov}`);
   a.s.forEach((x, i) => {
     const y = b.s[i]; if (!y) return;
-    if (st(x) !== st(y)) out.push(`${x[0]}  ${st(x)} → ${st(y)}`);
-    if (x[3] !== y[3]) out.push(`${x[0]} note  "${x[3] || '—'}" → "${y[3] || '—'}"`);
+    if (x[1] !== y[1]) out.push(`${x[0]}  ${word(x[1])} → ${word(y[1])}`);
+    if (x[2] !== y[2]) out.push(`${x[0]} note  "${x[2] || '—'}" → "${y[2] || '—'}"`);
   });
   a.t.forEach((x, i) => {
     const y = b.t[i]; if (!y) return;
-    if (x[1] !== y[1] || x[2] !== y[2]) out.push(`Thruster ${x[0]}  ${x[1] ? 'checked' : 'pending'} → ${y[1] ? 'checked' : 'pending'}`);
-    if (x[3] !== y[3]) out.push(`Thruster ${x[0]} position  ${x[3] || '—'} → ${y[3] || '—'}`);
+    if (x[1] !== y[1]) out.push(`Thruster ${x[0]}  ${word(x[1])} → ${word(y[1])}`);
+    if (x[2] !== y[2]) out.push(`Thruster ${x[0]} position  ${x[2] || '—'} → ${y[2] || '—'}`);
   });
   a.n.forEach((x, i) => {
     const y = b.n[i]; if (!y) return;
@@ -874,6 +981,7 @@ function onPrimaryAction() {
       diff: diff(snapshot, snap()),
     });
     fs.reconfirmedAt = new Date().toISOString();     // lockedAt is left alone on purpose
+    fs.lockSummary = lockSummary(fs);
     snapshot = null; pendingReason = null; fs._pending = null;
     showToast('Change logged and setup re-locked.', 'success');
     renderFinalSetupTab(); showPane('signoff');
@@ -886,7 +994,8 @@ function onPrimaryAction() {
     fs.lockedBy = refs.signName?.value?.trim() || state.currentUserId || 'Operator';
     fs.reconfirmedAt = null;
     fs._merge = null;
-    showToast('Setup confirmed and locked.', 'success');
+    fs.lockSummary = lockSummary(fs);
+    showToast(`Setup locked — ${fs.lockSummary}`, 'success');
     renderFinalSetupTab(); showPane('signoff');
     return;
   }
