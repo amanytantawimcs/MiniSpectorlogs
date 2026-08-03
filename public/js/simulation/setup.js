@@ -8,7 +8,10 @@ import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
 import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
-import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem, markNewSimProject } from './core.js';
+import {
+  loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem,
+  markNewSimProject, markSimulationStarted, isSimulationStarted, scheduleSimSync, saveSimulation,
+} from './core.js';
 import { renderProjectTeam } from '../projectTeam.js';
 
 const SENSOR_ALL = Object.keys(SENSOR_HARDWARE);
@@ -404,21 +407,28 @@ async function beginSimulation() {
 
   document.getElementById('sim-step-1').classList.add('hidden');
   document.getElementById('sim-step-2').classList.remove('hidden');
+  markSimulationStarted();
 
   renderWorkspaceShell();
   updateWorkspaceNavAvailability();
 }
 
 // Sidebar entry point for the Sensors & Equipment / Topology / System
-// Readiness workspace tabs. If the wizard (scope + units) hasn't been
-// completed yet, this reuses beginSimulation()'s own validation/toasts
-// instead of duplicating the "scope required" / "unit required" checks —
-// on success it proceeds straight into the requested tab; on failure it
-// falls back to the Mission Info panel where the user can fix what's missing.
+// Readiness workspace tabs. Once a simulation has actually been started
+// (isSimulationStarted — a successful beginSimulation() or a joined/loaded
+// project), re-entering the workspace from a Mission Info/MiniSpectors
+// review must NOT re-run beginSimulation() — that would re-check the
+// project code against the database and always find it (it's literally the
+// project being reviewed), incorrectly reporting it as taken. Only the
+// pre-start wizard case (scope + units not completed yet) still goes
+// through beginSimulation()'s own validation/toasts.
 async function goToWorkspaceSubTab(tab, navId) {
   const step2 = document.getElementById('sim-step-2');
   const alreadyIn = step2 && !step2.classList.contains('hidden');
-  if (!alreadyIn) await beginSimulation();
+  if (!alreadyIn) {
+    if (isSimulationStarted()) returnToWorkspace();
+    else await beginSimulation();
+  }
 
   const nowIn = step2 && !step2.classList.contains('hidden');
   if (!nowIn) {
@@ -430,9 +440,7 @@ async function goToWorkspaceSubTab(tab, navId) {
   switchSimSubTab(tab);
 }
 
-function simGoBack() {
-  document.getElementById('sim-step-2').classList.add('hidden');
-  document.getElementById('sim-step-1').classList.remove('hidden');
+function restoreStep1FieldsFromState() {
   const nameEl = document.getElementById('sim-project-name');
   const codeEl = document.getElementById('sim-project-code');
   const descEl = document.getElementById('sim-project-desc');
@@ -447,7 +455,54 @@ function simGoBack() {
   syncScopeWorkingFromState();
   renderScopeCatalog();
   renderScopeDetail();
-  showSimSetupTab('units');
+}
+
+// Project Code, the Scope catalog, and the MiniSpectors grid all get locked
+// read-only; Project Name and Description are left interactive (their input
+// listeners — see installSimSetup() below — write straight into
+// simState.projectData and autosave normally).
+function applyPreparationReadOnlyLock(locked) {
+  document.getElementById('sim-review-banner')?.classList.toggle('hidden', !locked);
+  const codeEl = document.getElementById('sim-project-code');
+  if (codeEl) codeEl.disabled = locked;
+  document.getElementById('scope-card')?.classList.toggle('sim-locked', locked);
+  document.querySelector('#sim-setup-units .rcard')?.classList.toggle('sim-locked', locked);
+  document.getElementById('btn-begin-sim')?.classList.toggle('hidden', locked);
+}
+
+// Sidebar entry point for Mission Info / MiniSpectors. Only locks fields and
+// shows the review banner when actually coming back from the workspace —
+// switching between the Mission Info and MiniSpectors sub-tabs while already
+// reviewing leaves the existing lock state alone (step2 stays hidden either
+// way, so wasInWorkspace is false on those clicks). Coming from the workspace
+// implies the simulation is already started (see isSimulationStarted's own
+// comment for why: step2 is only ever shown after beginSimulation() succeeds
+// or an existing project is loaded, both of which set it) — so pre-start
+// wizard navigation, which never touches step2, is never affected by this.
+function goToPreparationTab(tab) {
+  const step2 = document.getElementById('sim-step-2');
+  const wasInWorkspace = step2 && !step2.classList.contains('hidden');
+  if (wasInWorkspace) {
+    restoreStep1FieldsFromState();
+    applyPreparationReadOnlyLock(true);
+    step2.classList.add('hidden');
+    document.getElementById('sim-step-1').classList.remove('hidden');
+  }
+  window.showTab('simulation', document.getElementById(tab === 'mission' ? 'sim-nav-mission' : 'sim-nav-units'));
+  showSimSetupTab(tab);
+  document.getElementById('page-title').innerText = tab === 'mission' ? 'Mission Info' : 'MiniSpectors';
+  updateWorkspaceNavAvailability();
+}
+
+// Returns to the workspace from a Mission Info/MiniSpectors review without
+// re-running beginSimulation()'s create/validate logic — the project already
+// exists, so this is just a view switch. Flushes any Name/Description edits
+// immediately rather than waiting for the 2s debounce.
+function returnToWorkspace() {
+  document.getElementById('sim-step-1').classList.add('hidden');
+  document.getElementById('sim-step-2').classList.remove('hidden');
+  saveSimulation({ silent: true });
+  renderWorkspaceShell();
   updateWorkspaceNavAvailability();
 }
 
@@ -456,6 +511,7 @@ export function initSimROVGrid() {
 
   document.getElementById('sim-step-1').classList.remove('hidden');
   document.getElementById('sim-step-2').classList.add('hidden');
+  applyPreparationReadOnlyLock(false);
 
   ['sim-project-name', 'sim-project-code', 'sim-project-desc', 'sim-project-asset', 'sim-project-weather'].forEach(id => {
     const el = document.getElementById(id);
@@ -479,7 +535,8 @@ export function initSimROVGrid() {
 export function installSimSetup() {
   window.showSimSetupTab = showSimSetupTab;
   window.beginSimulation = beginSimulation;
-  window.simGoBack = simGoBack;
+  window.goToPreparationTab = goToPreparationTab;
+  window.returnToWorkspace = returnToWorkspace;
   window.goToWorkspaceSubTab = goToWorkspaceSubTab;
   window.__updateSimUnitsBadge = updateUnitsBadge;
 
@@ -489,6 +546,14 @@ export function installSimSetup() {
   scopeFamEl?.addEventListener('change', renderScopeCatalog);
 
   document.getElementById('sim-project-code')?.addEventListener('input', updateWorkspaceNavAvailability);
+
+  // Project Name/Description stay editable during a Mission Info review (see
+  // applyPreparationReadOnlyLock) — write straight into simState.projectData
+  // and autosave, same pattern as every other simulation field (sensors.js).
+  document.getElementById('sim-project-name')?.addEventListener('input', (e) => {
+    simState.projectData.name = e.target.value;
+    scheduleSimSync();
+  });
 
   document.getElementById('scope-blank-btn')?.addEventListener('click', () => {
     if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
@@ -502,7 +567,11 @@ export function installSimSetup() {
     document.getElementById('scope-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
-  document.getElementById('sim-project-desc')?.addEventListener('input', updateDescCount);
+  document.getElementById('sim-project-desc')?.addEventListener('input', (e) => {
+    simState.projectData.description = e.target.value;
+    scheduleSimSync();
+    updateDescCount();
+  });
   document.getElementById('sim-gen-code')?.addEventListener('click', () => {
     const alphabet = 'ABCDEFGHJKLMNPRSTVWXZ';
     let s = '';

@@ -26,6 +26,16 @@ let lastSavedAt = null;
 let isNewProjectFlow = false;
 export function markNewSimProject() { isNewProjectFlow = true; }
 
+// True once Step 2 (the workspace) has been entered for real — either a
+// brand-new project's beginSimulation() succeeded, or an existing one was
+// loaded via loadSimulationState() below. Lets goToWorkspaceSubTab()
+// (setup.js) tell "re-enter the workspace I already created" apart from
+// "run the New Project wizard's validation" when the sidebar's Sensors/
+// Topology items are clicked from within a Mission Info/MiniSpectors review.
+let simulationStarted = false;
+export function markSimulationStarted() { simulationStarted = true; }
+export function isSimulationStarted() { return simulationStarted; }
+
 function formatAgo(ts) {
   const s = Math.round((Date.now() - ts) / 1000);
   if (s < 10) return 'just now';
@@ -148,6 +158,7 @@ export function loadSimulationState(data, isSimLocked) {
 
   document.getElementById('sim-step-1').classList.add('hidden');
   document.getElementById('sim-step-2').classList.remove('hidden');
+  markSimulationStarted();
   simState.activeROV = Math.min(...simState.selectedROVs.keys());
   window.__updateSimUnitsBadge?.();
   renderWorkspaceShell();
