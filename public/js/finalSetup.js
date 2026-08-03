@@ -6,14 +6,34 @@ import { escapeHtml, showToast, renderSectionCard, calBadge, tstBadge } from './
 import { state } from './state.js';
 
 function ensureFinalSetup() {
-  if (state.currentReportData.finalSetup?._initialized) return state.currentReportData.finalSetup;
   const preOpData = state.preOpData;
+  // "+ Operation-Time Additions" (Packing List & Equipment tab) can grow
+  // preOpData.additions.sensors at any point, including after Final Setup
+  // has already been built once — _mergedAdditionsCount is a watermark so a
+  // later call only appends the ones added since the last check, rather than
+  // either missing them entirely or re-adding ones already merged in (name
+  // matching would be unreliable here since two distinct additions, e.g. a
+  // replacement part, can legitimately share a name).
+  const additionsSensors = preOpData.additions?.sensors || [];
+  if (state.currentReportData.finalSetup?._initialized) {
+    const fs = state.currentReportData.finalSetup;
+    const mergedCount = fs._mergedAdditionsCount || 0;
+    if (additionsSensors.length > mergedCount) {
+      additionsSensors.slice(mergedCount).forEach(s => {
+        fs.sensors.push({ ...s, _type: 'operation', confirmed: !!(s.calibrated && s.tested), opNote: '' });
+      });
+      fs._mergedAdditionsCount = additionsSensors.length;
+    }
+    return fs;
+  }
   const allSensors = [
     ...(preOpData.sensors || []).map(s => ({ ...s, _type: 'mission' })),
     ...Object.entries(preOpData.rovSensors || {}).flatMap(([num, arr]) => arr.map(s => ({ ...s, rovNum: parseInt(num, 10), _type: 'fixed' }))),
+    ...additionsSensors.map(s => ({ ...s, _type: 'operation' })),
   ];
   state.currentReportData.finalSetup = {
     _initialized: true,
+    _mergedAdditionsCount: additionsSensors.length,
     activeROVNum: preOpData.rovs.find(r => r.role === 'main')?.rovNumber ?? preOpData.rovs[0]?.rovNumber ?? null,
     sensors: allSensors.map(s => ({ ...s, confirmed: !!(s.calibrated && s.tested), opNote: '' })),
     thrusters: (preOpData.thrusters || []).map(t => ({ ...t, position: '', confirmed: false })),
@@ -175,6 +195,14 @@ export function renderFinalSetupTab() {
     catRow.innerHTML = `<td colspan="7" class="px-3 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">Mission Sensors</span></td>`;
     sensorTbody.appendChild(catRow);
     missionSensors.forEach(s => addSensorRow(s, fs.sensors.indexOf(s)));
+  }
+  const operationSensors = fs.sensors.filter(s => s._type === 'operation');
+  if (operationSensors.length > 0) {
+    const catRow = document.createElement('tr');
+    catRow.style.background = 'rgba(12,23,39,0.7)';
+    catRow.innerHTML = `<td colspan="7" class="px-3 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#10b981">Operation-Time Additions</span></td>`;
+    sensorTbody.appendChild(catRow);
+    operationSensors.forEach(s => addSensorRow(s, fs.sensors.indexOf(s)));
   }
   if (fs.sensors.length === 0) sensorTbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-[#6C88A6] text-sm">No sensors</td></tr>`;
   sensorTable.appendChild(sensorTbody);
