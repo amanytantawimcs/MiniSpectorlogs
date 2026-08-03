@@ -10,14 +10,22 @@ function isDesktop() {
 }
 
 // ── Collapse (icon rail) ──────────────────────────────────────────────
+// The visible toggle button (#sim-sidebar-collapse-btn) has been removed
+// from the UI, but the collapse mechanism itself — the persisted state, the
+// aside's .sim-collapsed class, and toggleCollapsed() — is left fully
+// intact so it still applies on load and can be wired to a trigger again
+// later without resurrecting any of this logic. Only the button-specific
+// bits (aria attributes, label text) are skipped when it's absent.
 function applyCollapsed(collapsed) {
   const aside = document.getElementById('app-sidebar');
-  const btn = document.getElementById('sim-sidebar-collapse-btn');
-  if (!aside || !btn) return;
+  if (!aside) return;
   aside.classList.toggle('sim-collapsed', collapsed);
-  btn.setAttribute('aria-expanded', String(!collapsed));
-  btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
-  btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  const btn = document.getElementById('sim-sidebar-collapse-btn');
+  if (btn) {
+    btn.setAttribute('aria-expanded', String(!collapsed));
+    btn.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    btn.title = collapsed ? 'Expand sidebar' : 'Collapse sidebar';
+  }
   const label = document.getElementById('sim-collapse-label');
   if (label) label.textContent = collapsed ? 'Expand' : 'Collapse';
 }
@@ -30,10 +38,11 @@ function toggleCollapsed() {
 }
 
 function initCollapse() {
-  const btn = document.getElementById('sim-sidebar-collapse-btn');
-  if (!btn) return;
-  applyCollapsed(localStorage.getItem(COLLAPSE_KEY) === '1');
-  btn.addEventListener('click', () => {
+  // Deliberately NOT restoring the persisted collapsed state here — with no
+  // visible button, anyone who had previously collapsed the sidebar would
+  // otherwise be stuck on an icon-only rail with no way back. toggleCollapsed()
+  // and the .sim-collapsed CSS are still fully functional for a future trigger.
+  document.getElementById('sim-sidebar-collapse-btn')?.addEventListener('click', () => {
     if (!isDesktop()) return; // rail collapse is a desktop-only affordance; mobile uses the drawer
     toggleCollapsed();
   });
