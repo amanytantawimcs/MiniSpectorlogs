@@ -8,7 +8,7 @@ import { escapeHtml, showToast, renderSectionCard, calBadge, tstBadge, rdyBadge 
 import { api } from './api.js';
 import { state } from './state.js';
 import { enterDashboard, showTab } from './navigation.js';
-import { startProjectAutoSave, saveProject } from './projectDetails.js';
+import { startProjectAutoSave, saveProject, applyProjectIdentityLock } from './projectDetails.js';
 import { addSensorRow, showSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
 import { stopSimAutoSave } from './simulation/core.js';
@@ -85,6 +85,7 @@ export async function pushToOperation() {
   if (pName) pName.value = state.preOpData.projectName || '';
   if (pCode) pCode.value = state.preOpData.projectCode || '';
   if (state.preOpData.projectCode) state.currentProjectCode = state.preOpData.projectCode;
+  applyProjectIdentityLock();
 
   renderProjectSimInfo();
 

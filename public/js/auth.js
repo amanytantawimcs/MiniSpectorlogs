@@ -2,7 +2,7 @@ import { api } from './api.js';
 import { state, getDeviceId } from './state.js';
 import { showToast, setUserCardName, setUserCardRole } from './ui.js';
 import { enterDashboard, showTab } from './navigation.js';
-import { startProjectAutoSave } from './projectDetails.js';
+import { startProjectAutoSave, applyProjectIdentityLock } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
 import { simState } from './simulation/state.js';
@@ -39,6 +39,7 @@ function enterOpMode(userName) {
   document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Operation navigation');
   setUserCardRole(state.currentUserProjectRole);
   if (state.currentProjectCode) clearPendingTeam(); // joining an existing project — drop any stale staged picks
+  applyProjectIdentityLock();
   enterDashboard();
   startProjectAutoSave();
   startStaleCheck();
