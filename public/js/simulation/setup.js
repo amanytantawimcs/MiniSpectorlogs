@@ -3,11 +3,12 @@
 // picker with role assignment and auto-assign).
 
 import { state } from '../state.js';
+import { api } from '../api.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
 import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
-import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem } from './core.js';
+import { loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem, markNewSimProject } from './core.js';
 import { renderProjectTeam } from '../projectTeam.js';
 
 const SENSOR_ALL = Object.keys(SENSOR_HARDWARE);
@@ -338,8 +339,16 @@ function updateWorkspaceNavAvailability() {
   });
 }
 
-function beginSimulation() {
-  if (!document.getElementById('sim-project-code')?.value.trim()) {
+// The exclusive entry point for the "New Project" wizard — Join/Continue
+// loads an existing project via loadSimulationState() instead and never
+// reaches this function, so a passing check here is a reliable "this code
+// is genuinely free" signal at the moment the user commits to it. Still just
+// advisory (a moment-in-time check, not a lock) — the createOnly guard on
+// the actual save in saveSimulation() is what makes the guarantee airtight
+// against someone else grabbing the same code in between.
+async function beginSimulation() {
+  const code = document.getElementById('sim-project-code')?.value.trim();
+  if (!code) {
     showToast('Project code is required.', 'warn');
     return;
   }
@@ -352,9 +361,16 @@ function beginSimulation() {
     return;
   }
 
+  const existing = await api.pullProject(code);
+  if (existing.success) {
+    showToast(`Project code "${code}" already exists. Choose a different code, or use Join Project from the mode screen to open it.`, 'error');
+    return;
+  }
+  markNewSimProject();
+
   simState.projectData = {
     name: document.getElementById('sim-project-name')?.value.trim() || '',
-    code: document.getElementById('sim-project-code')?.value.trim() || '',
+    code,
     description: document.getElementById('sim-project-desc')?.value.trim() || '',
     asset: document.getElementById('sim-project-asset')?.value || '',
     weatherWindow: document.getElementById('sim-project-weather')?.value || '',
@@ -399,10 +415,10 @@ function beginSimulation() {
 // instead of duplicating the "scope required" / "unit required" checks —
 // on success it proceeds straight into the requested tab; on failure it
 // falls back to the Mission Info panel where the user can fix what's missing.
-function goToWorkspaceSubTab(tab, navId) {
+async function goToWorkspaceSubTab(tab, navId) {
   const step2 = document.getElementById('sim-step-2');
   const alreadyIn = step2 && !step2.classList.contains('hidden');
-  if (!alreadyIn) beginSimulation();
+  if (!alreadyIn) await beginSimulation();
 
   const nowIn = step2 && !step2.classList.contains('hidden');
   if (!nowIn) {

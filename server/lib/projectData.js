@@ -34,7 +34,14 @@ async function getProjectRowByCode(code) {
   return rows[0] || null;
 }
 
-async function upsertOperationProject(client, { project_code, project_name, created_by, data }) {
+// createOnly (set only for a brand-new project's very first save — see
+// isFirstSave in projectDetails.js) turns the upsert into a create-or-fail:
+// ON CONFLICT DO NOTHING means an existing row is left completely untouched
+// rather than merged into, and the empty RETURNING tells the caller a
+// collision happened so it can report it instead of silently joining
+// someone else's project. Every later save on that same project (isFirstSave
+// false) still upserts normally.
+async function upsertOperationProject(client, { project_code, project_name, created_by, data, createOnly }) {
   const d = data || {};
   const { rows } = await client.query(
     `INSERT INTO projects (
@@ -50,7 +57,7 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        $15,$16,$17,$18,$19,
        $20,$21,$22,$23
      )
-     ON CONFLICT (project_code) DO UPDATE SET
+     ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
        mode = 'operation',
        created_by = EXCLUDED.created_by,
@@ -73,7 +80,7 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        minispector_systems = EXCLUDED.minispector_systems,
        pre_operation_data = EXCLUDED.pre_operation_data,
        final_setup = EXCLUDED.final_setup,
-       remarks = EXCLUDED.remarks
+       remarks = EXCLUDED.remarks`}
      RETURNING id, updated_at`,
     [
       project_code, project_name || '', created_by || '',
@@ -90,6 +97,7 @@ async function upsertOperationProject(client, { project_code, project_name, crea
       d.remarks || '',
     ]
   );
+  if (rows.length === 0) return { conflict: true }; // createOnly + project_code already existed
   const projectId = rows[0].id;
 
   // replace child rows wholesale — the app always sends full arrays, never deltas
@@ -158,7 +166,10 @@ async function upsertOperationProject(client, { project_code, project_name, crea
   return rows[0];
 }
 
-async function upsertSimulationProject(client, { project_code, project_name, created_by, data }) {
+// createOnly: see the comment on upsertOperationProject above — same
+// create-or-fail behavior, gated on the new-project wizard's first save
+// (isNewProjectFlow && isFirstSave in simulation/core.js's saveSimulation()).
+async function upsertSimulationProject(client, { project_code, project_name, created_by, data, createOnly }) {
   const d = data || {};
   // Once a simulation has been pushed to Operation (is_sim_locked), later edits
   // to Sensors/Topology — which the UI deliberately leaves open for reference/
@@ -174,14 +185,15 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
   const { rows } = await client.query(
     `INSERT INTO projects (project_code, project_name, mode, created_by, scope)
      VALUES ($1,$2,'simulation',$3,$4)
-     ON CONFLICT (project_code) DO UPDATE SET
+     ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
        mode = CASE WHEN projects.is_sim_locked THEN projects.mode ELSE 'simulation' END,
        created_by = EXCLUDED.created_by,
-       scope = EXCLUDED.scope
+       scope = EXCLUDED.scope`}
      RETURNING id, updated_at`,
     [project_code, project_name || '', created_by || '', d.projectScope || '']
   );
+  if (rows.length === 0) return { conflict: true }; // createOnly + project_code already existed
   const projectId = rows[0].id;
 
   const simResult = await client.query(

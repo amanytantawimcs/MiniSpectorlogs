@@ -16,6 +16,16 @@ let syncDebounceTimer = null;
 let autoSaveTimer = null;
 let lastSavedAt = null;
 
+// Set only by beginSimulation() (setup.js) — the exclusive entry point for
+// the "New Project" wizard, never reached by Join/Continue (which loads an
+// existing project via loadSimulationState() below instead). Distinct from
+// lastSavedAt: that only tracks whether *this browser tab* has saved yet,
+// which is also null right after joining an existing project — using it
+// alone as the createOnly signal would incorrectly try to "create" a
+// project that already exists the moment a freshly-joined session autosaves.
+let isNewProjectFlow = false;
+export function markNewSimProject() { isNewProjectFlow = true; }
+
 function formatAgo(ts) {
   const s = Math.round((Date.now() - ts) / 1000);
   if (s < 10) return 'just now';
@@ -237,29 +247,44 @@ function updateSimProgress() {
   bar.style.width = Math.round((ready / sensorItems.length) * 100) + '%';
 }
 
+let lastCodeTakenWarned = null;
+
 export async function saveSimulation({ silent } = {}) {
   if (!simState.projectData.code) {
     if (!silent) showToast('Enter a Project Code before saving.', 'warn');
     return;
   }
+  // Same reasoning as projectDetails.js's isFirstSave: only refresh the
+  // embedded Project Team section on the save that first persists this
+  // project server-side, not on every 20s autosave after that, which
+  // would otherwise wipe out an in-progress search mid-keystroke. Also
+  // gates createOnly below — see isNewProjectFlow's comment for why
+  // lastSavedAt alone isn't a safe enough signal for that.
+  const isFirstSave = !lastSavedAt;
   const result = await api.pushProject({
     project_code: simState.projectData.code,
     mode: 'simulation',
     created_by: state.currentUserName,
     project_name: simState.projectData.name || simState.projectData.code,
     data: collectSimState(),
+    createOnly: isNewProjectFlow && isFirstSave,
   });
   if (result.success) {
-    // Same reasoning as projectDetails.js's isFirstSave: only refresh the
-    // embedded Project Team section on the save that first persists this
-    // project server-side, not on every 20s autosave after that, which
-    // would otherwise wipe out an in-progress search mid-keystroke.
-    const isFirstSave = !lastSavedAt;
     lastSavedAt = Date.now();
     noteSavedUpdatedAt(result.updated_at);
     if (isFirstSave) { await flushPendingTeam(simState.projectData.code); renderProjectTeam('team-container-sim', simState.projectData.code); }
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
+  } else if (result.codeTaken) {
+    // Always surfaced (even silent autosave/debounced sync) and throttled to
+    // once per distinct code — see projectDetails.js's saveProject() for the
+    // same pattern. beginSimulation() already checks this proactively before
+    // the wizard even proceeds, so this is the defense-in-depth backstop for
+    // the race where someone else grabs the code in between.
+    if (lastCodeTakenWarned !== simState.projectData.code) {
+      lastCodeTakenWarned = simState.projectData.code;
+      showToast(`Project code "${simState.projectData.code}" is already in use by another project. Go back and choose a different code.`, 'error');
+    }
   } else if (!silent) {
     showToast('Save failed: ' + (result.error || 'unknown error'), 'error');
   }

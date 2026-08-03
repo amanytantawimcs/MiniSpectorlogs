@@ -10,7 +10,7 @@ const { asyncRoute } = require('../lib/asyncRoute');
 const router = express.Router();
 
 router.post('/', requireAuth, asyncRoute(async (req, res) => {
-  const { project_code, mode, created_by, project_name, data } = req.body || {};
+  const { project_code, mode, created_by, project_name, data, createOnly } = req.body || {};
   if (!project_code) return res.status(400).json({ success: false, error: 'project_code required' });
   if (!(await assertCanWrite(req.userId, project_code))) {
     return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
@@ -21,8 +21,15 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
     client = await pool.connect();
     await client.query('BEGIN');
     const row = mode === 'simulation'
-      ? await upsertSimulationProject(client, { project_code, project_name, created_by, data })
-      : await upsertOperationProject(client, { project_code, project_name, created_by, data });
+      ? await upsertSimulationProject(client, { project_code, project_name, created_by, data, createOnly })
+      : await upsertOperationProject(client, { project_code, project_name, created_by, data, createOnly });
+    if (row.conflict) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        success: false, codeTaken: true,
+        error: `Project code "${project_code}" is already in use by another project.`,
+      });
+    }
     await client.query('COMMIT');
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {

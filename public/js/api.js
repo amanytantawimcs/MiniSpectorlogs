@@ -131,7 +131,7 @@ export const api = {
         enqueueFailedSave(payload);
         if (!alreadyQueued) showToast('Offline — save queued, will retry automatically.', 'warn');
       }
-      return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false };
+      return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false, codeTaken: !!r.data.codeTaken };
     }
     return { success: true, updated_at: r.data.updated_at };
   },
