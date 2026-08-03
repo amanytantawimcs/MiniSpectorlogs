@@ -300,7 +300,7 @@ async function renderAdminActivityTab() {
 }
 
 function projectsRowsHtml(list) {
-  if (list.length === 0) return `<tr><td colspan="5" class="text-center py-8 text-sm" style="color:#6C88A6">No projects found.</td></tr>`;
+  if (list.length === 0) return `<tr><td colspan="6" class="text-center py-8 text-sm" style="color:#6C88A6">No projects found.</td></tr>`;
   return list.map(p => `
       <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
           <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(p.project_code)}</td>
@@ -311,7 +311,31 @@ function projectsRowsHtml(list) {
           </td>
           <td class="px-4 py-3" style="color:#9AB0C8">${escapeHtml(p.created_by || '—')}</td>
           <td class="px-4 py-3 text-xs whitespace-nowrap" style="color:#6C88A6">${p.updated_at ? new Date(p.updated_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td>
+          <td class="px-4 py-3 text-right whitespace-nowrap">
+              <button onclick="adminDeleteProject('${escapeHtml(p.project_code)}')" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-900/20">Remove</button>
+          </td>
       </tr>`).join('');
+}
+
+// Deletes a project and everything tied to it — permanent, no undo. A plain
+// confirm() is too weak for something this destructive (matches the whole
+// project's dive/maintenance/HSE/standby/fault logs and simulation data,
+// not just one row), so this requires typing the exact project code back,
+// the same weight of confirmation GitHub-style repo deletion uses.
+async function adminDeleteProject(projectCode) {
+  if (!isAdminLoggedIn) { handleAdminSessionExpired(); return; }
+  const typed = prompt(
+    `This permanently deletes project "${projectCode}" and everything in it — crew, shift logs, dive logs, maintenance, HSE reports, standby logs, faults, and its simulation data if it has one. This cannot be undone.\n\nType the project code to confirm:`
+  );
+  if (typed === null) return;
+  if (typed.trim().toUpperCase() !== projectCode.toUpperCase()) {
+    showToast('Project code did not match — nothing was deleted.', 'warn');
+    return;
+  }
+  const result = await api.deleteProject(projectCode);
+  if (result.unauthorized) { handleAdminSessionExpired(); return; }
+  if (result.success) { showToast(`Project "${projectCode}" deleted.`, 'success'); renderAdminProjectsTab(); }
+  else showToast(result.error || 'Failed to delete project.', 'error');
 }
 
 function filterAdminProjects(query) {
@@ -354,6 +378,7 @@ async function renderAdminProjectsTab() {
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Status</th>
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Created By</th>
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Last Updated</th>
+                        <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody id="admin-projects-tbody">${projectsRowsHtml(cachedAdminProjects)}</tbody>
@@ -377,4 +402,5 @@ export function installAdmin() {
   window.filterAdminUsers = filterAdminUsers;
   window.filterAdminActivity = filterAdminActivity;
   window.filterAdminProjects = filterAdminProjects;
+  window.adminDeleteProject = adminDeleteProject;
 }

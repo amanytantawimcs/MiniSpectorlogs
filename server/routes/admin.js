@@ -58,4 +58,17 @@ router.get('/projects', requireAdminAuth, asyncRoute(async (req, res) => {
   res.json({ success: true, projects: rows });
 }));
 
+// Permanently deletes a project. Every child table (crew_members,
+// shift_logs, dive_logs, maintenance_logs, hse_reports, standby_logs,
+// fault_logs, simulations + simulation_rovs, project_members, session_meta,
+// sync_log) has ON DELETE CASCADE on project_id, so this one statement
+// removes the project's entire history — irreversible, no soft-delete.
+// The admin panel requires typing the exact project code before calling
+// this at all (see adminDeleteProject in admin.js).
+router.delete('/projects/:code', requireAdminAuth, asyncRoute(async (req, res) => {
+  const { rowCount } = await pool.query('DELETE FROM projects WHERE project_code = $1', [req.params.code]);
+  if (!rowCount) return res.status(404).json({ success: false, error: 'Project not found' });
+  res.json({ success: true });
+}));
+
 module.exports = router;

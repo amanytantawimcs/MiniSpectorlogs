@@ -159,6 +159,14 @@ export const api = {
     return { success: true, projects: r.data.projects || [] };
   },
 
+  // Permanently deletes a project and everything tied to it (cascades
+  // server-side — see DELETE /api/admin/projects/:code).
+  deleteProject: async (projectCode) => {
+    const r = await request('/admin/projects/' + encodeURIComponent(projectCode), { method: 'DELETE' });
+    if (r.status === 401) return { success: false, unauthorized: true };
+    return { success: r.ok, error: r.data.error };
+  },
+
   listProjects: async (filters = {}) => {
     const qs = filters.mode ? ('?mode=' + encodeURIComponent(filters.mode)) : '';
     const r = await request('/projects' + qs);
