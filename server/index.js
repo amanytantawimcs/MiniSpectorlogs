@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const pool = require('./db');
 const { ensureLoginLogTable } = require('./lib/loginLog');
+const { ensureUsersAdminColumn } = require('./lib/usersSchema');
 
 // A rejected pool.query() in a route with no try/catch becomes an unhandled
 // rejection, which crashes the whole process (and every other in-flight
@@ -52,8 +53,9 @@ app.use('/api', require('./routes/sync'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const PORT = process.env.PORT || 8080;
-ensureLoginLogTable(pool)
-  .catch((e) => console.error('[startup] could not ensure login_log table:', e.message))
-  .finally(() => {
-    app.listen(PORT, () => console.log(`MiniSpector Log Lite listening on :${PORT}`));
-  });
+Promise.all([
+  ensureLoginLogTable(pool).catch((e) => console.error('[startup] could not ensure login_log table:', e.message)),
+  ensureUsersAdminColumn(pool).catch((e) => console.error('[startup] could not ensure users.is_admin column:', e.message)),
+]).finally(() => {
+  app.listen(PORT, () => console.log(`MiniSpector Log Lite listening on :${PORT}`));
+});

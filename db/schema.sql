@@ -25,6 +25,7 @@ CREATE TABLE users (
   role           TEXT NOT NULL DEFAULT 'engineer' CHECK (role IN ('engineer', 'manager')),
   passcode_hash  TEXT,                          -- scrypt hash; NULL means no passcode set yet (first login sets one)
   passcode_salt  TEXT,
+  is_admin       BOOLEAN NOT NULL DEFAULT false, -- grants Admin panel access only (see requireAdminAuth) — separate from the two hardcoded PRIVILEGED_USER_IDS, which also get All Projects + simulation approvals
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

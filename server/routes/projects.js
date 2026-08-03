@@ -4,14 +4,10 @@ const {
   getProjectRowByCode, upsertOperationProject, upsertSimulationProject,
   buildOperationData, buildSimulationData, lockSimulation,
 } = require('../lib/projectData');
-const { requireAuth, assertCanWrite } = require('../lib/auth');
+const { requireAuth, assertCanWrite, PRIVILEGED_USER_IDS } = require('../lib/auth');
 const { asyncRoute } = require('../lib/asyncRoute');
 
 const router = express.Router();
-
-// Same two privileged User IDs as the simulation approver gate
-// (APPROVER_IDS in public/js/simulation/config.js) — keep both lists in sync.
-const PRIVILEGED_USER_IDS = ['1162', '1774'];
 
 router.post('/', requireAuth, asyncRoute(async (req, res) => {
   const { project_code, mode, created_by, project_name, data } = req.body || {};

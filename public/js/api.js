@@ -96,7 +96,7 @@ export const api = {
   getUserName: async (userId) => {
     const r = await request('/users/' + encodeURIComponent(userId));
     if (!r.ok) return { success: false };
-    return { success: true, name: r.data.name, role: r.data.role, hasPasscode: r.data.hasPasscode };
+    return { success: true, name: r.data.name, role: r.data.role, hasPasscode: r.data.hasPasscode, isAdmin: r.data.isAdmin };
   },
 
   setPasscode: async (userId, passcode) => {
@@ -152,6 +152,16 @@ export const api = {
   // in server/lib/auth.js), not a userId query param the client could claim.
   getProjectsOverview: async () => {
     const r = await request('/projects/overview');
+    if (!r.ok) return { success: false, error: r.data.error || 'Request failed', projects: [] };
+    return { success: true, projects: r.data.projects || [] };
+  },
+
+  // Admin-panel equivalent of getProjectsOverview() above — same data, but
+  // authenticated via the admin session token instead of a privileged user's
+  // regular session, since the admin panel logs in independently.
+  getAdminProjects: async () => {
+    const r = await request('/admin/projects');
+    if (r.status === 401) return { success: false, unauthorized: true, projects: [] };
     if (!r.ok) return { success: false, error: r.data.error || 'Request failed', projects: [] };
     return { success: true, projects: r.data.projects || [] };
   },
@@ -252,5 +262,12 @@ export const api = {
   deleteUser: async (userId) => {
     const r = await request('/users/' + encodeURIComponent(userId), { method: 'DELETE' });
     return { success: r.ok, unauthorized: r.status === 401 };
+  },
+
+  setUserAdmin: async (userId, isAdmin) => {
+    const r = await request('/users/' + encodeURIComponent(userId) + '/set-admin', {
+      method: 'POST', body: JSON.stringify({ isAdmin }),
+    });
+    return { success: r.ok, error: r.data.error, unauthorized: r.status === 401 };
   },
 };

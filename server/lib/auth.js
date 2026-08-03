@@ -17,6 +17,12 @@
 const pool = require('../db');
 const { getSession } = require('./sessions');
 const { getProjectRowByCode } = require('./projectData');
+const { asyncRoute } = require('./asyncRoute');
+
+// Same two privileged User IDs as the simulation approver gate (APPROVER_IDS
+// in public/js/simulation/config.js) and the /overview privileged-user gate
+// in routes/projects.js — keep all three lists in sync.
+const PRIVILEGED_USER_IDS = ['1162', '1774'];
 
 function requireAuth(req, res, next) {
   const token = (req.body && req.body.sessionToken) || req.get('X-Session-Token');
@@ -26,13 +32,36 @@ function requireAuth(req, res, next) {
   next();
 }
 
-function requireAdminAuth(req, res, next) {
-  const token = req.get('X-Admin-Session-Token');
-  const session = getSession(token);
-  if (!session || session.type !== 'admin') return res.status(401).json({ success: false, error: 'Admin authentication required.' });
-  req.adminUsername = session.userId;
-  next();
-}
+// Accepts a real admin session, a privileged user's own regular session, or
+// any user whose users.is_admin flag has been set from the Users tab — the
+// "Admin Management" sidebar button lets any of these open the admin panel
+// without a separate admin login, so the routes it calls must recognize an
+// ordinary session token too, not just X-Admin-Session-Token. Wrapped in
+// asyncRoute since the is_admin lookup makes this middleware async — an
+// unwrapped async middleware that rejects would otherwise become an
+// unhandled rejection instead of a response.
+const requireAdminAuth = asyncRoute(async function requireAdminAuth(req, res, next) {
+  const adminToken = req.get('X-Admin-Session-Token');
+  const adminSession = getSession(adminToken);
+  if (adminSession && adminSession.type === 'admin') {
+    req.adminUsername = adminSession.userId;
+    return next();
+  }
+  const userToken = (req.body && req.body.sessionToken) || req.get('X-Session-Token');
+  const userSession = getSession(userToken);
+  if (userSession && userSession.type === 'user') {
+    if (PRIVILEGED_USER_IDS.includes(String(userSession.userId))) {
+      req.adminUsername = userSession.userId;
+      return next();
+    }
+    const { rows } = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userSession.userId]);
+    if (rows[0] && rows[0].is_admin) {
+      req.adminUsername = userSession.userId;
+      return next();
+    }
+  }
+  return res.status(401).json({ success: false, error: 'Admin authentication required.' });
+});
 
 async function assertCanWrite(userId, projectCode) {
   const project = await getProjectRowByCode(projectCode);
@@ -43,4 +72,4 @@ async function assertCanWrite(userId, projectCode) {
   return !!mine && mine.role !== 'viewer'; // team configured: unlisted users are implicitly viewers
 }
 
-module.exports = { requireAuth, requireAdminAuth, assertCanWrite };
+module.exports = { requireAuth, requireAdminAuth, assertCanWrite, PRIVILEGED_USER_IDS };

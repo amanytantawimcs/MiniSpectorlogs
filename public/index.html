@@ -609,7 +609,6 @@
     </div>
 
     <p class="absolute bottom-6 left-4 right-4 text-center text-[#6C88A6] text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Terms of Service</button></p>
-    <button onclick="showAdminLogin()" class="absolute bottom-5 right-6 text-gray-700 hover:text-[#6C88A6] text-[11px] transition-colors">Admin</button>
 </div>
 
 <!-- ============================================================ -->
@@ -956,11 +955,16 @@
         </div>
     </div>
 
-    <!-- Visible only to the two privileged User IDs — toggled in enterDashboard() (navigation.js) -->
-    <div id="nav-projects-overview-section" class="hidden">
+    <!-- Group visible if either item inside it is; each item is toggled independently
+         in enterDashboard() (navigation.js). All Projects: the two hardcoded privileged
+         User IDs only. Admin Management: those two, plus anyone with users.is_admin set. -->
+    <div id="nav-admin-group" class="hidden">
         <div class="sim-nav-label">Admin</div>
-        <div onclick="showTab('projects-overview', this); renderProjectsOverviewTab();" class="nav-item">
+        <div id="nav-projects-overview-item" onclick="showTab('projects-overview', this); renderProjectsOverviewTab();" class="nav-item hidden">
             All Projects
+        </div>
+        <div id="nav-admin-mgmt-item" onclick="openAdminManagement()" class="nav-item hidden">
+            Admin Management
         </div>
     </div>
 

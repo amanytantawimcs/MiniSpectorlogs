@@ -247,6 +247,7 @@ export function installAuth() {
 
       state.currentUserId = userId;
       state.currentUserRole = 'member';
+      state.currentUserIsAdmin = !!result.isAdmin;
       setUserCardName(result.name);
       showModeScreen(result.name);
     } catch (err) {

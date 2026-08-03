@@ -5,6 +5,7 @@ export const state = {
   currentUserId: null,
   currentUserName: '',
   currentUserRole: 'member',     // 'member' | 'reviewer'
+  currentUserIsAdmin: false,     // grants the "Admin Management" nav item — see users.is_admin / requireAdminAuth
   currentUserProjectRole: 'operator', // 'operator' | 'viewer'
   currentMode: null,             // 'operation' | 'simulation'
   currentProjectCode: null,

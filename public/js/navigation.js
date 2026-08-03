@@ -26,8 +26,14 @@ export function enterDashboard() {
   document.getElementById('app-container').classList.remove('hidden');
 
   // Same two IDs as the simulation approver gate — see APPROVER_IDS in simulation/config.js.
+  // isPrivileged additionally unlocks All Projects + simulation approvals;
+  // isAdmin (privileged, or a per-user DB flag set from the Users tab) only
+  // unlocks the Admin Management shortcut — see users.is_admin / requireAdminAuth.
   const isPrivileged = APPROVER_IDS.includes(String(state.currentUserId));
-  document.getElementById('nav-projects-overview-section')?.classList.toggle('hidden', !isPrivileged);
+  const isAdmin = isPrivileged || !!state.currentUserIsAdmin;
+  document.getElementById('nav-admin-group')?.classList.toggle('hidden', !(isPrivileged || isAdmin));
+  document.getElementById('nav-projects-overview-item')?.classList.toggle('hidden', !isPrivileged);
+  document.getElementById('nav-admin-mgmt-item')?.classList.toggle('hidden', !isAdmin);
 }
 
 function openSupport() {

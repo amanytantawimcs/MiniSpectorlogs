@@ -25,9 +25,9 @@ router.get('/search', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 router.get('/:id', asyncRoute(async (req, res) => {
-  const { rows } = await pool.query('SELECT id, name, role, passcode_hash FROM users WHERE id = $1', [req.params.id.trim()]);
+  const { rows } = await pool.query('SELECT id, name, role, passcode_hash, is_admin FROM users WHERE id = $1', [req.params.id.trim()]);
   if (!rows[0]) return res.status(404).json({ success: false, message: 'User not found' });
-  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode: !!rows[0].passcode_hash });
+  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode: !!rows[0].passcode_hash, isAdmin: rows[0].is_admin });
 }));
 
 // First-time passcode set. Rejected if a passcode already exists for this user.
@@ -79,8 +79,19 @@ router.post('/:id/reset-passcode', requireAdminAuth, resetLimiter, asyncRoute(as
 // adminPasswordHash in the URL query string, which lands in the browser's
 // Network tab, address bar history, and any server access logs in the clear.
 router.get('/', requireAdminAuth, asyncRoute(async (req, res) => {
-  const { rows } = await pool.query('SELECT id, name, role FROM users ORDER BY id');
+  const { rows } = await pool.query('SELECT id, name, role, is_admin FROM users ORDER BY id');
   res.json({ success: true, users: rows });
+}));
+
+// Grants or revokes Admin panel access for a user — separate from the two
+// hardcoded PRIVILEGED_USER_IDS (see lib/auth.js), which also get All
+// Projects + simulation approvals and aren't affected by this flag.
+router.post('/:id/set-admin', requireAdminAuth, asyncRoute(async (req, res) => {
+  const id = req.params.id.trim();
+  const { isAdmin } = req.body || {};
+  const { rowCount } = await pool.query('UPDATE users SET is_admin = $1 WHERE id = $2', [!!isAdmin, id]);
+  if (!rowCount) return res.status(404).json({ success: false, error: 'User not found' });
+  res.json({ success: true });
 }));
 
 router.post('/', requireAdminAuth, asyncRoute(async (req, res) => {

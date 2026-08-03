@@ -46,4 +46,16 @@ router.get('/login-log', requireAdminAuth, asyncRoute(async (req, res) => {
   res.json({ success: true, logs });
 }));
 
+// Cross-project directory for the admin panel — same data as the privileged-
+// user /api/projects/overview endpoint, but gated on the admin session
+// instead of one of the two hardcoded PRIVILEGED_USER_IDS, since the admin
+// panel is a separate login with no req.userId of its own.
+router.get('/projects', requireAdminAuth, asyncRoute(async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT project_code, project_name, mode, created_by, updated_at, is_sim_locked
+     FROM projects ORDER BY updated_at DESC`
+  );
+  res.json({ success: true, projects: rows });
+}));
+
 module.exports = router;
