@@ -72,7 +72,20 @@ router.get('/', requireAuth, asyncRoute(async (req, res) => {
 router.get('/:code', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, notFound: true, error: 'Not found' });
-  const data = project.mode === 'simulation' ? await buildSimulationData(project) : await buildOperationData(project);
+  let data;
+  if (project.mode === 'simulation') {
+    data = await buildSimulationData(project);
+  } else {
+    data = await buildOperationData(project);
+    // is_sim_locked means this operation project was pushed from a
+    // simulation at some point — the simulations row is never deleted on
+    // push, just marked, so it's still there to review. Attached only when
+    // relevant so an ordinary operation project (never simulated) doesn't
+    // pay for the extra query. Lets a device that joins later (rather than
+    // being present for the live push) still see the Simulation tabs —
+    // see handleJoin() in auth.js.
+    if (project.is_sim_locked) data.simulationData = await buildSimulationData(project);
+  }
   res.json({
     success: true,
     project: {

@@ -115,7 +115,21 @@ export function collectSimState() {
   };
 }
 
-export function loadSimulationState(data, isSimLocked) {
+// renderShell controls whether the visible workspace UI (page title, active
+// sidebar highlight, Push-to-Operation header button, the sensors/topology
+// content area) updates immediately — correct when Simulation is the tab
+// about to be shown (enterSimMode's existingProject branch), wrong when it
+// isn't (handleJoin() in auth.js loading an already-operation project's
+// attached simulation data purely for later review: the Project Details tab
+// is what's actually on screen, so renderWorkspaceShell() would incorrectly
+// stomp the page title to "Sensors and equipment" and could flash the
+// Push-to-Operation button into the header if simState.activeSubTab happened
+// to be left on 'sysarch' from an earlier session). false still fully
+// populates simState and flips step1/step2's hidden state (safe — that's
+// inside the not-currently-visible #tab-simulation container, and is what
+// lets a later goToWorkspaceSubTab() click find the workspace already
+// "started" instead of re-running the New Project wizard's validation).
+export function loadSimulationState(data, isSimLocked, renderShell = true) {
   simState.projectData = {
     name: data.projectName || '', code: data.projectCode || '', description: data.projectScope || '',
     asset: data.projectAsset || '', weatherWindow: data.projectWeatherWindow || '',
@@ -161,7 +175,7 @@ export function loadSimulationState(data, isSimLocked) {
   markSimulationStarted();
   simState.activeROV = Math.min(...simState.selectedROVs.keys());
   window.__updateSimUnitsBadge?.();
-  renderWorkspaceShell();
+  if (renderShell) renderWorkspaceShell();
 }
 
 export function renderWorkspaceShell() {

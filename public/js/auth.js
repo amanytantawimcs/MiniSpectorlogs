@@ -120,6 +120,23 @@ async function handleJoin(userName) {
     } else {
       enterOpMode(userName);
       populateUI(project.data);
+      // This project was pushed from a simulation at some point (the server
+      // only attaches simulationData when project.is_sim_locked) — load it
+      // into simState and surface the Simulation sidebar section (Sensors/
+      // Topology only, not Preparation, matching what pushToOperation()
+      // itself leaves visible in the same-session case) so someone joining
+      // from a different device/session later can still review it, not just
+      // whoever was present for the live push. renderShell:false because
+      // Project Details, not Simulation, is the tab actually on screen right
+      // now — see loadSimulationState()'s own comment for why rendering the
+      // workspace shell here would be wrong (stomps the page title, could
+      // flash the Push-to-Operation button into the header).
+      if (project.data.simulationData) {
+        loadSimulationState(project.data.simulationData, true, false);
+        document.getElementById('sim-heading-prep')?.classList.add('hidden');
+        document.getElementById('nav-prep-group')?.classList.add('hidden');
+        document.getElementById('nav-simulation-section')?.classList.remove('hidden');
+      }
     }
     saveSessionMeta(code, 'office', userName);
   } catch (e) {
