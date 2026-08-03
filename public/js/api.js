@@ -148,17 +148,10 @@ export const api = {
     return { success: r.ok, updated_at: r.data && r.data.updated_at };
   },
 
-  // Server now identifies the caller from the session token (see requireAuth
-  // in server/lib/auth.js), not a userId query param the client could claim.
-  getProjectsOverview: async () => {
-    const r = await request('/projects/overview');
-    if (!r.ok) return { success: false, error: r.data.error || 'Request failed', projects: [] };
-    return { success: true, projects: r.data.projects || [] };
-  },
-
-  // Admin-panel equivalent of getProjectsOverview() above — same data, but
-  // authenticated via the admin session token instead of a privileged user's
-  // regular session, since the admin panel logs in independently.
+  // Cross-project directory for the admin panel's Projects tab — the only
+  // place this data is surfaced now (a separate sidebar "All Projects" tab
+  // backed by /api/projects/overview used to exist too, but was redundant
+  // with this and was removed).
   getAdminProjects: async () => {
     const r = await request('/admin/projects');
     if (r.status === 401) return { success: false, unauthorized: true, projects: [] };

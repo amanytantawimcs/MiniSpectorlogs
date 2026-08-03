@@ -955,14 +955,11 @@
         </div>
     </div>
 
-    <!-- Group visible if either item inside it is; each item is toggled independently
-         in enterDashboard() (navigation.js). All Projects: the two hardcoded privileged
-         User IDs only. Admin Management: those two, plus anyone with users.is_admin set. -->
+    <!-- Visible to the two hardcoded privileged User IDs, plus anyone with users.is_admin
+         set — toggled in enterDashboard() (navigation.js). The Admin Management panel's own
+         Projects tab covers the cross-project directory, so there's no separate sidebar item for it. -->
     <div id="nav-admin-group" class="hidden">
         <div class="sim-nav-label">Admin</div>
-        <div id="nav-projects-overview-item" onclick="showTab('projects-overview', this); renderProjectsOverviewTab();" class="nav-item hidden">
-            All Projects
-        </div>
         <div id="nav-admin-mgmt-item" onclick="openAdminManagement()" class="nav-item hidden">
             Admin Management
         </div>
@@ -1123,12 +1120,6 @@
             <p class="text-[#6C88A6] font-semibold">No Pre-Operation Data</p>
             <p class="text-[#6C88A6] text-sm mt-1">Use "Push to Operation" from the Simulation workspace to populate this tab.</p>
         </div>
-    </div>
-</div>
-
-<div id="tab-projects-overview" class="tab-content hidden max-w-full w-full">
-    <div id="projects-overview-content" class="space-y-4">
-        <div class="flex items-center justify-center py-16 text-[#6C88A6] text-sm">Select All Projects from the sidebar.</div>
     </div>
 </div>
 

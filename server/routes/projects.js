@@ -69,25 +69,6 @@ router.get('/', requireAuth, asyncRoute(async (req, res) => {
   res.json({ success: true, projects: rows });
 }));
 
-// Cross-project directory for those two users: every project regardless of
-// who created it, with its mode (operation/simulation) and creator — not to
-// be confused with the mode-filtered GET '/' above, which every user hits
-// from their own Simulation History tab.
-// requireAuth + comparing req.userId (from the session, not the query string)
-// against the privileged list — previously this only checked the userId
-// *claimed* in the query string, so anyone who knew a privileged ID (visible
-// in this file's source) could call the endpoint directly with no login at all.
-router.get('/overview', requireAuth, asyncRoute(async (req, res) => {
-  if (!PRIVILEGED_USER_IDS.includes(String(req.userId))) {
-    return res.status(403).json({ success: false, error: 'Not authorized.' });
-  }
-  const { rows } = await pool.query(
-    `SELECT project_code, project_name, mode, created_by, updated_at, is_sim_locked
-     FROM projects ORDER BY updated_at DESC`
-  );
-  res.json({ success: true, projects: rows });
-}));
-
 router.get('/:code', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, notFound: true, error: 'Not found' });
