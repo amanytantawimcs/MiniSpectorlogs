@@ -65,6 +65,13 @@ export function renderFinalSetupTab() {
   const confirmedThrusters = fs.thrusters.filter(t => t.confirmed).length;
   const totalThrusters = fs.thrusters.length;
 
+  // Checking a single sensor/thruster box re-renders this whole tab (see the
+  // checkbox onToggle callbacks below), so the collapsed tables' open/closed
+  // state has to be read back before the rebuild wipes it, or expanding one
+  // to work through it would snap shut after the very first box ticked.
+  const wasSensorsOpen = document.getElementById('final-sensors-card')?.open ?? false;
+  const wasThrustersOpen = document.getElementById('final-thrusters-card')?.open ?? false;
+
   el.innerHTML = '';
 
   // Header
@@ -100,7 +107,10 @@ export function renderFinalSetupTab() {
         <p class="text-lg font-bold text-[#E9F0F8] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
         <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')}</p>
       </div>
-      ${headerButtonsHtml}
+      <div class="flex flex-col items-end gap-2">
+        <button type="button" onclick="exportFinalSetupWord()" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Report</button>
+        ${headerButtonsHtml}
+      </div>
     </div>
     <div class="grid grid-cols-3" style="border-top:1px solid rgba(120,166,212,0.16);">
       <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Sensors Confirmed</p></div>
@@ -168,7 +178,7 @@ export function renderFinalSetupTab() {
   }
   if (fs.sensors.length === 0) sensorTbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-[#6C88A6] text-sm">No sensors</td></tr>`;
   sensorTable.appendChild(sensorTbody);
-  el.appendChild(renderSectionCard('#f39124', 'Active Sensors', `${confirmedSensors}/${totalSensors} confirmed`, sensorTable, { padded: true }));
+  el.appendChild(renderSectionCard('#f39124', 'Active Sensors', `${confirmedSensors}/${totalSensors} confirmed`, sensorTable, { padded: true, collapsed: true, startOpen: wasSensorsOpen, id: 'final-sensors-card' }));
 
   // 3. Thrusters
   if (fs.thrusters.length > 0) {
@@ -193,7 +203,7 @@ export function renderFinalSetupTab() {
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
-    el.appendChild(renderSectionCard('#f39124', 'Thrusters', `${confirmedThrusters}/${totalThrusters} confirmed`, table, { padded: true }));
+    el.appendChild(renderSectionCard('#f39124', 'Thrusters', `${confirmedThrusters}/${totalThrusters} confirmed`, table, { padded: true, collapsed: true, startOpen: wasThrustersOpen, id: 'final-thrusters-card' }));
   }
 
   // 4. Setup Notes

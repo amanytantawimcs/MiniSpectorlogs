@@ -252,6 +252,66 @@ function buildSimulationDocChildren(data) {
   return children;
 }
 
+function buildFinalSetupDocChildren(data) {
+  const dt = (iso) => iso ? new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending';
+  const sensors = data.sensors || [];
+  const thrusters = data.thrusters || [];
+  const revisions = data.revisions || [];
+
+  const children = [
+    title('Final Setup Report'),
+    p(''),
+    kv('Project', data.projectName),
+    kv('Code', data.projectCode),
+    kv('Scope', data.scopeName),
+    kv('Operated Unit', data.operatedUnit ? `MS-${data.operatedUnit.rovNumber} (${(data.operatedUnit.role || '').toUpperCase()})` : ''),
+    kv('Setup Status', data.lockedAt ? `Confirmed ${dt(data.lockedAt)}` : 'Draft — not yet confirmed'),
+  ];
+
+  children.push(h1(`Active Sensors (${sensors.filter(s => s.confirmed).length}/${sensors.length} confirmed)`));
+  children.push(sensors.length
+    ? logTable(
+      [
+        { label: 'Confirmed', get: r => r.confirmed ? 'Yes' : 'No' },
+        { label: 'Sensor', get: r => r.name },
+        { label: 'Model', get: r => r.model },
+        { label: 'Qty', get: r => r.qty },
+        { label: 'Calibrated', get: r => r.calibrated ? 'Yes' : 'No' },
+        { label: 'Tested', get: r => r.tested ? 'Yes' : 'No' },
+        { label: 'Op. Note', get: r => r.opNote },
+      ],
+      sensors,
+    )
+    : emptyNote('sensors'));
+
+  children.push(h1(`Thrusters (${thrusters.filter(t => t.confirmed).length}/${thrusters.length} confirmed)`));
+  children.push(thrusters.length
+    ? logTable(
+      [
+        { label: 'Confirmed', get: r => r.confirmed ? 'Yes' : 'No' },
+        { label: 'Thruster No.', get: r => r.number },
+        { label: 'Serial', get: r => r.serial },
+        { label: 'Position', get: r => r.position },
+      ],
+      thrusters,
+    )
+    : emptyNote('thrusters'));
+
+  children.push(h1('Setup Notes'));
+  children.push(data.notes ? p(data.notes) : emptyNote('setup notes'));
+
+  children.push(h1('Change History'));
+  if (revisions.length === 0) {
+    children.push(emptyNote('operational changes'));
+  } else {
+    revisions.forEach((rev, idx) => {
+      children.push(p(`Change #${idx + 1} — ${dt(rev.at)}${rev.by ? ` by ${rev.by}` : ''}: ${rev.reason || '—'}`));
+    });
+  }
+
+  return children;
+}
+
 router.post('/operation-word', async (req, res) => {
   try {
     const { data, section } = req.body;
@@ -279,6 +339,23 @@ router.post('/simulation-word', async (req, res) => {
     res.set({
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'Content-Disposition': `attachment; filename="Simulation-${key}.docx"`,
+    });
+    res.send(buffer);
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/final-setup-word', async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ success: false, error: 'Missing data' });
+    const doc = new Document({ sections: [{ properties: {}, children: buildFinalSetupDocChildren(data) }] });
+    const buffer = await Packer.toBuffer(doc);
+    const key = data.projectCode || 'setup';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="FinalSetup-${key}.docx"`,
     });
     res.send(buffer);
   } catch (e) {

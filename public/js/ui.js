@@ -97,9 +97,17 @@ export function setUserCardRole(role) {
 // for the toggle, which matters because preOp.js's sectionWrap() serializes
 // this to a string via .outerHTML and reinserts it with innerHTML; any
 // addEventListener-based toggle would be silently dropped in that round-trip.
-export function renderSectionCard(dotColor, title, subtitle, body, { padded = false, collapsed = false } = {}) {
+// `startOpen` overrides the default closed state (e.g. finalSetup.js
+// re-renders its whole tab on every checkbox click, so it reads back
+// whether the card was open before the rebuild and passes that in here —
+// otherwise expanding a table to work through it would snap shut on the
+// very first checkbox ticked). `id` lets a caller find a specific card
+// again after a rebuild to read its .open state back.
+export function renderSectionCard(dotColor, title, subtitle, body, { padded = false, collapsed = false, startOpen = false, id = null } = {}) {
   const wrap = document.createElement(collapsed ? 'details' : 'div');
   wrap.className = 'rcard mb-4';
+  if (id) wrap.id = id;
+  if (collapsed && startOpen) wrap.open = true;
   const header = document.createElement(collapsed ? 'summary' : 'div');
   header.className = 'flex items-center gap-2.5 px-5 py-3 border-b rcard-head';
   header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#E9F0F8">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>${collapsed ? '<i class="ti ti-chevron-down section-collapse-chevron" aria-hidden="true"></i>' : ''}`;

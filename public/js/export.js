@@ -4,6 +4,7 @@
 // Excel export stays client-side via the SheetJS CDN script already loaded
 // in index.html (global `XLSX`), same as the old app.
 
+import { state } from './state.js';
 import { showToast } from './ui.js';
 import { collectAllData } from './projectData.js';
 import { collectSimState } from './simulation/core.js';
@@ -54,6 +55,37 @@ export async function exportWord(arg) {
     const blob = await res.blob();
     const filenamePrefix = templateLogType ? arg.replace('.docx', '') : 'Report';
     downloadBlob(blob, `${filenamePrefix}-${data.operationalIdAuto || data.projectCode || 'report'}.docx`);
+  } catch (e) {
+    showToast('Word export failed: ' + e.message, 'error');
+  }
+}
+
+export async function exportFinalSetupWord() {
+  const preOpData = state.preOpData;
+  const fs = state.currentReportData.finalSetup;
+  if (!preOpData || !fs) { showToast('No Final Setup data to export yet.', 'warn'); return; }
+  const activeRov = (preOpData.rovs || []).find(r => r.rovNumber === fs.activeROVNum);
+  const data = {
+    projectName: preOpData.projectName,
+    projectCode: preOpData.projectCode,
+    scopeName: preOpData.scopeName,
+    operatedUnit: activeRov ? { rovNumber: activeRov.rovNumber, role: activeRov.role } : null,
+    lockedAt: fs.lockedAt,
+    sensors: fs.sensors,
+    thrusters: fs.thrusters,
+    notes: fs.notes,
+    revisions: fs.revisions,
+  };
+  showToast('Generating Word report…', 'info');
+  try {
+    const res = await fetch('/api/export/final-setup-word', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const blob = await res.blob();
+    downloadBlob(blob, `FinalSetup-${data.projectCode || 'setup'}.docx`);
   } catch (e) {
     showToast('Word export failed: ' + e.message, 'error');
   }
@@ -129,6 +161,7 @@ export function saveSimulationJSON() {
 
 export function installExport() {
   window.exportWord = exportWord;
+  window.exportFinalSetupWord = exportFinalSetupWord;
   window.exportSimulationWord = exportSimulationWord;
   window.exportSimulationExcel = exportSimulationExcel;
   window.saveSimulationJSON = saveSimulationJSON;
