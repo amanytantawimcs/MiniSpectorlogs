@@ -1322,19 +1322,16 @@
 </div>
 <div id="tab-project" class="tab-content max-w-full w-full">
 
-    <!-- Hidden fields kept for collectAllData / updateOperationalId compatibility -->
+    <!-- Hidden fields kept for collectAllData / updateOperationalId compatibility.
+         operationalIdAuto is still computed and saved (used as the export filename
+         fallback and in the generic Word report) — just no longer shown in this tab. -->
     <input type="hidden" id="startDate">
     <input type="hidden" id="endDate">
     <input type="hidden" id="shiftno">
     <input type="hidden" id="weather">
     <input type="hidden" id="visibility">
     <input type="hidden" id="temperature">
-
-    <!-- Operational ID strip -->
-    <div class="flex items-center gap-3 mb-5">
-        <span class="text-xs font-bold text-[#6C88A6] uppercase tracking-wider flex-shrink-0">Operational ID</span>
-        <input id="operationalIdAuto" type="text" class="bg-transparent text-sm font-bold text-blue-400 border-none focus:ring-0 outline-none p-0 cursor-default flex-1 min-w-0" readonly>
-    </div>
+    <input type="hidden" id="operationalIdAuto">
 
     <!-- Project Identity card -->
     <div class="chart-card mb-5">

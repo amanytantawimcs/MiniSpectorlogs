@@ -70,6 +70,11 @@ export async function renderProjectTeam(containerId, projectCode) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  // Preserve the dropdown's open/closed state across re-renders — every
+  // add/remove/role-change re-runs this whole function, and a freshly
+  // rebuilt <details> element would otherwise always snap back closed.
+  const wasOpen = container.querySelector('details.team-card')?.open ?? false;
+
   const isPending = !projectCode;
   let members;
   if (isPending) {
@@ -81,33 +86,32 @@ export async function renderProjectTeam(containerId, projectCode) {
   }
   const readOnly = state.currentUserRole === 'reviewer';
 
+  // Collapsed to just a member count by default — the search box and full
+  // member list only render once expanded, via a native <details>/<summary>
+  // disclosure (no JS needed for the toggle itself).
   container.innerHTML = `
-    ${explainerHTML(members.length > 0, isPending)}
-    <div class="grid grid-cols-1 ${readOnly ? '' : 'md:grid-cols-2'} gap-4 items-stretch">
-      ${readOnly ? '' : `
-      <div class="rcard">
-        <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
-          <span class="rcard-bar"></span>
-          <span class="rcard-title">Add Team Member</span>
-        </div>
-        <div class="p-4">
+    <details class="rcard team-card"${wasOpen ? ' open' : ''}>
+      <summary class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
+        <span class="rcard-bar"></span>
+        <span class="rcard-title">Team</span>
+        <span class="rcard-hint">${members.length} ${members.length === 1 ? 'person' : 'people'}${isPending && members.length ? ' · pending save' : ''}</span>
+        <i class="ti ti-chevron-down section-collapse-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="p-4">
+        ${explainerHTML(members.length > 0, isPending)}
+        ${readOnly ? '' : `
+        <div class="mb-4">
+          <label class="rfield-label" style="display:block;margin-bottom:6px;">Add Team Member</label>
           <input id="team-search-input" type="text" class="w-full rfield" placeholder="Search by name or User ID..." autocomplete="off"/>
           <div id="team-search-results" class="hidden" style="margin-top:8px;background:#0C1727;border:1px solid rgba(120,166,212,0.24);border-radius:10px;max-height:220px;overflow-y:auto;"></div>
-        </div>
-      </div>`}
-      <div class="rcard">
-        <div class="flex items-center gap-3 px-5 py-3 border-b rcard-head">
-          <span class="rcard-bar"></span>
-          <span class="rcard-title">Team</span>
-          <span class="rcard-hint">${members.length} ${members.length === 1 ? 'person' : 'people'}${isPending && members.length ? ' · pending save' : ''}</span>
-        </div>
-        <div class="p-4" id="team-member-list">
+        </div>`}
+        <div id="team-member-list">
           ${members.length
             ? members.map(m => memberRowHTML(m, readOnly)).join('')
             : `<div style="padding:20px;text-align:center;color:#4b5563;font-style:italic;font-size:0.85rem;">No one added yet — this project is open to all logged-in users.</div>`}
         </div>
       </div>
-    </div>
+    </details>
   `;
 
   if (readOnly) return;
