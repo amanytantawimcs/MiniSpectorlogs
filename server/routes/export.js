@@ -1,4 +1,8 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const PizZip = require('pizzip');
+const Docxtemplater = require('docxtemplater');
 const { Document, Paragraph, TextRun, HeadingLevel, Packer, Table, TableRow, TableCell, WidthType } = require('docx');
 
 const router = express.Router();
@@ -278,6 +282,123 @@ router.post('/simulation-word', async (req, res) => {
     });
     res.send(buffer);
   } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// ============================================================
+// TEMPLATE-BACKED EXPORTS (Standby / Dive / Maintenance)
+// ============================================================
+// Unlike buildOperationDocChildren() above, which builds a .docx from
+// scratch with the `docx` package, these fill real client-supplied .docx
+// files (server/templates/*.docx) via docxtemplater — the templates already
+// contain the client's exact branding/layout with {tag} and {#loop}...{/loop}
+// placeholders, so the output is pixel-identical to what they authored in
+// Word, not a recreation of it.
+
+const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
+
+function todayFormatted() {
+  return new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Durations are free-text ("2 hrs 30 mins", "45 mins", or non-numeric values
+// like "In Progress"/"Check Dates" for an entry still open) — not a numeric
+// column in the data model, so totals are computed by parsing out any hrs/
+// mins components found and summing those; unparseable entries are skipped
+// rather than treated as zero, so an in-progress entry doesn't fool anyone
+// into thinking it contributed no time.
+function sumDurations(strings) {
+  let totalMins = 0;
+  for (const s of strings) {
+    if (!s) continue;
+    const hrsMatch = /(\d+)\s*hrs?/i.exec(s);
+    const minsMatch = /(\d+)\s*mins?/i.exec(s);
+    if (!hrsMatch && !minsMatch) continue;
+    totalMins += (hrsMatch ? parseInt(hrsMatch[1], 10) * 60 : 0) + (minsMatch ? parseInt(minsMatch[1], 10) : 0);
+  }
+  const hrs = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const parts = [];
+  if (hrs > 0) parts.push(`${hrs} hrs`);
+  if (mins > 0 || parts.length === 0) parts.push(`${mins} mins`);
+  return parts.join(' ');
+}
+
+const TEMPLATE_CONFIGS = {
+  standby: {
+    file: 'Standby.docx',
+    buildData: (data) => {
+      const logs = data.standbyLogs || [];
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        supervisorName: data.supervisorName || '',
+        date: todayFormatted(),
+        totalStandbyTime: sumDurations(logs.map(r => r.duration)),
+        standbyLogs: logs.map(r => ({
+          id: r.id || '', date: r.date || '', startTime: r.startTime || '', endTime: r.endTime || '',
+          duration: r.duration || '', category: r.category || '', desc: r.desc || '', by: r.by || '',
+        })),
+      };
+    },
+  },
+  dive: {
+    file: 'Divelog.docx',
+    buildData: (data) => {
+      const logs = data.diveLogs || [];
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        supervisorName: data.supervisorName || '',
+        date: todayFormatted(),
+        totalDiveCount: logs.length,
+        totalDiveDuration: sumDurations(logs.map(r => r.duration)),
+        diveLogs: logs.map(r => ({
+          num: r.num || '', date: r.date || '', startTime: r.startTime || '', endTime: r.endTime || '',
+          duration: r.duration || '', depth: r.depth || '', purpose: r.purpose || '', area: r.area || '', notes: r.notes || '',
+        })),
+      };
+    },
+  },
+  maintenance: {
+    file: 'Maintenance.docx',
+    buildData: (data) => {
+      const logs = data.maintenanceLogs || [];
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        supervisorName: data.supervisorName || '',
+        date: todayFormatted(),
+        maintenanceLogs: logs.map(r => ({
+          id: r.id || '', date: r.date || '', task: r.task || '', details: r.details || '', parts: r.parts || '', by: r.by || '',
+        })),
+      };
+    },
+  },
+};
+
+router.post('/log-template-word', (req, res) => {
+  try {
+    const { logType, data } = req.body || {};
+    const cfg = TEMPLATE_CONFIGS[logType];
+    if (!cfg) return res.status(400).json({ success: false, error: 'Unknown log type' });
+    if (!data) return res.status(400).json({ success: false, error: 'Missing data' });
+
+    const content = fs.readFileSync(path.join(TEMPLATES_DIR, cfg.file), 'binary');
+    const zip = new PizZip(content);
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc.render(cfg.buildData(data));
+    const buffer = doc.getZip().generate({ type: 'nodebuffer' });
+
+    const key = data.operationalIdAuto || data.projectCode || 'report';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'Content-Disposition': `attachment; filename="${cfg.file.replace('.docx', '')}-${key}.docx"`,
+    });
+    res.send(buffer);
+  } catch (e) {
+    console.error('[export/log-template-word]', e);
     res.status(500).json({ success: false, error: e.message });
   }
 });

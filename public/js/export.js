@@ -20,26 +20,40 @@ function downloadBlob(blob, filename) {
 }
 
 const SECTION_FROM_FILENAME = {
-  'Divelog.docx': 'diveLogs',
-  'Standby.docx': 'standbyLogs',
   'Faults.docx': 'faultLogs',
-  'Maintenance.docx': 'maintenanceLogs',
   'HSE.docx': 'hseReports',
 };
 
+// Standby/Dive/Maintenance have real client-supplied .docx templates
+// (server/templates/*.docx) that get filled via docxtemplater — pixel-
+// identical to the client's own layout/branding, not a recreation of it.
+// Everything else still goes through the programmatic docx-library builder.
+const TEMPLATE_LOG_TYPE_FROM_FILENAME = {
+  'Standby.docx': 'standby',
+  'Divelog.docx': 'dive',
+  'Maintenance.docx': 'maintenance',
+};
+
 export async function exportWord(arg) {
-  const section = SECTION_FROM_FILENAME[arg] || 'all';
+  const templateLogType = TEMPLATE_LOG_TYPE_FROM_FILENAME[arg];
   const data = collectAllData();
   showToast('Generating Word report…', 'info');
   try {
-    const res = await fetch('/api/export/operation-word', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data, section }),
-    });
+    const res = templateLogType
+      ? await fetch('/api/export/log-template-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logType: templateLogType, data }),
+      })
+      : await fetch('/api/export/operation-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data, section: SECTION_FROM_FILENAME[arg] || 'all' }),
+      });
     if (!res.ok) throw new Error(`Server returned ${res.status}`);
     const blob = await res.blob();
-    downloadBlob(blob, `Report-${data.operationalIdAuto || data.projectCode || 'report'}.docx`);
+    const filenamePrefix = templateLogType ? arg.replace('.docx', '') : 'Report';
+    downloadBlob(blob, `${filenamePrefix}-${data.operationalIdAuto || data.projectCode || 'report'}.docx`);
   } catch (e) {
     showToast('Word export failed: ' + e.message, 'error');
   }
