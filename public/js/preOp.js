@@ -17,9 +17,12 @@ import { scopeName } from './simulation/scopeCatalog.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
 
 // Bridges the shared DOM-based renderSectionCard() into this file's
-// string-concatenation table-building flow.
+// string-concatenation table-building flow. Collapsed by default — this
+// tab stacks up to seven tables (per-ROV sensors, packing list, machines,
+// equipment, thrusters, system IPs, issues), most of which are just for
+// reference once Pre-Op is underway.
 function sectionWrap(dotColor, title, subtitle, body) {
-  return renderSectionCard(dotColor, title, subtitle, body).outerHTML;
+  return renderSectionCard(dotColor, title, subtitle, body, { collapsed: true }).outerHTML;
 }
 // Color comes from the global `th { color: #9AB0C8; background: #16233A; }` rule.
 const thL = 'px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider';

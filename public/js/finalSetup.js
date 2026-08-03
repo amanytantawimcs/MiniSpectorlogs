@@ -17,7 +17,6 @@ function ensureFinalSetup() {
     activeROVNum: preOpData.rovs.find(r => r.role === 'main')?.rovNumber ?? preOpData.rovs[0]?.rovNumber ?? null,
     sensors: allSensors.map(s => ({ ...s, confirmed: !!(s.calibrated && s.tested), opNote: '' })),
     thrusters: (preOpData.thrusters || []).map(t => ({ ...t, position: '', confirmed: false })),
-    systemIPs: (preOpData.systemIPs || []).map(d => ({ ...d })),
     notes: '',
     lockedAt: null,
     revisions: [],
@@ -65,8 +64,6 @@ export function renderFinalSetupTab() {
   const totalSensors = fs.sensors.length;
   const confirmedThrusters = fs.thrusters.filter(t => t.confirmed).length;
   const totalThrusters = fs.thrusters.length;
-  const filledIPs = fs.systemIPs.filter(d => (d.hasIP !== false && d.ip) || (d.hasPort !== false && d.port)).length;
-  const totalIPs = fs.systemIPs.length;
 
   el.innerHTML = '';
 
@@ -105,10 +102,9 @@ export function renderFinalSetupTab() {
       </div>
       ${headerButtonsHtml}
     </div>
-    <div class="grid grid-cols-4" style="border-top:1px solid rgba(120,166,212,0.16);">
+    <div class="grid grid-cols-3" style="border-top:1px solid rgba(120,166,212,0.16);">
       <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Sensors Confirmed</p></div>
       <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedThrusters}<span class="text-sm text-[#6C88A6] font-normal">/${totalThrusters}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters Confirmed</p></div>
-      <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#459fd9">${filledIPs}<span class="text-sm text-[#6C88A6] font-normal">/${totalIPs}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">IPs Configured</p></div>
       <div class="px-4 py-3 text-center"><p class="text-xl font-bold" style="color:${isLocked ? '#459fd9' : '#f39124'}">${isLocked ? '✓' : '—'}</p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Setup Status</p></div>
     </div>`;
   el.appendChild(header);
@@ -200,48 +196,7 @@ export function renderFinalSetupTab() {
     el.appendChild(renderSectionCard('#f39124', 'Thrusters', `${confirmedThrusters}/${totalThrusters} confirmed`, table, { padded: true }));
   }
 
-  // 4. System Network
-  if (fs.systemIPs.length > 0) {
-    const table = document.createElement('table');
-    table.className = 'w-full';
-    table.innerHTML = `<thead><tr style="background:rgba(0,0,0,0.3)"><th class="${thL}">Device</th><th class="${thC}">IP Address</th><th class="${thC}">Port</th></tr></thead>`;
-    const tbody = document.createElement('tbody');
-    tbody.className = 'divide-y divide-[rgba(120,166,212,0.16)]';
-    let lastCat = null;
-    fs.systemIPs.forEach((dev) => {
-      if (dev.category !== lastCat) {
-        lastCat = dev.category;
-        const catRow = document.createElement('tr');
-        catRow.style.background = 'rgba(12,23,39,0.7)';
-        catRow.innerHTML = `<td colspan="3" class="px-3 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">${escapeHtml(dev.category)}</span></td>`;
-        tbody.appendChild(catRow);
-      }
-      const tr = document.createElement('tr');
-      const tdName = document.createElement('td'); tdName.className = 'px-3 py-2 text-sm text-[#E9F0F8]'; tdName.style.minWidth = '200px'; tdName.textContent = dev.name;
-      const tdIp = document.createElement('td'); tdIp.className = 'px-3 py-2'; tdIp.style.width = '160px';
-      if (dev.hasIP !== false) {
-        const ipInput = document.createElement('input');
-        ipInput.type = 'text'; ipInput.placeholder = '0.0.0.0'; ipInput.value = dev.ip || ''; ipInput.disabled = readOnly;
-        ipInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace;width:100%;outline:none;text-align:center`;
-        ipInput.addEventListener('input', () => { dev.ip = ipInput.value; });
-        tdIp.appendChild(ipInput);
-      } else tdIp.innerHTML = '<span class="text-[#6C88A6] text-xs" style="display:block;text-align:center">—</span>';
-      const tdPort = document.createElement('td'); tdPort.className = 'px-3 py-2'; tdPort.style.width = '100px';
-      if (dev.hasPort !== false) {
-        const portInput = document.createElement('input');
-        portInput.type = 'text'; portInput.placeholder = '0000'; portInput.value = dev.port || ''; portInput.disabled = readOnly;
-        portInput.style.cssText = `${inputStyleStr};border-radius:6px;padding:4px 8px;font-size:11px;font-family:monospace;width:100%;outline:none;text-align:center`;
-        portInput.addEventListener('input', () => { dev.port = portInput.value; });
-        tdPort.appendChild(portInput);
-      } else tdPort.innerHTML = '<span class="text-[#6C88A6] text-xs" style="display:block;text-align:center">—</span>';
-      tr.append(tdName, tdIp, tdPort);
-      tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    el.appendChild(renderSectionCard('#459fd9', 'System Network', `${filledIPs}/${totalIPs} IPs configured`, table, { padded: true }));
-  }
-
-  // 5. Setup Notes
+  // 4. Setup Notes
   const notesArea = document.createElement('textarea');
   notesArea.placeholder = 'Enter any setup notes, deviations from plan, or field observations…';
   notesArea.disabled = readOnly;

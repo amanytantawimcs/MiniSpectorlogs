@@ -92,13 +92,17 @@ export function setUserCardRole(role) {
 // both built their own near-identical version of this before the reskin.
 // `body` may be an HTML string or a DOM node; `padded` adds card padding
 // (for free-form content) vs edge-to-edge (for tables, which scroll inside
-// the card themselves).
-export function renderSectionCard(dotColor, title, subtitle, body, { padded = false } = {}) {
-  const wrap = document.createElement('div');
+// the card themselves). `collapsed: true` renders the card as a native
+// <details>/<summary> disclosure, closed by default — no JS wiring needed
+// for the toggle, which matters because preOp.js's sectionWrap() serializes
+// this to a string via .outerHTML and reinserts it with innerHTML; any
+// addEventListener-based toggle would be silently dropped in that round-trip.
+export function renderSectionCard(dotColor, title, subtitle, body, { padded = false, collapsed = false } = {}) {
+  const wrap = document.createElement(collapsed ? 'details' : 'div');
   wrap.className = 'rcard mb-4';
-  const header = document.createElement('div');
+  const header = document.createElement(collapsed ? 'summary' : 'div');
   header.className = 'flex items-center gap-2.5 px-5 py-3 border-b rcard-head';
-  header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#E9F0F8">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>`;
+  header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#E9F0F8">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>${collapsed ? '<i class="ti ti-chevron-down section-collapse-chevron" aria-hidden="true"></i>' : ''}`;
   wrap.appendChild(header);
   const bodyWrap = document.createElement('div');
   bodyWrap.className = padded ? 'p-4' : '';
