@@ -43,6 +43,20 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
         error: `Project code "${project_code}" is already in use by another project.`,
       });
     }
+    // createOnly only fires on a brand-new project's very first save (never
+    // Join/Load, which set state.currentProjectCode before any save can
+    // happen) — auto-adding the creator as its first team member the moment
+    // it exists means it's restricted from the start instead of staying open
+    // to anyone with the code until someone remembers to configure a team.
+    // Existing projects created before this change are unaffected — this
+    // only ever runs on the INSERT path, never a later update.
+    if (createOnly) {
+      await client.query(
+        `INSERT INTO project_members (project_id, user_id, role, added_by) VALUES ($1,$2,'operator',$3)
+         ON CONFLICT (project_id, user_id) DO NOTHING`,
+        [row.id, req.userId, created_by || '']
+      );
+    }
     await client.query('COMMIT');
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {
