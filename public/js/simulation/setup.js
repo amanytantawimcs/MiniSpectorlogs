@@ -7,7 +7,10 @@ import { api } from '../api.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
-import { getAllBundles, findScope, scopeName, addCustomBundle } from './scopeCatalog.js';
+import {
+  getAllBundles, findScope, scopeName, addCustomBundle, getAddOnsForBase,
+  encodeScopeId, resolveScopeSelection,
+} from './scopeCatalog.js';
 import {
   loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem,
   markNewSimProject, markSimulationStarted, isSimulationStarted, scheduleSimSync, saveSimulation,
@@ -21,7 +24,11 @@ const FLEET_SIZE = 12;
 // Scope-editing scratch state (what's shown/edited in the catalog detail
 // panel). simState.selectedScope only ever holds a catalog id (or null for
 // a blank/unsaved bundle) — this holds the live req/opt arrays being edited.
+// scopeSelectedId is the base scope's id (or a custom bundle's own id) —
+// distinct from simState.selectedScope, which holds the full composite
+// "baseId+addon1+addon2" once add-ons are picked.
 let scopeSelectedId = null;
+let scopeSelectedAddOns = new Set();
 let scopeWorking = null;
 let scopeDirty = false;
 let scopeSearchEl = null;
@@ -42,11 +49,19 @@ function cloneBundle(b) {
 function syncScopeWorkingFromState() {
   const found = simState.selectedScope ? findScope(simState.selectedScope) : null;
   if (found) {
-    scopeSelectedId = simState.selectedScope;
+    const sel = resolveScopeSelection(simState.selectedScope);
+    // A base scope: scopeSelectedId is the base id, add-ons come from sel.
+    // A custom bundle: scopeSelectedId is its own id, no add-ons apply.
+    scopeSelectedId = sel.baseId || found.id;
+    scopeSelectedAddOns = new Set(sel.addonIds);
     scopeWorking = { id: found.id, fam: found.fam, name: found.name, req: found.req.slice(), opt: found.opt.slice() };
     scopeDirty = false;
+    // Normalizes a legacy plain-numeric id (from a project saved before this
+    // redesign) to its canonical composite form going forward.
+    simState.selectedScope = found.id;
   } else {
     scopeSelectedId = null;
+    scopeSelectedAddOns = new Set();
     scopeWorking = null;
     scopeDirty = false;
   }
@@ -98,10 +113,38 @@ function pickBundle(id) {
   const found = getAllBundles().find(b => b.id === id);
   if (!found) return;
   scopeSelectedId = id;
-  scopeWorking = cloneBundle(found);
+  scopeSelectedAddOns = new Set();
+  // A custom bundle is already a flat req/opt list — clone it as-is. A base
+  // scope goes through findScope() (zero add-ons) so its req/opt reflects
+  // the same resolution path toggleAddOn() uses, rather than duplicating
+  // the base's own sensors list here.
+  scopeWorking = found.custom ? cloneBundle(found) : (() => {
+    const resolved = findScope(id);
+    return { id, fam: resolved.fam, name: resolved.name, req: resolved.req.slice(), opt: resolved.opt.slice() };
+  })();
   scopeDirty = false;
   simState.selectedScope = id;
   renderScopeCatalog();
+  renderScopeDetail();
+  renderUnitGrid();
+  updateBeginBtn();
+}
+
+// Toggles one add-on for the currently selected base scope, recomputing
+// scopeWorking from scratch (base + every currently-checked add-on) — same
+// dirty-discard guard as switching bases, since this discards any manual
+// chip edits layered on top.
+function toggleAddOn(addonId) {
+  if (!scopeSelectedId) return;
+  if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
+  const nextAddOns = new Set(scopeSelectedAddOns);
+  if (nextAddOns.has(addonId)) nextAddOns.delete(addonId); else nextAddOns.add(addonId);
+  scopeSelectedAddOns = nextAddOns;
+  const composedId = encodeScopeId(scopeSelectedId, [...scopeSelectedAddOns]);
+  const resolved = findScope(composedId);
+  scopeWorking = { id: composedId, fam: resolved.fam, name: resolved.name, req: resolved.req.slice(), opt: resolved.opt.slice() };
+  scopeDirty = false;
+  simState.selectedScope = composedId;
   renderScopeDetail();
   renderUnitGrid();
   updateBeginBtn();
@@ -127,6 +170,12 @@ function renderScopeDetail() {
     return;
   }
   const used = scopeWorking.req.concat(scopeWorking.opt);
+  const addOns = getAddOnsForBase(scopeSelectedId);
+  const addOnsHtml = addOns.length ? `
+    <div class="scope-addons-row">
+      <span class="scope-addons-label">Add-ons</span>
+      ${addOns.map(a => `<button type="button" class="scope-addon-chip${scopeSelectedAddOns.has(a.id) ? ' on' : ''}" data-addon="${escapeHtml(a.id)}" aria-pressed="${scopeSelectedAddOns.has(a.id)}">${escapeHtml(a.label)}</button>`).join('')}
+    </div>` : '';
   detEl.innerHTML = `<div class="scope-detail">
     <div class="scope-detail-head"><h4>${escapeHtml(scopeWorking.name)}</h4><span class="code">${escapeHtml(scopeWorking.id)} &middot; ${escapeHtml(scopeWorking.fam)}</span>
       <div class="scope-detail-acts">
@@ -134,6 +183,7 @@ function renderScopeDetail() {
         <button type="button" id="scope-save-as-btn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors" style="background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.35);">Save as new bundle</button>
       </div>
     </div>
+    ${addOnsHtml}
     <div class="scope-sensor-cols">
       <div class="scope-scol"><h5>Required sensors<b>${scopeWorking.req.length}</b></h5><div class="scope-sensors">${chipList(scopeWorking.req, 'req')}</div>
         <div class="scope-addrow"><select id="scope-add-req" aria-label="Add required sensor"><option value="">Add required sensor…</option>${sensorOptions(used)}</select></div></div>
@@ -147,6 +197,9 @@ function renderScopeDetail() {
     </div>
   </div>`;
 
+  detEl.querySelectorAll('[data-addon]').forEach(b => {
+    b.addEventListener('click', () => toggleAddOn(b.dataset.addon));
+  });
   detEl.querySelectorAll('[data-rm]').forEach(b => {
     b.addEventListener('click', () => {
       const k = b.dataset.kind === 'req' ? 'req' : 'opt';
@@ -182,7 +235,19 @@ function revertScope() {
     return;
   }
   const found = getAllBundles().find(b => b.id === scopeSelectedId);
-  scopeWorking = cloneBundle(found); scopeDirty = false;
+  if (found?.custom) {
+    scopeWorking = cloneBundle(found);
+  } else {
+    // Revert discards manual chip edits, not the add-ons the user
+    // deliberately toggled — recompute from base + whatever's still checked,
+    // same resolution path toggleAddOn() uses, rather than dropping back to
+    // the bare base with zero add-ons.
+    const composedId = encodeScopeId(scopeSelectedId, [...scopeSelectedAddOns]);
+    const resolved = findScope(composedId);
+    scopeWorking = { id: composedId, fam: resolved.fam, name: resolved.name, req: resolved.req.slice(), opt: resolved.opt.slice() };
+    simState.selectedScope = composedId;
+  }
+  scopeDirty = false;
   renderScopeDetail(); renderUnitGrid(); updateBeginBtn();
   showToast('Reverted to the catalog version', 'info');
 }
@@ -558,6 +623,7 @@ export function installSimSetup() {
   document.getElementById('scope-blank-btn')?.addEventListener('click', () => {
     if (scopeDirty && !confirm('You have unsaved sensor changes. Discard them?')) return;
     scopeSelectedId = null;
+    scopeSelectedAddOns = new Set();
     scopeWorking = { id: 'DRAFT', fam: 'Custom', name: 'Untitled bundle', req: [], opt: [] };
     scopeDirty = true;
     simState.selectedScope = null;
@@ -597,6 +663,7 @@ export function installSimSetup() {
     });
     if (scopeFamEl && scopeFamEl.value && scopeFamEl.value !== fam) scopeFamEl.value = '';
     scopeSelectedId = nb.id;
+    scopeSelectedAddOns = new Set();
     scopeWorking = cloneBundle(nb);
     scopeDirty = false;
     simState.selectedScope = nb.id;

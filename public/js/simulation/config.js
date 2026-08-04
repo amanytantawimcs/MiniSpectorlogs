@@ -3,8 +3,14 @@
 // is user-editable; it only drives dropdowns, autocomplete, and scope-driven
 // sensor defaults.
 
-export const OPERATION_SCOPES = {
-  1: {
+// Base operation scopes — the shared inspection core for a mission type.
+// Add-ons (below) layer optional modules on top instead of every combination
+// needing its own separate catalog entry (that's what OPERATION_SCOPES used
+// to be: 16 flat, heavily-duplicated bundles). See scopeCatalog.js's
+// composeScope()/findScope() for how a base + a set of add-on ids resolve
+// into a final required/optional sensor list.
+export const BASE_SCOPES = {
+  'platform-conventional': {
     name: 'Platform Conventional Inspection (GVI - CVI - CP - UT - ACFM)', category: 'Platform',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
@@ -14,17 +20,7 @@ export const OPERATION_SCOPES = {
       { name: 'PRC Camera 1', status: 'optional' }, { name: 'PRC Camera 2', status: 'optional' },
     ],
   },
-  2: {
-    name: 'Platform Conventional Inspection with PRC', category: 'Platform',
-    sensors: [
-      { name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' }, { name: 'Navigation', status: 'required' },
-      { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
-      { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
-      { name: 'UT', status: 'required' }, { name: 'FMD', status: 'required' },
-      { name: 'Cleaning Brush', status: 'required' },
-    ],
-  },
-  3: {
+  'platform-gvi': {
     name: 'Platform GVI - Video Only', category: 'Platform',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
@@ -32,7 +28,7 @@ export const OPERATION_SCOPES = {
       { name: 'Manipulator', status: 'optional' },
     ],
   },
-  4: {
+  'platform-mass-cleaning': {
     name: 'Platform Mass Cleaning', category: 'Platform',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
@@ -40,73 +36,28 @@ export const OPERATION_SCOPES = {
       { name: 'Manipulator', status: 'optional' },
     ],
   },
-  5: {
-    name: 'Pipeline Conventional Inspection + SBES/Profiler', category: 'Pipeline',
+  'pipeline-conventional': {
+    name: 'Pipeline Conventional Inspection', category: 'Pipeline',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
-      { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
-      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  6: {
-    name: 'Pipeline Conventional Inspection + PRC + SBES/Profiler', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
-      { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
-      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  7: {
-    name: 'Pipeline Geometric Assessment + PRC', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'Scan (SBES/Profiler)', status: 'required' }, { name: 'CP', status: 'required' },
-      { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'MBES', status: 'optional' }, { name: 'Center Camera', status: 'required' },
-      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  8: {
-    name: 'Pipeline Conventional Inspection + PRC + PipeTracker', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'required' },
       { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
-      { name: 'PRC External Frame', status: 'optional' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'PRC External Frame', status: 'optional' },
       { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
       { name: 'Starboard Camera', status: 'required' },
     ],
   },
-  9: {
-    name: 'Pipeline Geophysical Survey', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'MBES', status: 'required' }, { name: 'CP', status: 'required' },
-      { name: 'Manipulator', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'PipeTracker', status: 'optional' }, { name: 'Center Camera', status: 'required' },
-      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  10: {
+  'seabed-geophysical': {
     name: 'Seabed Geophysical Survey', category: 'Pipeline',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'MBES', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'PipeTracker', status: 'optional' }, { name: 'Center Camera', status: 'required' },
-      { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
+      { name: 'PRC External Frame', status: 'optional' },
+      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
+      { name: 'Starboard Camera', status: 'required' },
     ],
   },
-  11: {
+  'pipeline-gvi': {
     name: 'Pipeline GVI / Video Recording', category: 'Pipeline',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
@@ -116,7 +67,7 @@ export const OPERATION_SCOPES = {
       { name: 'Starboard Camera', status: 'required' },
     ],
   },
-  12: {
+  'pre-eng-spools': {
     name: 'Pre-engineering Metrology (Spools)', category: 'Pipeline',
     sensors: [
       { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
@@ -126,29 +77,7 @@ export const OPERATION_SCOPES = {
       { name: 'Starboard Camera', status: 'required' },
     ],
   },
-  13: {
-    name: 'Pre-engineering Metrology (Jumper / Subsea Structures)', category: 'Pipeline',
-    sensors: [
-      { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
-      { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
-      { name: 'Altimeter', status: 'required' }, { name: 'PRC Camera 1', status: 'optional' },
-      { name: 'PRC Camera 2', status: 'optional' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
-      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
-      { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  14: {
-    name: 'Pipeline Conventional Inspection + Subsea Structures + PRC', category: 'Pipeline',
-    sensors: [
-      { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
-      { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
-      { name: 'Altimeter', status: 'required' }, { name: 'Scan (SBES/Profiler)', status: 'required' },
-      { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
-      { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
-      { name: 'Starboard Camera', status: 'required' },
-    ],
-  },
-  15: {
+  'pipeline-mass-cleaning': {
     name: 'Pipeline Mass Cleaning', category: 'Pipeline',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
@@ -157,7 +86,7 @@ export const OPERATION_SCOPES = {
       { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
   },
-  16: {
+  'prc-camera-inspection': {
     name: 'PRC Camera Inspection', category: 'PRC',
     sensors: [
       { name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' },
@@ -166,6 +95,61 @@ export const OPERATION_SCOPES = {
       { name: 'Depth', status: 'required' },
     ],
   },
+};
+
+// Optional modules layered on top of a base scope. `sensors` entries
+// override the base's status for that sensor name (or add it if absent);
+// when multiple add-ons are picked together, later-applied add-ons win on
+// conflicts — see composeScope() in scopeCatalog.js.
+export const SCOPE_ADD_ONS = {
+  'sbes-profiler': {
+    label: '+ SBES/Profiler', appliesTo: ['pipeline-conventional'],
+    sensors: [{ name: 'Scan (SBES/Profiler)', status: 'required' }],
+  },
+  'prc-ext-frame': {
+    label: '+ PRC', appliesTo: ['pipeline-conventional', 'pipeline-gvi'],
+    sensors: [{ name: 'PRC External Frame', status: 'required' }],
+  },
+  pipetracker: {
+    label: '+ PipeTracker', appliesTo: ['pipeline-conventional'],
+    sensors: [{ name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'required' }],
+  },
+  'mbes-survey': {
+    label: '+ MBES Survey', appliesTo: ['pipeline-conventional', 'seabed-geophysical'],
+    sensors: [{ name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'optional' }],
+  },
+  'prc-cameras-required': {
+    label: '+ PRC', appliesTo: ['platform-conventional'],
+    sensors: [{ name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' }],
+  },
+  'prc-cameras-optional': {
+    label: '+ PRC Cameras', appliesTo: ['pre-eng-spools'],
+    sensors: [{ name: 'PRC Camera 1', status: 'optional' }, { name: 'PRC Camera 2', status: 'optional' }],
+  },
+};
+
+// Maps the old flat OPERATION_SCOPES numeric ids (1-16) to their equivalent
+// base+add-ons composite id, so a simulation saved before this redesign
+// still resolves via findScope()'s legacy fallback instead of showing blank.
+// Bundles 6 and 14 map to the same composite — they were secretly identical
+// once each add-on's required/optional status matches what its name implies.
+export const LEGACY_SCOPE_IDS = {
+  1: 'platform-conventional',
+  2: 'platform-conventional+prc-cameras-required',
+  3: 'platform-gvi',
+  4: 'platform-mass-cleaning',
+  5: 'pipeline-conventional+sbes-profiler',
+  6: 'pipeline-conventional+prc-ext-frame+sbes-profiler',
+  7: 'pipeline-conventional+prc-ext-frame',
+  8: 'pipeline-conventional+pipetracker+prc-ext-frame',
+  9: 'pipeline-conventional+mbes-survey',
+  10: 'seabed-geophysical+mbes-survey',
+  11: 'pipeline-gvi',
+  12: 'pre-eng-spools',
+  13: 'pre-eng-spools+prc-cameras-optional',
+  14: 'pipeline-conventional+prc-ext-frame+sbes-profiler',
+  15: 'pipeline-mass-cleaning',
+  16: 'prc-camera-inspection',
 };
 
 export const SENSOR_HARDWARE = {

@@ -9,7 +9,7 @@ export const simState = {
   rovDescriptions: new Map(), // num -> description string
   activeROV: null,         // display-only focus, not persisted
   activeSubTab: 'sensors', // 'sensors' | 'sysarch'
-  selectedScope: null,     // key into OPERATION_SCOPES, or a "CUS-xx" custom bundle id
+  selectedScope: null,     // base scope id, "baseId+addon1+addon2" composite, or a "CUS-xx" custom bundle id
   projectData: { name: '', code: '', description: '', asset: '', weatherWindow: '' },
   approval: { status: 'draft', history: [] },
   shared: {
