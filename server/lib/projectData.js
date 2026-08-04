@@ -47,6 +47,12 @@ async function getProjectRowByCode(code) {
 // collision happened so it can report it instead of silently joining
 // someone else's project. Every later save on that same project (isFirstSave
 // false) still upserts normally.
+// created_by is intentionally absent from the DO UPDATE SET below — it's
+// only written on the initial INSERT. Every save sends the current user's
+// own name as created_by, so including it in the update clause would
+// silently overwrite the original creator with whoever last hit save
+// (which is exactly the bug the admin Projects tab's "Created By" column
+// was showing).
 async function upsertOperationProject(client, { project_code, project_name, created_by, data, createOnly }) {
   const d = data || {};
   const { rows } = await client.query(
@@ -66,7 +72,6 @@ async function upsertOperationProject(client, { project_code, project_name, crea
      ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
        mode = 'operation',
-       created_by = EXCLUDED.created_by,
        vessel = EXCLUDED.vessel,
        location = EXCLUDED.location,
        scope = EXCLUDED.scope,
@@ -175,6 +180,8 @@ async function upsertOperationProject(client, { project_code, project_name, crea
 // createOnly: see the comment on upsertOperationProject above — same
 // create-or-fail behavior, gated on the new-project wizard's first save
 // (isNewProjectFlow && isFirstSave in simulation/core.js's saveSimulation()).
+// created_by is likewise absent from DO UPDATE SET — see that same comment
+// for why (only the initial INSERT should ever set it).
 async function upsertSimulationProject(client, { project_code, project_name, created_by, data, createOnly }) {
   const d = data || {};
   // Once a simulation has been pushed to Operation (is_sim_locked), later edits
@@ -194,7 +201,6 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
      ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
        mode = CASE WHEN projects.is_sim_locked THEN projects.mode ELSE 'simulation' END,
-       created_by = EXCLUDED.created_by,
        scope = EXCLUDED.scope`}
      RETURNING id, updated_at`,
     [project_code, project_name || '', created_by || '', d.projectScope || '']
