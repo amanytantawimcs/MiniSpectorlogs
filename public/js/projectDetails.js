@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import { showToast } from './ui.js';
-import { api, getSessionToken } from './api.js';
+import { api, getSessionToken, rememberLastProjectCode } from './api.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
 import { collectAllData, populateUI } from './projectData.js';
 import { renderProjectTeam, flushPendingTeam } from './projectTeam.js';
@@ -152,7 +152,16 @@ export async function saveProject({ silent } = {}) {
     state.currentProjectCode = projectCode;
     state.isDirty = false;
     noteSavedUpdatedAt(result.updated_at);
-    if (isFirstSave) { await flushPendingTeam(projectCode); renderProjectTeam('team-container-op', projectCode); applyProjectIdentityLock(); }
+    if (isFirstSave) {
+      await flushPendingTeam(projectCode);
+      renderProjectTeam('team-container-op', projectCode);
+      applyProjectIdentityLock();
+      // Remember this brand-new project as "last active" too — otherwise only
+      // Join sets this, and refreshing right after creating a project would
+      // lose the session-restore's ability to rejoin it (see tryRestoreSession()
+      // in auth.js).
+      rememberLastProjectCode(projectCode);
+    }
     showSyncIndicator('synced');
     if (!silent) {
       const ind = document.getElementById('save-indicator');

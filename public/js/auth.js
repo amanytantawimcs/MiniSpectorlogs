@@ -1,4 +1,7 @@
-import { api } from './api.js';
+import {
+  api, loadPersistedSessionToken, clearPersistedSessionToken,
+  rememberLastProjectCode, getPersistedLastProjectCode, forgetLastProjectCode,
+} from './api.js';
 import { state, getDeviceId } from './state.js';
 import { showToast, setUserCardName, setUserCardRole } from './ui.js';
 import { enterDashboard, showTab } from './navigation.js';
@@ -27,7 +30,7 @@ async function checkProjectAccessForUser(code, userId) {
 async function saveSessionMeta(code, role, userName) {
   try {
     await api.saveSessionMeta({ device_id: getDeviceId(), project_code: code, device_role: role, user_name: userName });
-    localStorage.setItem('mcs_last_project_code', code);
+    rememberLastProjectCode(code);
   } catch (e) { /* non-fatal */ }
 }
 
@@ -76,6 +79,63 @@ function enterSimMode(userName, existingProject) {
   renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
+// Shared by handleJoin() (the manual "Join Project" form) and
+// tryRestoreSession() (silently rejoining whatever project this device was
+// last active in, after a page refresh) — pulls a project by code, checks
+// access, and enters the right mode. Returns { success, error, notFound } so
+// each caller can present a failure its own way: handleJoin shows it in the
+// form's error banner, tryRestoreSession just falls back to the mode-select
+// screen without surfacing anything (a stale/deleted project code from a
+// previous visit isn't really an "error" from the user's point of view).
+async function joinProjectByCode(code, userName) {
+  const result = await api.pullProject(code);
+  if (!result.success) {
+    return {
+      success: false,
+      notFound: !!result.notFound,
+      error: result.notFound ? 'Project code not found.' : 'Connection failed. Check your internet connection.',
+    };
+  }
+
+  const access = await checkProjectAccessForUser(code, state.currentUserId);
+  if (!access.allowed) {
+    return { success: false, error: 'You do not have access to this project. Contact your admin.' };
+  }
+  state.currentUserProjectRole = access.role || 'operator';
+  if (access.role === 'viewer') state.currentUserRole = 'reviewer';
+
+  state.currentProjectCode = code;
+  state.currentDeviceRole = 'office';
+  const project = result.project;
+  noteSavedUpdatedAt(project.updated_at);
+
+  if (project.mode === 'simulation') {
+    enterSimMode(userName, project);
+  } else {
+    enterOpMode(userName);
+    populateUI(project.data);
+    // This project was pushed from a simulation at some point (the server
+    // only attaches simulationData when project.is_sim_locked) — load it
+    // into simState and surface the Simulation sidebar section (Sensors/
+    // Topology only, not Preparation, matching what pushToOperation()
+    // itself leaves visible in the same-session case) so someone joining
+    // from a different device/session later can still review it, not just
+    // whoever was present for the live push. renderShell:false because
+    // Project Details, not Simulation, is the tab actually on screen right
+    // now — see loadSimulationState()'s own comment for why rendering the
+    // workspace shell here would be wrong (stomps the page title, could
+    // flash the Push-to-Operation button into the header).
+    if (project.data.simulationData) {
+      loadSimulationState(project.data.simulationData, true, false);
+      document.getElementById('sim-heading-prep')?.classList.add('hidden');
+      document.getElementById('nav-prep-group')?.classList.add('hidden');
+      document.getElementById('nav-simulation-section')?.classList.remove('hidden');
+    }
+  }
+  saveSessionMeta(code, 'office', userName);
+  return { success: true };
+}
+
 async function handleJoin(userName) {
   const codeInput = document.getElementById('join-code-input');
   const errEl = document.getElementById('join-error');
@@ -95,53 +155,14 @@ async function handleJoin(userName) {
 
   setStatus('Searching...', '#60a5fa');
   try {
-    const result = await api.pullProject(code);
-    if (!result.success) {
-      errEl.textContent = result.notFound ? 'Project code not found.' : 'Connection failed. Check your internet connection.';
+    const outcome = await joinProjectByCode(code, userName);
+    if (!outcome.success) {
+      errEl.textContent = outcome.error;
       errEl.classList.remove('hidden');
       resetBtn();
-      return;
     }
-
-    const access = await checkProjectAccessForUser(code, state.currentUserId);
-    if (!access.allowed) {
-      errEl.textContent = 'You do not have access to this project. Contact your admin.';
-      errEl.classList.remove('hidden');
-      resetBtn();
-      return;
-    }
-    state.currentUserProjectRole = access.role || 'operator';
-    if (access.role === 'viewer') state.currentUserRole = 'reviewer';
-
-    state.currentProjectCode = code;
-    state.currentDeviceRole = 'office';
-    const project = result.project;
-    noteSavedUpdatedAt(project.updated_at);
-
-    if (project.mode === 'simulation') {
-      enterSimMode(userName, project);
-    } else {
-      enterOpMode(userName);
-      populateUI(project.data);
-      // This project was pushed from a simulation at some point (the server
-      // only attaches simulationData when project.is_sim_locked) — load it
-      // into simState and surface the Simulation sidebar section (Sensors/
-      // Topology only, not Preparation, matching what pushToOperation()
-      // itself leaves visible in the same-session case) so someone joining
-      // from a different device/session later can still review it, not just
-      // whoever was present for the live push. renderShell:false because
-      // Project Details, not Simulation, is the tab actually on screen right
-      // now — see loadSimulationState()'s own comment for why rendering the
-      // workspace shell here would be wrong (stomps the page title, could
-      // flash the Push-to-Operation button into the header).
-      if (project.data.simulationData) {
-        loadSimulationState(project.data.simulationData, true, false);
-        document.getElementById('sim-heading-prep')?.classList.add('hidden');
-        document.getElementById('nav-prep-group')?.classList.add('hidden');
-        document.getElementById('nav-simulation-section')?.classList.remove('hidden');
-      }
-    }
-    saveSessionMeta(code, 'office', userName);
+    // On success, joinProjectByCode() already navigated away (enterOpMode/
+    // enterSimMode hide the mode-select screen) — nothing else to do here.
   } catch (e) {
     errEl.textContent = 'Unexpected error. Try again.';
     errEl.classList.remove('hidden');
@@ -160,6 +181,45 @@ function showModeScreen(userName) {
   document.getElementById('btn-skip-to-op').onclick = () => enterOpMode(userName);
   document.getElementById('btn-back-join').onclick = () => modeShowStep('mode-step1');
   document.getElementById('btn-join-confirm').onclick = () => handleJoin(userName);
+}
+
+// Runs once on page load (see main.js), before the login screen would
+// otherwise be shown — if a still-valid session token was persisted from a
+// previous visit, silently re-authenticates and rejoins whatever project
+// this device was last active in (rememberLastProjectCode()'s target, set
+// every time a Join succeeds, or a brand-new project's first save completes
+// — see saveProject()/beginSimulation()), so a refresh mid-work doesn't
+// bounce back to the login form. Falls through to the ordinary login screen
+// on any failure — expired/revoked token, deleted user, no persisted
+// project, project since deleted — this is purely a convenience path, never
+// a second source of truth: every write still goes through the server's own
+// session check regardless. Returns true if it took over navigation (caller
+// should not also show the login screen), false otherwise.
+export async function tryRestoreSession() {
+  const token = loadPersistedSessionToken();
+  if (!token) return false;
+
+  const me = await api.getCurrentUser();
+  if (!me.success) {
+    clearPersistedSessionToken();
+    forgetLastProjectCode();
+    return false;
+  }
+
+  state.currentUserId = me.userId;
+  state.currentUserRole = 'member';
+  state.currentUserIsAdmin = !!me.isAdmin;
+  setUserCardName(me.name);
+
+  const lastCode = getPersistedLastProjectCode();
+  if (lastCode) {
+    const outcome = await joinProjectByCode(lastCode, me.name);
+    if (outcome.success) return true;
+    // Project code no longer resolves (deleted, access revoked since) —
+    // still a valid login, just nothing to resume into.
+  }
+  showModeScreen(me.name);
+  return true;
 }
 
 function setLoginPasscodeMode(hasPasscode) {

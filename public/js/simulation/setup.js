@@ -3,7 +3,7 @@
 // picker with role assignment and auto-assign).
 
 import { state } from '../state.js';
-import { api } from '../api.js';
+import { api, rememberLastProjectCode } from '../api.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE, APPROVER_IDS } from './config.js';
@@ -535,6 +535,11 @@ async function beginSimulation() {
   document.getElementById('sim-step-1').classList.add('hidden');
   document.getElementById('sim-step-2').classList.remove('hidden');
   markSimulationStarted();
+  // Same reasoning as the operation-mode save path (projectDetails.js) — a
+  // brand-new simulation project needs to be remembered too, not just ones
+  // joined via project code, or refreshing right after starting one would
+  // lose it (see tryRestoreSession() in auth.js).
+  rememberLastProjectCode(code);
 
   renderWorkspaceShell();
   updateWorkspaceNavAvailability();

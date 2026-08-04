@@ -1,6 +1,7 @@
 import { state } from './state.js';
 import { APPROVER_IDS } from './simulation/config.js';
 import { setActiveNavItem } from './ui.js';
+import { clearPersistedSessionToken, forgetLastProjectCode } from './api.js';
 
 // Ported as-is from the old renderer.js — same behavior.
 export function showTab(tabName, navElement) {
@@ -68,7 +69,15 @@ function closeTermsOfService() {
 // screen, cleared state, timers gone) — simpler and safer than manually
 // unwinding every global. The beforeunload handler in main.js still fires
 // first, so any unsaved work gets its flush + warning before this runs.
+//
+// Must clear the persisted session token/last-project-code before reloading
+// — now that a page load can silently restore a previous session (see
+// tryRestoreSession() in auth.js), skipping this would mean "sign out" on a
+// shared vessel/office computer just reloads straight back into the same
+// account instead of actually signing out.
 function signOut() {
+  clearPersistedSessionToken();
+  forgetLastProjectCode();
   window.location.reload();
 }
 

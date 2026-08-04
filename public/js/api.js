@@ -9,9 +9,64 @@ import { state } from './state.js';
 // for anything that sends one (covers navigator.sendBeacon calls, which
 // can't set custom headers) — so write routes can verify the caller is
 // actually logged in instead of trusting whatever the client claims.
+//
+// Also mirrored into localStorage so a page refresh doesn't force the login
+// form again — auth.js's tryRestoreSession() reads it back on load and
+// re-resolves who it belongs to via GET /users/me (the token alone doesn't
+// say who it is). This is a convenience path only, never a second source of
+// truth: every write still goes through the server's own session check, and
+// signOut() (navigation.js) clears it explicitly so a shared/vessel computer
+// never silently logs the next person in as whoever signed out.
+const SESSION_TOKEN_KEY = 'mcs_session_token';
 let sessionToken = null;
-export function setSessionToken(token) { sessionToken = token; }
+export function setSessionToken(token) {
+  sessionToken = token;
+  try { if (token) localStorage.setItem(SESSION_TOKEN_KEY, token); } catch (e) { /* storage unavailable — best effort */ }
+}
 export function getSessionToken() { return sessionToken; }
+
+// Synchronous peek used only to decide whether to show a brief "Restoring
+// session…" loader before the async restore check resolves (see main.js) —
+// doesn't touch the live `sessionToken` variable.
+export function hasPersistedSessionToken() {
+  try { return !!localStorage.getItem(SESSION_TOKEN_KEY); } catch (e) { return false; }
+}
+
+// Loads the persisted token into the live `sessionToken` variable (so it's
+// sent on the very next request) and returns it, or null if none was saved.
+export function loadPersistedSessionToken() {
+  try {
+    const token = localStorage.getItem(SESSION_TOKEN_KEY);
+    if (token) sessionToken = token;
+    return token;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function clearPersistedSessionToken() {
+  sessionToken = null;
+  try { localStorage.removeItem(SESSION_TOKEN_KEY); } catch (e) { /* non-fatal */ }
+}
+
+// Which project this device was last active in — the other half of session
+// restore (see setSessionToken's comment above). Remembered whenever a
+// project becomes this device's active one (Join succeeding, or either
+// mode's brand-new-project flow completing its first save) so
+// tryRestoreSession() (auth.js) can rejoin it after a refresh, not just
+// re-authenticate who's logged in. Single source of truth for the key name,
+// previously duplicated as a raw string literal in both auth.js and
+// navigation.js.
+const LAST_PROJECT_CODE_KEY = 'mcs_last_project_code';
+export function rememberLastProjectCode(code) {
+  try { localStorage.setItem(LAST_PROJECT_CODE_KEY, code); } catch (e) { /* non-fatal */ }
+}
+export function getPersistedLastProjectCode() {
+  try { return localStorage.getItem(LAST_PROJECT_CODE_KEY); } catch (e) { return null; }
+}
+export function forgetLastProjectCode() {
+  try { localStorage.removeItem(LAST_PROJECT_CODE_KEY); } catch (e) { /* non-fatal */ }
+}
 
 // Separate token/header for the admin panel — kept independent of the
 // regular user session so the two can never be confused with each other.
@@ -97,6 +152,15 @@ export const api = {
     const r = await request('/users/' + encodeURIComponent(userId));
     if (!r.ok) return { success: false };
     return { success: true, name: r.data.name, role: r.data.role, hasPasscode: r.data.hasPasscode, isAdmin: r.data.isAdmin };
+  },
+
+  // Resolves the currently-set session token (see setSessionToken above)
+  // back to a display name/role — used by auth.js's tryRestoreSession() to
+  // silently re-authenticate a persisted token after a page refresh.
+  getCurrentUser: async () => {
+    const r = await request('/users/me');
+    if (!r.ok) return { success: false };
+    return { success: true, userId: r.data.userId, name: r.data.name, role: r.data.role, isAdmin: r.data.isAdmin };
   },
 
   setPasscode: async (userId, passcode) => {

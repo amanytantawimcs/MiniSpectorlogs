@@ -551,6 +551,17 @@
     </style>
 </head>
 <body>
+<!-- Shown only when a persisted session token exists (see hasPersistedSessionToken()
+     in api.js / main.js) while tryRestoreSession() silently re-authenticates and
+     rejoins the last active project, so a refresh doesn't flash the login form
+     before immediately replacing it. Hidden again either way once that resolves. -->
+<div id="session-restore-loading" class="hidden fixed inset-0 z-[80] flex flex-col items-center justify-center bg-[#0C1727]">
+    <svg class="w-8 h-8 animate-spin" style="color:#459fd9" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>
+    <p class="text-[#6C88A6] text-sm mt-3">Restoring your session…</p>
+</div>
 <div id="login-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0C1727]">
     <div class="login-bg fixed inset-0 z-0"></div>
 

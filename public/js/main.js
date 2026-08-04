@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { installAuth } from './auth.js';
+import { installAuth, tryRestoreSession } from './auth.js';
 import { installNavigationStubs } from './navigation.js';
 import { installProjectDetails, flushSaveOnUnload } from './projectDetails.js';
 import { installAdmin } from './admin.js';
@@ -15,9 +15,9 @@ import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
 import { installProjectTeam } from './projectTeam.js';
 import { installDevPreview } from './devPreviewSim.js'; // TEMPORARY — see file header
-import { flushOfflineQueue } from './api.js';
+import { flushOfflineQueue, hasPersistedSessionToken } from './api.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   installNavigationStubs();
   installAuth();
   installProjectDetails();
@@ -34,6 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
   installExport();
   installProjectTeam();
   installDevPreview(); // TEMPORARY — see devPreviewSim.js header
+
+  // Silently re-authenticate and rejoin the last active project if a
+  // previous visit left a session token behind — see tryRestoreSession()'s
+  // own comment (auth.js) for the full reasoning. Only shows the loading
+  // overlay when there's actually a token to check, so a genuinely
+  // logged-out visitor sees the ordinary login screen with no flash/delay.
+  if (hasPersistedSessionToken()) {
+    document.getElementById('session-restore-loading')?.classList.remove('hidden');
+    await tryRestoreSession();
+    document.getElementById('session-restore-loading')?.classList.add('hidden');
+  }
 
   // Retry any saves that failed while offline — on startup (queue survives a
   // reload via localStorage), when connectivity returns, and periodically as

@@ -24,6 +24,17 @@ router.get('/search', requireAuth, asyncRoute(async (req, res) => {
   res.json({ success: true, users: rows });
 }));
 
+// Identifies whoever a session token belongs to — lets the client silently
+// re-authenticate after a page refresh (the token is persisted in
+// localStorage; the token alone doesn't say who it is, so this resolves it
+// back to a display name/role) instead of forcing the login form again.
+// Declared before the generic GET '/:id' below so "/me" isn't swallowed by it.
+router.get('/me', requireAuth, asyncRoute(async (req, res) => {
+  const { rows } = await pool.query('SELECT id, name, role, is_admin FROM users WHERE id = $1', [req.userId]);
+  if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
+  res.json({ success: true, userId: rows[0].id, name: rows[0].name, role: rows[0].role, isAdmin: rows[0].is_admin });
+}));
+
 router.get('/:id', asyncRoute(async (req, res) => {
   const { rows } = await pool.query('SELECT id, name, role, passcode_hash, is_admin FROM users WHERE id = $1', [req.params.id.trim()]);
   if (!rows[0]) return res.status(404).json({ success: false, message: 'User not found' });
