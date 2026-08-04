@@ -201,7 +201,25 @@ function chipList(names, kind) {
 }
 
 function sensorOptions(used) {
-  return SENSOR_ALL.filter(s => used.indexOf(s) < 0).map(s => `<option>${escapeHtml(s)}</option>`).join('');
+  return SENSOR_ALL.filter(s => used.indexOf(s) < 0).map(s => `<option>${escapeHtml(s)}</option>`).join('')
+    + '<option value="__custom__">+ Custom sensor…</option>';
+}
+
+// A sensor name not in SENSOR_HARDWARE/SENSOR_CATEGORIES already degrades
+// safely everywhere downstream — sensors.js's buildModelCell() falls back to
+// a free-text model input when SENSOR_HARDWARE[name] is empty, and its
+// category grouping falls back to "Other" — so a typed custom name needs no
+// special-casing beyond landing in scopeWorking.req/opt like any other pick.
+function addCustomSensorName(kind) {
+  const used = scopeWorking.req.concat(scopeWorking.opt);
+  const name = (prompt('Sensor name:') || '').trim();
+  if (!name) return;
+  if (used.includes(name)) { showToast(`"${name}" is already in this bundle.`, 'warn'); return; }
+  scopeWorking[kind].push(name);
+  scopeDirty = true;
+  renderScopeDetail();
+  renderUnitGrid();
+  updateBeginBtn();
 }
 
 function renderScopeDetail() {
@@ -255,9 +273,11 @@ function renderScopeDetail() {
   const addReq = document.getElementById('scope-add-req');
   const addOpt = document.getElementById('scope-add-opt');
   if (addReq) addReq.onchange = function () {
+    if (this.value === '__custom__') { this.value = ''; addCustomSensorName('req'); return; }
     if (this.value) { scopeWorking.req.push(this.value); scopeDirty = true; renderScopeDetail(); renderUnitGrid(); updateBeginBtn(); }
   };
   if (addOpt) addOpt.onchange = function () {
+    if (this.value === '__custom__') { this.value = ''; addCustomSensorName('opt'); return; }
     if (this.value) { scopeWorking.opt.push(this.value); scopeDirty = true; renderScopeDetail(); }
   };
   const resetBtn = document.getElementById('scope-reset-btn');
