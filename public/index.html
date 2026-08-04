@@ -453,7 +453,7 @@
         .scope-fam-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #6C88A6; margin: 16px 0 8px; display: flex; align-items: center; gap: 10px; }
         .scope-fam-label::after { content: ''; flex: 1; height: 1px; background: rgba(120,166,212,0.16); }
         .scope-bundles-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 10px; }
-        .scope-bundle-btn { text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #0C1727; cursor: pointer; transition: all 0.18s ease; display: block; width: 100%; color: inherit; }
+        .scope-bundle-btn { position: relative; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #0C1727; cursor: pointer; transition: all 0.18s ease; display: block; width: 100%; color: inherit; }
         .scope-bundle-btn:hover { border-color: rgba(120,166,212,0.28); transform: translateY(-1px); }
         .scope-bundle-btn[aria-pressed="true"] { border-color: #F0912D; background: rgba(240,145,45,0.1); }
         .scope-bundle-btn .row { display: flex; align-items: center; gap: 9px; }
@@ -461,6 +461,8 @@
         .scope-bundle-btn[aria-pressed="true"] .scope-bundle-mark { background: #F0912D; border-color: #F0912D; color: #20130A; }
         .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #E9F0F8; line-height: 1.35; margin: 0; }
         .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(71,163,220,0.4); color: #47A3DC; background: rgba(71,163,220,0.14); }
+        .scope-bundle-delete { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; background: rgba(239,68,68,0.1); border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.15s ease, background 0.15s ease; }
+        .scope-bundle-delete:hover { opacity: 1; background: rgba(239,68,68,0.22); }
         .scope-detail { border: 1px solid rgba(120,166,212,0.16); border-radius: 12px; background: #14243A; overflow: hidden; margin-top: 18px; }
         .scope-detail-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(120,166,212,0.16); flex-wrap: wrap; }
         .scope-detail-head h4 { font-size: 14px; font-weight: 600; color: #E9F0F8; margin: 0; }
@@ -1742,10 +1744,12 @@
 
             <!-- Shown only when viewing Mission Info / MiniSpectors from within an
                  already-started simulation (see goToPreparationTab() in setup.js).
-                 Project Code, Scope, and MiniSpectors are locked read-only below;
-                 Project Name and Description stay editable and autosave normally. -->
+                 Project Code and MiniSpectors are always locked read-only here; the
+                 Operation Scope unlocks for project team members (operators) — see
+                 applyPreparationReadOnlyLock(), which also swaps this banner's text.
+                 Project Name and Description always stay editable and autosave normally. -->
             <div id="sim-review-banner" class="hidden rcard mb-5" style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-                <div class="text-sm" style="color:#9AB0C8;">
+                <div class="text-sm" style="color:#9AB0C8;" id="sim-review-banner-text">
                     <strong style="color:#f39124;">Reviewing an active simulation</strong> — Project Code, Scope, and MiniSpectors are locked. You can still edit the Project Name and Description.
                 </div>
                 <button type="button" onclick="returnToWorkspace()" class="rbtn-orange-outline flex items-center gap-2" style="flex-shrink:0;">

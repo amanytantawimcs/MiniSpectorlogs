@@ -153,10 +153,21 @@ export function scopeName(id) {
   return findScope(id)?.name || '';
 }
 
+// Derived from the highest existing "CUS-NN" number rather than
+// customBundles.length + 1 — once bundles can be deleted (deleteCustomBundle
+// below), length-based numbering would reuse an id the moment any bundle
+// before the end of the list was removed.
+function nextCustomBundleId() {
+  const maxN = customBundles.reduce((max, b) => {
+    const m = /^CUS-(\d+)$/.exec(b.id);
+    return m ? Math.max(max, parseInt(m[1], 10)) : max;
+  }, 0);
+  return 'CUS-' + String(maxN + 1).padStart(2, '0');
+}
+
 export function addCustomBundle({ name, fam, req, opt, note, shared }) {
-  const n = customBundles.length + 1;
   const bundle = {
-    id: 'CUS-' + String(n).padStart(2, '0'),
+    id: nextCustomBundleId(),
     fam: fam || 'Custom',
     name,
     req: req.slice(),
@@ -168,4 +179,12 @@ export function addCustomBundle({ name, fam, req, opt, note, shared }) {
   customBundles.push(bundle);
   saveCustom(customBundles);
   return bundle;
+}
+
+export function deleteCustomBundle(id) {
+  const idx = customBundles.findIndex(b => b.id === id);
+  if (idx === -1) return false;
+  customBundles.splice(idx, 1);
+  saveCustom(customBundles);
+  return true;
 }

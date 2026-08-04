@@ -6,9 +6,9 @@ import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
-import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
+import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE, APPROVER_IDS } from './config.js';
 import {
-  getAllBundles, findScope, scopeName, addCustomBundle, getAddOnsForBase,
+  getAllBundles, findScope, scopeName, addCustomBundle, deleteCustomBundle, getAddOnsForBase,
   encodeScopeId, resolveScopeSelection,
 } from './scopeCatalog.js';
 import {
@@ -69,6 +69,13 @@ function syncScopeWorkingFromState() {
 
 /* ---------------- Operation scope catalog ---------------- */
 
+// Same "privileged or per-user is_admin flag" rule navigation.js uses for
+// the Admin Management sidebar item — reused here so custom-bundle deletion
+// has one consistent definition of "admin" across the app.
+function isAdminUser() {
+  return APPROVER_IDS.includes(String(state.currentUserId)) || !!state.currentUserIsAdmin;
+}
+
 function renderScopeCatalog() {
   const term = (scopeSearchEl?.value || '').trim().toLowerCase();
   const fam = scopeFamEl?.value || '';
@@ -89,23 +96,58 @@ function renderScopeCatalog() {
     return;
   }
 
+  const canDelete = isAdminUser();
   const fams = [];
   list.forEach(b => { if (fams.indexOf(b.fam) < 0) fams.push(b.fam); });
   let html = '';
   fams.forEach(f => {
     html += `<p class="scope-fam-label">${escapeHtml(f)}</p><div class="scope-bundles-grid">`;
     list.filter(b => b.fam === f).forEach(b => {
-      html += `<button type="button" class="scope-bundle-btn" aria-pressed="${b.id === scopeSelectedId}" data-id="${escapeHtml(b.id)}">
+      // A <div role="button"> instead of a real <button> here — a custom
+      // bundle's delete button needs to live inside this card, and a
+      // <button> nested inside another <button> is invalid HTML (and would
+      // also double-fire the pick click via bubbling).
+      html += `<div class="scope-bundle-btn" role="button" tabindex="0" aria-pressed="${b.id === scopeSelectedId}" data-id="${escapeHtml(b.id)}">
         <div class="row"><span class="scope-bundle-mark"><svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
         <span><h4>${escapeHtml(b.name)}</h4></span></div>
-        ${b.custom ? '<span class="scope-bundle-tag">custom</span>' : ''}</button>`;
+        ${b.custom ? '<span class="scope-bundle-tag">custom</span>' : ''}
+        ${b.custom && canDelete ? `<button type="button" class="scope-bundle-delete" data-delete-id="${escapeHtml(b.id)}" aria-label="Delete bundle ${escapeHtml(b.name)}" title="Delete bundle">
+          <svg xmlns="http://www.w3.org/2000/svg" style="width:12px;height:12px" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>` : ''}
+      </div>`;
     });
     html += '</div>';
   });
   catEl.innerHTML = html;
   catEl.querySelectorAll('.scope-bundle-btn').forEach(el => {
     el.addEventListener('click', () => pickBundle(el.dataset.id));
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickBundle(el.dataset.id); }
+    });
   });
+  catEl.querySelectorAll('.scope-bundle-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteBundle(btn.dataset.deleteId);
+    });
+  });
+}
+
+function deleteBundle(id) {
+  const target = getAllBundles().find(b => b.id === id);
+  if (!confirm(`Delete the bundle "${target?.name || id}"? This cannot be undone.`)) return;
+  deleteCustomBundle(id);
+  if (scopeSelectedId === id) {
+    scopeSelectedId = null;
+    scopeSelectedAddOns = new Set();
+    scopeWorking = null;
+    scopeDirty = false;
+    simState.selectedScope = null;
+  }
+  renderScopeCatalog();
+  renderScopeDetail();
+  updateBeginBtn();
+  showToast('Bundle deleted.', 'success');
 }
 
 function pickBundle(id) {
@@ -522,17 +564,32 @@ function restoreStep1FieldsFromState() {
   renderScopeDetail();
 }
 
-// Project Code, the Scope catalog, and the MiniSpectors grid all get locked
-// read-only; Project Name and Description are left interactive (their input
-// listeners — see installSimSetup() below — write straight into
-// simState.projectData and autosave normally).
-function applyPreparationReadOnlyLock(locked) {
-  document.getElementById('sim-review-banner')?.classList.toggle('hidden', !locked);
+// isReviewing: whether Mission Info/MiniSpectors is being viewed as a review
+// of an already-started simulation (vs. the pre-start wizard) — controls the
+// review banner and hides "Start Simulation" (which doesn't apply to a
+// project that already exists; "Back to Workspace" is the way back in).
+// canEditScope: whether the Operation Scope card is actually editable within
+// that review — project team members (operators) can still adjust the scope
+// after the fact, since beginSimulation()'s merge/reset logic already
+// handles a scope change safely; anyone else stays locked. Project Code and
+// the MiniSpectors grid stay locked for everyone while reviewing regardless
+// — those are identity/roster changes, not what was asked for here. Project
+// Name and Description are always left interactive (their input listeners —
+// see installSimSetup() below — write straight into simState.projectData
+// and autosave normally).
+function applyPreparationReadOnlyLock(isReviewing, canEditScope = !isReviewing) {
+  document.getElementById('sim-review-banner')?.classList.toggle('hidden', !isReviewing);
+  const bannerText = document.getElementById('sim-review-banner-text');
+  if (bannerText) {
+    bannerText.innerHTML = canEditScope
+      ? '<strong style="color:#f39124;">Reviewing an active simulation</strong> — as a team member on this project, the Operation Scope is still editable here. Project Code and MiniSpectors stay locked.'
+      : '<strong style="color:#f39124;">Reviewing an active simulation</strong> — Project Code, Scope, and MiniSpectors are locked. You can still edit the Project Name and Description.';
+  }
   const codeEl = document.getElementById('sim-project-code');
-  if (codeEl) codeEl.disabled = locked;
-  document.getElementById('scope-card')?.classList.toggle('sim-locked', locked);
-  document.querySelector('#sim-setup-units .rcard')?.classList.toggle('sim-locked', locked);
-  document.getElementById('btn-begin-sim')?.classList.toggle('hidden', locked);
+  if (codeEl) codeEl.disabled = isReviewing;
+  document.getElementById('scope-card')?.classList.toggle('sim-locked', !canEditScope);
+  document.querySelector('#sim-setup-units .rcard')?.classList.toggle('sim-locked', isReviewing);
+  document.getElementById('btn-begin-sim')?.classList.toggle('hidden', isReviewing);
 }
 
 // Sidebar entry point for Mission Info / MiniSpectors. Only locks fields and
@@ -549,7 +606,11 @@ function goToPreparationTab(tab) {
   const wasInWorkspace = step2 && !step2.classList.contains('hidden');
   if (wasInWorkspace) {
     restoreStep1FieldsFromState();
-    applyPreparationReadOnlyLock(true);
+    // Project team members (operators) can still edit the Operation Scope
+    // when reviewing; reviewer.js's other checks (state.currentUserRole)
+    // already block writes everywhere else, so this mirrors the same rule.
+    const canEditScope = state.currentUserRole !== 'reviewer' && state.currentUserProjectRole === 'operator';
+    applyPreparationReadOnlyLock(true, canEditScope);
     step2.classList.add('hidden');
     document.getElementById('sim-step-1').classList.remove('hidden');
   }
