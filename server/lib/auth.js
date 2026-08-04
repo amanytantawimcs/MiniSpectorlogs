@@ -63,8 +63,12 @@ const requireAdminAuth = asyncRoute(async function requireAdminAuth(req, res, ne
   return res.status(401).json({ success: false, error: 'Admin authentication required.' });
 });
 
-async function assertCanWrite(userId, projectCode) {
-  const project = await getProjectRowByCode(projectCode);
+// knownProject lets a caller that already fetched the project row (e.g. the
+// POST / route, which needs it to resolve project_code's on-file casing
+// before it can even call this) pass it straight through instead of paying
+// for a second identical getProjectRowByCode query.
+async function assertCanWrite(userId, projectCode, knownProject) {
+  const project = knownProject !== undefined ? knownProject : await getProjectRowByCode(projectCode);
   if (!project) return true; // new project — any logged-in user may create it
   const { rows } = await pool.query('SELECT user_id, role FROM project_members WHERE project_id = $1', [project.id]);
   if (rows.length === 0) return true; // no team configured yet — open project

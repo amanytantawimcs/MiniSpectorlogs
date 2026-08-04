@@ -10,9 +10,22 @@ const { asyncRoute } = require('../lib/asyncRoute');
 const router = express.Router();
 
 router.post('/', requireAuth, asyncRoute(async (req, res) => {
-  const { project_code, mode, created_by, project_name, data, createOnly } = req.body || {};
-  if (!project_code) return res.status(400).json({ success: false, error: 'project_code required' });
-  if (!(await assertCanWrite(req.userId, project_code))) {
+  const { mode, created_by, project_name, data, createOnly } = req.body || {};
+  const rawCode = (req.body?.project_code || '').trim();
+  if (!rawCode) return res.status(400).json({ success: false, error: 'project_code required' });
+
+  // Resolve to whatever casing is already on file if this project exists —
+  // Join/Load Project uppercase before sending, but Project Details' own
+  // code field never did, so a save could otherwise arrive in different
+  // casing than the stored row. Forcing uppercase unconditionally here would
+  // miss the UNIQUE(project_code) constraint entirely and silently fork an
+  // existing lowercase-coded project into a second, disconnected row instead
+  // of updating it. A genuinely new project is canonicalized to uppercase so
+  // future lookups (including this one) stay consistent going forward.
+  const existing = await getProjectRowByCode(rawCode);
+  const project_code = existing ? existing.project_code : rawCode.toUpperCase();
+
+  if (!(await assertCanWrite(req.userId, project_code, existing))) {
     return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
   }
 

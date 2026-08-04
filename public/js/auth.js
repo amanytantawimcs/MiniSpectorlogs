@@ -17,8 +17,11 @@ function modeShowStep(id) {
 }
 
 async function checkProjectAccessForUser(code, userId) {
+  // Same fail-closed reasoning as api.checkProjectAccess()'s !r.ok branch —
+  // this catch is the network-threw-entirely case (that function only
+  // handles a non-ok HTTP response), and must resolve the same way.
   try { return await api.checkProjectAccess(code, userId); }
-  catch (e) { return { allowed: true, role: 'operator' }; }
+  catch (e) { return { allowed: true, role: 'viewer' }; }
 }
 
 async function saveSessionMeta(code, role, userName) {

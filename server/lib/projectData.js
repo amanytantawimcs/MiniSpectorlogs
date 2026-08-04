@@ -29,8 +29,14 @@ function deriveActiveMinispector(systems) {
   return def ? def.name : 'N/A';
 }
 
+// Case-insensitive: Join Project and Load Project both uppercase the code
+// client-side before sending it, but Project Details' own code field never
+// did — an exact-match lookup here meant a project saved as "prj-001" was
+// invisible to a later request for "PRJ-001" (or vice versa), silently
+// falling through every "project not found" branch that treats it as brand
+// new, including assertCanWrite()'s write-access check.
 async function getProjectRowByCode(code) {
-  const { rows } = await pool.query('SELECT * FROM projects WHERE project_code = $1', [code]);
+  const { rows } = await pool.query('SELECT * FROM projects WHERE UPPER(project_code) = UPPER($1)', [code]);
   return rows[0] || null;
 }
 

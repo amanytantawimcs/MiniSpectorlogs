@@ -176,7 +176,13 @@ export const api = {
 
   checkProjectAccess: async (projectCode, userId) => {
     const r = await request('/projects/' + encodeURIComponent(projectCode) + '/access/' + encodeURIComponent(userId));
-    if (!r.ok) return { allowed: true, role: 'operator' };
+    // Fail closed: a request failure (network blip, rate limit, cold start)
+    // must never be indistinguishable from "you're a full operator" — that
+    // silently defeated the whole point of restricting a project to a team.
+    // Entry still isn't blocked (matches the by-design "team restricts
+    // writes, not viewing" rule the /access route itself documents), but the
+    // uncertain case always resolves to the least-privileged role.
+    if (!r.ok) return { allowed: true, role: 'viewer' };
     return r.data;
   },
 
