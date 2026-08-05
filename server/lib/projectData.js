@@ -132,9 +132,9 @@ async function upsertOperationProject(client, { project_code, project_name, crea
   await client.query('DELETE FROM dive_logs WHERE project_id = $1', [projectId]);
   for (const l of d.diveLogs || []) {
     await client.query(
-      `INSERT INTO dive_logs (project_id, num, rov, date, end_date, start_time, end_time, depth, duration, purpose, area, issues, client, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
-      [projectId, l.num || '', l.rov || '', l.date || '', l.endDate || '', l.startTime || '', l.endTime || '', l.depth || '', l.duration || '', l.purpose || '', l.area || '', l.issues || '', l.client || '', l.notes || '']
+      `INSERT INTO dive_logs (project_id, num, rov, date, end_date, start_time, end_time, depth, duration, int_temp, int_humidity, rain, objective, purpose, area, issues, client, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+      [projectId, l.num || '', l.rov || '', l.date || '', l.endDate || '', l.startTime || '', l.endTime || '', l.depth || '', l.duration || '', l.intTemp || '', l.intHumidity || '', l.rain || '', l.objective || '', l.purpose || '', l.area || '', l.issues || '', l.client || '', l.notes || '']
     );
   }
 
@@ -271,7 +271,8 @@ async function buildOperationData(project) {
 
   const diveLogs = dives.rows.map(l => ({
     num: l.num, rov: l.rov, date: l.date, endDate: l.end_date, startTime: l.start_time, endTime: l.end_time,
-    depth: l.depth, duration: l.duration, purpose: l.purpose, area: l.area, issues: l.issues, client: l.client, notes: l.notes,
+    depth: l.depth, duration: l.duration, intTemp: l.int_temp, intHumidity: l.int_humidity, rain: l.rain, objective: l.objective,
+    purpose: l.purpose, area: l.area, issues: l.issues, client: l.client, notes: l.notes,
   }));
   const standbyLogs = standby.rows.map(l => ({
     id: l.entry_ref, date: l.date, endDate: l.end_date, by: l.performed_by, startTime: l.start_time, endTime: l.end_time,

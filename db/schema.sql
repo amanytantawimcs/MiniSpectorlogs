@@ -135,6 +135,10 @@ CREATE TABLE dive_logs (
   end_time   TEXT,
   depth      TEXT,
   duration   TEXT,
+  int_temp     TEXT,   -- Interior Temperature
+  int_humidity TEXT,   -- Interior Humidity
+  rain         TEXT,
+  objective    TEXT,
   purpose    TEXT,
   area       TEXT,
   issues     TEXT,

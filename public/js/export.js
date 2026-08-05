@@ -23,17 +23,20 @@ function downloadBlob(blob, filename) {
 const SECTION_FROM_FILENAME = {
   'Faults.docx': 'faultLogs',
   'HSE.docx': 'hseReports',
-  'IssueReport.docx': 'issueReports',
 };
 
 // Standby/Dive/Maintenance have real client-supplied .docx templates
 // (server/templates/*.docx) that get filled via docxtemplater — pixel-
 // identical to the client's own layout/branding, not a recreation of it.
-// Everything else still goes through the programmatic docx-library builder.
+// Dive Log and Issue Report use generated equivalents matching the client's
+// "ROV Technical Logbook" Operation Daily Log / Issue Report pages (see
+// scripts/generate-report-templates.js). Everything else still goes through
+// the programmatic docx-library builder.
 const TEMPLATE_LOG_TYPE_FROM_FILENAME = {
   'Standby.docx': 'standby',
   'Divelog.docx': 'dive',
   'Maintenance.docx': 'maintenance',
+  'IssueReport.docx': 'issue',
 };
 
 export async function exportWord(arg) {

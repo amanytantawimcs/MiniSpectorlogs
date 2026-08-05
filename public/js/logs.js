@@ -26,8 +26,25 @@ function fieldRow(field, value) {
     return `<div>${label}<textarea id="${id}">${escapeHtml(value || '')}</textarea></div>`;
   }
   if (field.type === 'select') {
-    const opts = field.options.map(o => `<option value="${escapeHtml(o)}"${o === value ? ' selected' : ''}>${escapeHtml(field.optionLabels?.[o] || o)}</option>`).join('');
-    return `<div>${label}<select id="${id}">${opts}</select></div>`;
+    let options = field.options;
+    if (field.dynamicOptionsFrom) {
+      // Recomputed on every modal open rather than baked into the config —
+      // e.g. Issue Report's "Dive #" needs to always reflect whatever Dive
+      // Log entries currently exist, including ones added after this modal
+      // last opened.
+      options = (state.currentReportData[field.dynamicOptionsFrom] || [])
+        .map(r => r[field.dynamicOptionsKey])
+        .filter(Boolean);
+      // Keep a previously-saved value selectable even if it no longer
+      // matches any current entry (that dive was renumbered/deleted since)
+      // instead of silently dropping it the next time this is saved.
+      if (value && !options.includes(value)) options = [value, ...options];
+    }
+    const placeholder = field.dynamicOptionsFrom && !value
+      ? `<option value="" selected>${options.length ? 'Select a dive…' : 'No dives recorded yet'}</option>`
+      : '';
+    const opts = options.map(o => `<option value="${escapeHtml(o)}"${o === value ? ' selected' : ''}>${escapeHtml(field.optionLabels?.[o] || o)}</option>`).join('');
+    return `<div>${label}<select id="${id}">${placeholder}${opts}</select></div>`;
   }
   if (field.type === 'duration') {
     return `<div>${label}<input id="${id}" value="${escapeHtml(value || '')}" readonly style="color:#6C88A6"></div>`;
@@ -46,7 +63,7 @@ function fieldRow(field, value) {
 // Groups fields into 2-column rows the way the old app's modal markup did
 // (id+rov together, dates paired, etc) rather than one field per line.
 function pairFields(fields) {
-  const pairKeys = new Set(['num,rov', 'id,by', 'date,startTime', 'endDate,endTime', 'status,tech', 'parts,remaining']);
+  const pairKeys = new Set(['num,rov', 'id,by', 'date,startTime', 'endDate,endTime', 'status,tech', 'parts,remaining', 'intTemp,intHumidity', 'rain,objective']);
   const html = [];
   let i = 0;
   while (i < fields.length) {

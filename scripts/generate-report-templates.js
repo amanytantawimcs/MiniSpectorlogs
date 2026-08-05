@@ -1,0 +1,207 @@
+// One-off generator for two docxtemplater-fillable .docx templates that
+// visually match the client's "ROV Technical Logbook" v1.7 Operation Daily
+// Log / Issue Report pages (landscape, MCS-branded, navy header row) — run
+// once to (re)produce server/templates/OperationDailyLog.docx and
+// server/templates/IssueReport.docx. The {tag}/{#loop}...{/loop} text runs
+// written here are plain text as far as the `docx` package is concerned;
+// docxtemplater finds and replaces them at fill-time exactly as it does in
+// the client's own real .docx templates — same mechanism, just authored by
+// script instead of by hand in Word.
+//
+// Usage: node scripts/generate-report-templates.js
+
+const fs = require('fs');
+const path = require('path');
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
+  Header, Footer, ImageRun, PageNumber, PageOrientation, AlignmentType,
+  BorderStyle, ShadingType, VerticalAlign, HeightRule,
+} = require('docx');
+
+const LOGO_PATH = path.join('C:', 'Users', 'Maryam', 'Desktop', 'Web_logs', 'assets', 'logo.png');
+const OUT_DIR = path.join(__dirname, '..', 'server', 'templates');
+
+const NAVY = '1F3864';
+const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const noBorders = { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER };
+
+function pageHeader() {
+  const logoBuffer = fs.readFileSync(LOGO_PATH);
+  return new Header({
+    children: [
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER, insideHorizontal: NO_BORDER, insideVertical: NO_BORDER },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                borders: noBorders,
+                children: [new Paragraph({ children: [new ImageRun({ data: logoBuffer, transformation: { width: 97, height: 30 }, type: 'png' })] })],
+              }),
+              new TableCell({
+                borders: noBorders,
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'ROV Technical Logbook', bold: true })] })],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function pageFooter() {
+  return new Footer({
+    children: [
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        borders: { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER, insideHorizontal: NO_BORDER, insideVertical: NO_BORDER },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({ borders: noBorders, children: [new Paragraph({ children: [new TextRun('{projectCode}')] })] }),
+              new TableCell({
+                borders: noBorders,
+                children: [new Paragraph({
+                  alignment: AlignmentType.RIGHT,
+                  children: [new TextRun('Page '), new TextRun({ children: [PageNumber.CURRENT] }), new TextRun(' of '), new TextRun({ children: [PageNumber.TOTAL_PAGES] })],
+                })],
+              }),
+            ],
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function title(text) {
+  return new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 200, after: 300 },
+    children: [new TextRun({ text, bold: true, size: 28, underline: {} })],
+  });
+}
+
+function projectLine() {
+  return new Paragraph({
+    spacing: { after: 200 },
+    children: [
+      new TextRun({ text: 'Project: ', bold: true }), new TextRun('{projectName}'),
+      new TextRun({ text: '    Code: ', bold: true }), new TextRun('{projectCode}'),
+    ],
+  });
+}
+
+function navyHeaderCell(text, opts = {}) {
+  return new TableCell({
+    shading: { type: ShadingType.CLEAR, fill: NAVY },
+    verticalAlign: VerticalAlign.CENTER,
+    ...opts,
+    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text, bold: true, color: 'FFFFFF', size: 18 })] })],
+  });
+}
+
+function bodyCell(runText, opts = {}) {
+  return new TableCell({
+    verticalAlign: VerticalAlign.CENTER,
+    ...opts,
+    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: runText, size: 18 })] })],
+  });
+}
+
+function landscapeSection(children) {
+  return {
+    properties: {
+      page: {
+        size: { orientation: PageOrientation.LANDSCAPE },
+        margin: { top: 720, bottom: 720, left: 720, right: 720 },
+      },
+    },
+    headers: { default: pageHeader() },
+    footers: { default: pageFooter() },
+    children,
+  };
+}
+
+// ============================================================
+// Operation Daily Log (Dive Log export)
+// ============================================================
+
+function buildOperationDailyLog() {
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [
+      navyHeaderCell('Dive #'), navyHeaderCell('Dive Date'), navyHeaderCell('Dive In'), navyHeaderCell('Dive Out'),
+      navyHeaderCell('Max Depth (m)'), navyHeaderCell('Int. Temp.'), navyHeaderCell('Int. Humidity'),
+      navyHeaderCell('Rain'), navyHeaderCell('Objective'),
+    ],
+  });
+
+  const bodyRow = new TableRow({
+    children: [
+      bodyCell('{#diveLogs}{num}'), bodyCell('{date}'), bodyCell('{startTime}'), bodyCell('{endTime}'),
+      bodyCell('{depth}'), bodyCell('{intTemp}'), bodyCell('{intHumidity}'), bodyCell('{rain}'), bodyCell('{objective}{/diveLogs}'),
+    ],
+  });
+
+  const table = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow, bodyRow] });
+
+  return new Document({
+    sections: [landscapeSection([title('Operation Daily Log'), projectLine(), table])],
+  });
+}
+
+// ============================================================
+// Issue Report (Issue Report export)
+// ============================================================
+
+function buildIssueReport() {
+  const headerRow1 = new TableRow({
+    tableHeader: true,
+    children: [
+      navyHeaderCell('Dive #', { rowSpan: 2 }),
+      navyHeaderCell('Issue Description', { rowSpan: 2 }),
+      navyHeaderCell('Cause', { rowSpan: 2 }),
+      navyHeaderCell('Lim Reading', { rowSpan: 2 }),
+      navyHeaderCell('Action Taken', { columnSpan: 3 }),
+      navyHeaderCell('Contacted System Support Personnel', { rowSpan: 2 }),
+      navyHeaderCell('Malfunctioning Component No.', { rowSpan: 2 }),
+      navyHeaderCell('Replaced Component No.', { rowSpan: 2 }),
+    ],
+  });
+  const headerRow2 = new TableRow({
+    tableHeader: true,
+    children: [navyHeaderCell('Replaced'), navyHeaderCell('Repaired'), navyHeaderCell('No Action')],
+  });
+
+  const bodyRow = new TableRow({
+    children: [
+      bodyCell('{#issueReports}{diveNo}'), bodyCell('{desc}'), bodyCell('{cause}'), bodyCell('{limReading}'),
+      bodyCell('{replacedYN}'), bodyCell('{repairedYN}'), bodyCell('{noActionYN}'),
+      bodyCell('{contactedBy}'), bodyCell('{malfComponent}'), bodyCell('{replacedComponent}{/issueReports}'),
+    ],
+  });
+
+  const table = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow1, headerRow2, bodyRow] });
+
+  return new Document({
+    sections: [landscapeSection([title('Issue Report'), projectLine(), table])],
+  });
+}
+
+async function main() {
+  fs.mkdirSync(OUT_DIR, { recursive: true });
+
+  const opDoc = buildOperationDailyLog();
+  fs.writeFileSync(path.join(OUT_DIR, 'OperationDailyLog.docx'), await Packer.toBuffer(opDoc));
+  console.log('Wrote', path.join(OUT_DIR, 'OperationDailyLog.docx'));
+
+  const issueDoc = buildIssueReport();
+  fs.writeFileSync(path.join(OUT_DIR, 'IssueReport.docx'), await Packer.toBuffer(issueDoc));
+  console.log('Wrote', path.join(OUT_DIR, 'IssueReport.docx'));
+}
+
+main().catch((e) => { console.error(e); process.exit(1); });

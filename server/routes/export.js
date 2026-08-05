@@ -50,6 +50,10 @@ const SECTIONS = {
       { label: 'Time', get: r => `${r.startTime || ''}–${r.endTime || ''}` },
       { label: 'Depth (m)', get: r => r.depth },
       { label: 'Duration', get: r => r.duration },
+      { label: 'Int. Temp.', get: r => r.intTemp },
+      { label: 'Int. Humidity', get: r => r.intHumidity },
+      { label: 'Rain', get: r => r.rain },
+      { label: 'Objective', get: r => r.objective },
       { label: 'Purpose', get: r => r.purpose },
       { label: 'Area', get: r => r.area },
       { label: 'Notes', get: r => r.notes },
@@ -434,19 +438,38 @@ const TEMPLATE_CONFIGS = {
     },
   },
   dive: {
-    file: 'Divelog.docx',
+    // Matches the client's "ROV Technical Logbook" Operation Daily Log page
+    // (landscape, MCS-branded, navy header row) — generated once via
+    // scripts/generate-report-templates.js rather than hand-authored in Word,
+    // since no real client .docx of just this page was available.
+    file: 'OperationDailyLog.docx',
     buildData: (data) => {
       const logs = data.diveLogs || [];
       return {
         projectName: data.projectName || '',
         projectCode: data.projectCode || '',
-        supervisorName: data.supervisorName || '',
-        date: todayFormatted(),
-        totalDiveCount: logs.length,
-        totalDiveDuration: sumDurations(logs.map(r => r.duration)),
         diveLogs: logs.map(r => ({
           num: r.num || '', date: r.date || '', startTime: r.startTime || '', endTime: r.endTime || '',
-          duration: r.duration || '', depth: r.depth || '', purpose: r.purpose || '', area: r.area || '', notes: r.notes || '',
+          depth: r.depth || '', intTemp: r.intTemp || '', intHumidity: r.intHumidity || '', rain: r.rain || '', objective: r.objective || '',
+        })),
+      };
+    },
+  },
+  issue: {
+    // Matches the client's "Issue Report" page — see the comment on `dive`
+    // above for how/why this template was generated.
+    file: 'IssueReport.docx',
+    buildData: (data) => {
+      const logs = data.issueReports || [];
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        issueReports: logs.map(r => ({
+          diveNo: r.diveNo || '', desc: r.desc || '', cause: r.cause || '', limReading: r.limReading || '',
+          replacedYN: r.actionTaken === 'Replaced' ? 'Yes' : 'No',
+          repairedYN: r.actionTaken === 'Repaired' ? 'Yes' : 'No',
+          noActionYN: r.actionTaken === 'No Action' ? 'Yes' : '',
+          contactedBy: r.contactedBy || '', malfComponent: r.malfComponent || '', replacedComponent: r.replacedComponent || '',
         })),
       };
     },
