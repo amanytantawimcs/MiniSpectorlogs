@@ -301,12 +301,17 @@ function triggerQuickDive() {
 
 function emptyState(msg) { return `<p class="text-gray-500 italic text-center py-8">${msg}</p>`; }
 
+function mutedDash(text) { return `<span class="log-muted-dash">${escapeHtml(text)}</span>`; }
+
 function formatColumn(section, col, log) {
-  if (col.key === '_time') return `${escapeHtml(log.startTime || '')} - ${escapeHtml(log.endTime || '')}`;
-  if (col.key === '_depth') return `${escapeHtml(log.depth || '')} KM`;
+  if (col.key === '_time') {
+    const end = log.endTime ? escapeHtml(log.endTime) : mutedDash('—');
+    return log.startTime ? `${escapeHtml(log.startTime)} – ${end}` : mutedDash('—');
+  }
+  if (col.key === '_depth') return log.depth ? `${escapeHtml(log.depth)}<span class="log-muted-dash"> m</span>` : mutedDash('—');
   if (col.key === '_desc') {
     const d = log.desc || '';
-    return escapeHtml(d.length > 60 ? d.substring(0, 60) + '...' : d);
+    return d ? escapeHtml(d.length > 60 ? d.substring(0, 60) + '...' : d) : mutedDash('—');
   }
   if (col.key === '_status') {
     const closed = log.status === 'Closed';
@@ -314,7 +319,12 @@ function formatColumn(section, col, log) {
   }
   if (col.key === '_photos') return log.photos?.length ? `<span class="italic" style="color:#459fd9">${log.photos.length} file(s)</span>` : `<span class="italic" style="color:#6C88A6">None</span>`;
   const val = log[col.key] ?? '';
-  const text = val === '' && col.fallback ? col.fallback : escapeHtml(String(val));
+  // "In Progress"/"Check Dates" (see triggerQuickDive/triggerQuickStandby and
+  // setupAutoCalc) read as live-status badges instead of plain duration text.
+  if (col.key === 'duration' && val === 'In Progress') return `<span class="log-status-badge log-status-progress"><span class="dot"></span>In Progress</span>`;
+  if (col.key === 'duration' && val === 'Check Dates') return `<span class="log-status-badge log-status-check">Check Dates</span>`;
+  if (val === '') return mutedDash(col.fallback || '—');
+  const text = escapeHtml(String(val));
   return col.accent ? `<span class="${col.accent}">${text}</span>` : text;
 }
 
@@ -323,21 +333,30 @@ function renderLogTable(section) {
   const container = document.getElementById(config.containerId);
   if (!container) return;
   const logs = state.currentReportData[section] || [];
+
+  if (section === 'diveLogs') updateDiveLogSummary(logs);
+
   if (logs.length === 0) { container.innerHTML = emptyState(config.emptyMessage); return; }
 
   container.innerHTML = `
-    <div class="rcard" style="overflow-x:auto">
-      <table class="w-full text-left text-sm" style="color:#E9F0F8">
-        <thead class="text-xs uppercase font-bold" style="background:#16233A;color:#9AB0C8">
-          <tr>${config.columns.map(c => `<th class="px-4 py-3">${escapeHtml(c.label)}</th>`).join('')}<th class="px-4 py-3 text-right">Actions</th></tr>
+    <div class="log-table-wrap">
+      <table>
+        <thead>
+          <tr>${config.columns.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}<th class="actions-col">Actions</th></tr>
         </thead>
         <tbody>
           ${logs.map((log, i) => `
-          <tr style="border-bottom:1px solid rgba(120,166,212,0.16)">
-            ${config.columns.map(c => `<td class="px-4 py-3">${formatColumn(section, c, log)}</td>`).join('')}
-            <td class="px-4 py-3 text-right">
-              <button type="button" class="log-edit-btn mr-3 px-2.5 py-1 rounded-lg text-xs font-bold" style="background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.3)" data-section="${section}" data-idx="${i}">Edit</button>
-              <button type="button" class="log-del-btn px-2.5 py-1 rounded-lg text-xs font-bold" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)" data-section="${section}" data-idx="${i}">Del</button>
+          <tr>
+            ${config.columns.map(c => `<td>${formatColumn(section, c, log)}</td>`).join('')}
+            <td>
+              <div class="log-row-actions">
+                <button type="button" class="log-edit-btn log-icon-btn" title="Edit" data-section="${section}" data-idx="${i}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                </button>
+                <button type="button" class="log-del-btn log-icon-btn danger" title="Delete" data-section="${section}" data-idx="${i}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/></svg>
+                </button>
+              </div>
             </td>
           </tr>`).join('')}
         </tbody>
@@ -346,6 +365,14 @@ function renderLogTable(section) {
 
   container.querySelectorAll('.log-edit-btn').forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.section, parseInt(btn.dataset.idx, 10))));
   container.querySelectorAll('.log-del-btn').forEach(btn => btn.addEventListener('click', () => removeLog(btn.dataset.section, parseInt(btn.dataset.idx, 10))));
+}
+
+function updateDiveLogSummary(logs) {
+  const el = document.getElementById('dive-log-summary');
+  if (!el) return;
+  if (logs.length === 0) { el.textContent = 'No dives recorded'; return; }
+  const inProgress = logs.filter(l => l.duration === 'In Progress').length;
+  el.textContent = `${logs.length} dive${logs.length !== 1 ? 's' : ''} logged` + (inProgress ? ` · ${inProgress} in progress` : '');
 }
 
 export function renderGrids() {

@@ -39,7 +39,7 @@ export const LOG_CONFIGS = {
       { title: 'Mission Details', icon: 'target', rows: [{ fields: ['objective'] }, { fields: ['purpose'] }, { fields: ['issues'] }, { fields: ['client'] }, { fields: ['notes'] }] },
     ],
     columns: [
-      { key: 'num', label: 'Dive #', accent: 'text-blue-400 font-bold' },
+      { key: 'num', label: 'Dive #', accent: 'log-id-link' },
       { key: 'rov', label: 'ROV', accent: 'text-orange-400 font-medium', fallback: '—' },
       { key: 'date', label: 'Start Date' },
       { key: '_time', label: 'Time' },
@@ -73,7 +73,7 @@ export const LOG_CONFIGS = {
       { title: 'Details', icon: 'gauge', rows: [{ fields: ['category'] }, { fields: ['desc'] }] },
     ],
     columns: [
-      { key: 'id', label: 'ID', accent: 'text-yellow-500 font-bold' },
+      { key: 'id', label: 'ID', accent: 'log-id-link' },
       { key: 'date', label: 'Start Date' },
       { key: '_time', label: 'Time Range' },
       { key: 'duration', label: 'Duration' },
@@ -102,7 +102,7 @@ export const LOG_CONFIGS = {
       { title: 'Details', icon: 'gauge', rows: [{ fields: ['details'] }, { fields: ['parts', 'remarks'] }] },
     ],
     columns: [
-      { key: 'id', label: 'ID', accent: 'text-yellow-500 font-bold' },
+      { key: 'id', label: 'ID', accent: 'log-id-link' },
       { key: 'date', label: 'Date' },
       { key: 'task', label: 'Task' },
       { key: 'by', label: 'By' },
@@ -134,7 +134,7 @@ export const LOG_CONFIGS = {
       { title: 'Resolution', icon: 'wrench', rows: [{ fields: ['limReading', 'contactedBy'] }, { fields: ['malfComponent', 'replacedComponent'] }] },
     ],
     columns: [
-      { key: 'diveNo', label: 'Dive #', accent: 'text-blue-400 font-bold', fallback: '—' },
+      { key: 'diveNo', label: 'Dive #', accent: 'log-id-link', fallback: '—' },
       { key: '_desc', label: 'Issue Description' },
       { key: 'cause', label: 'Cause', fallback: '-' },
       { key: 'actionTaken', label: 'Action Taken', fallback: '-' },

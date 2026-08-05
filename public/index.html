@@ -179,6 +179,52 @@
         @keyframes log-pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
         .log-readout-value { font-family: ui-monospace, monospace; font-size:20px; font-weight:700; color:#f39124; }
         .log-readout-value span { font-size:11px; color:#6C88A6; font-weight:500; margin-left:3px; }
+
+        /* Dive Log toolbar */
+        .dl-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+        .dl-title-block { display:flex; align-items:center; gap:12px; }
+        .dl-title-bar { width:4px; height:32px; background:#f39124; border-radius:4px; flex-shrink:0; }
+        .dl-title-block h3 { font-size:20px; font-weight:700; color:#E9F0F8; margin:0 0 2px; }
+        .dl-title-block p { margin:0; font-size:11.5px; color:#6C88A6; display:flex; align-items:center; gap:6px; }
+        .dl-live-dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981; animation:log-pulse 2s ease-in-out infinite; flex-shrink:0; }
+        .dl-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .dl-nav-group { display:flex; align-items:center; gap:2px; background:#0C1727; border:1px solid rgba(120,166,212,0.16); border-radius:9px; padding:3px; }
+        .dl-btn-nav { background:transparent; color:#9AB0C8; border:none; padding:7px 12px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .15s ease, color .15s ease; white-space:nowrap; }
+        .dl-btn-nav:hover { background:rgba(255,255,255,0.05); color:#E9F0F8; }
+        .dl-toolbar-divider { width:1px; align-self:stretch; background:rgba(120,166,212,0.16); margin:0 2px; }
+        .dl-btn-secondary { display:inline-flex; align-items:center; gap:7px; background:rgba(120,166,212,0.1); color:#9AB0C8; border:1px solid rgba(120,166,212,0.25); padding:9px 16px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s ease; white-space:nowrap; }
+        .dl-btn-secondary:hover { background:rgba(120,166,212,0.18); }
+        .dl-btn-primary { display:inline-flex; align-items:center; gap:7px; background:#f39124; color:#1a1204; border:none; padding:9px 18px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 14px rgba(243,145,36,0.28); transition:box-shadow .15s ease, transform .12s ease; white-space:nowrap; }
+        .dl-btn-primary:hover { box-shadow:0 6px 20px rgba(243,145,36,0.4); transform:translateY(-1px); }
+        .dl-btn-primary:active, .dl-btn-secondary:active, .dl-btn-nav:active { transform:scale(.97); }
+
+        /* Log tables — shared renderer for Dive/Standby/Maintenance/Issue Report */
+        .log-table-wrap { border:1px solid rgba(120,166,212,0.16); border-radius:12px; overflow:hidden; overflow-x:auto; }
+        .log-table-wrap table { width:100%; border-collapse:collapse; }
+        .log-table-wrap thead th { text-align:left; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:#6C88A6; font-weight:700; padding:12px 16px; background:#16233A; border-bottom:1px solid rgba(120,166,212,0.16); white-space:nowrap; }
+        .log-table-wrap thead th.actions-col { text-align:right; }
+        .log-table-wrap tbody tr { border-bottom:1px solid rgba(120,166,212,0.16); transition:background .12s ease; }
+        .log-table-wrap tbody tr:last-child { border-bottom:none; }
+        .log-table-wrap tbody tr:hover { background:rgba(243,145,36,0.035); }
+        .log-table-wrap tbody td { padding:13px 16px; font-size:13px; vertical-align:middle; color:#E9F0F8; }
+        .log-muted-dash { color:#6C88A6; }
+        .log-id-link { font-family: ui-monospace, monospace; color:#f39124; font-weight:700; }
+        .log-status-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+        .log-status-progress { background:rgba(16,185,129,0.12); color:#10b981; }
+        .log-status-progress .dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981; animation:log-pulse 2s ease-in-out infinite; }
+        .log-status-check { background:rgba(239,68,68,0.12); color:#f87171; }
+        .log-row-actions { display:flex; gap:8px; justify-content:flex-end; }
+        .log-icon-btn { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:7px; border:1px solid rgba(120,166,212,0.16); background:rgba(12,23,39,0.6); color:#9AB0C8; cursor:pointer; transition:border-color .15s ease, color .15s ease, background .15s ease; }
+        .log-icon-btn:hover { border-color:#459fd9; color:#459fd9; background:rgba(69,159,217,0.1); }
+        .log-icon-btn.danger:hover { border-color:#ef4444; color:#f87171; background:rgba(239,68,68,0.1); }
+
+        @media (max-width:760px) {
+          .dl-toolbar { flex-direction:column; align-items:stretch; }
+          .log-table-wrap table, .log-table-wrap thead, .log-table-wrap tbody, .log-table-wrap th, .log-table-wrap td, .log-table-wrap tr { display:block; }
+          .log-table-wrap thead { display:none; }
+          .log-table-wrap tbody td { padding:6px 16px; }
+          .log-table-wrap tbody tr { padding:8px 0; }
+        }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .hidden { display: none !important; }
@@ -1786,16 +1832,34 @@
 
 </div>
 <div id="tab-divelog" class="tab-content hidden max-w-full w-full">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-bold text-white">Dive Log</h3>
-        <div class="flex gap-3">
-            <button onclick="triggerQuickDive()" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
-                <span class="text-lg"></span> Start Dive
+    <div class="dl-toolbar">
+        <div class="dl-title-block">
+            <div class="dl-title-bar"></div>
+            <div>
+                <h3>Dive Log</h3>
+                <p><span class="dl-live-dot"></span><span id="dive-log-summary">No dives recorded</span></p>
+            </div>
+        </div>
+        <div class="dl-actions">
+            <div class="dl-nav-group">
+                <button type="button" class="dl-btn-nav" onclick="exportWord('Divelog.docx')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+                    MiniSpector&reg; DIVE LOG
+                </button>
+                <button type="button" class="dl-btn-nav" onclick="exportWord('OperationDailyLog.docx')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+                    Operation Daily Log
+                </button>
+            </div>
+            <div class="dl-toolbar-divider"></div>
+            <button type="button" class="dl-btn-secondary" onclick="openModal('diveLogs')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                Add Entry
             </button>
-            
-            <button onclick="openModal('diveLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
-            <button onclick="exportWord('Divelog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">MiniSpector&reg; DIVE LOG</button>
-            <button onclick="exportWord('OperationDailyLog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Operation Daily Log</button>
+            <button type="button" class="dl-btn-primary" onclick="triggerQuickDive()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                Start Dive
+            </button>
         </div>
     </div>
     <div id="dive-log-container" class="space-y-3"></div>
