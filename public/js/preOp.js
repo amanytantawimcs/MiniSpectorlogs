@@ -15,7 +15,7 @@ import { stopSimAutoSave } from './simulation/core.js';
 import { PREOP_CHECKLIST } from './simulation/config.js';
 import { scopeName } from './simulation/scopeCatalog.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
-import { renderAutoEquipmentSummary, deriveAutoEquipment } from './projectDataLog.js';
+import { deriveAutoEquipment } from './projectDataLog.js';
 
 // Bridges the shared DOM-based renderSectionCard() into this file's
 // string-concatenation table-building flow. Collapsed by default — this
@@ -93,7 +93,6 @@ export async function pushToOperation() {
   applyProjectIdentityLock();
 
   renderProjectSimInfo();
-  renderAutoEquipmentSummary(state.preOpData);
 
   const camBody = document.getElementById('camLightBody');
   const sensorBody = document.getElementById('sensorBody');

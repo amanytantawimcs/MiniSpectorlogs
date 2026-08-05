@@ -1442,17 +1442,6 @@
             </div>
         </div>
 
-        <!-- Every item here (MiniSpector, Power Supply, Tether, On-Deck Station,
-             HCU, Tablet, PTZ, GVI, UT, FMD, thrusters) already exists in Topology
-             (simulation/sysarch.js's Equipment IDs card) or Packing List &
-             Equipment (pushed from Simulation, with a Main/Standby assignment
-             already made there) — shown read-only here instead of re-entering
-             them. See renderAutoEquipmentSummary() (projectDataLog.js). -->
-        <details open>
-            <summary class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2" style="cursor:pointer">Equipment IDs — Main Set / Backup Set</summary>
-            <div id="auto-equipment-log" class="mt-2"></div>
-        </details>
-
         <div class="flex justify-end mt-4">
             <button type="button" onclick="exportWord('ProjectDataLog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Project Data Log</button>
         </div>

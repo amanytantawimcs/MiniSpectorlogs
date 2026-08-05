@@ -4,7 +4,6 @@
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
 import { restoreSensorTables } from './sensorTable.js';
-import { renderAutoEquipmentSummary } from './projectDataLog.js';
 
 const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
@@ -226,7 +225,6 @@ export function populateUI(data) {
     document.getElementById('nav-finalsetup-item')?.classList.remove('hidden');
     if (window.__renderProjectSimInfo) window.__renderProjectSimInfo();
   }
-  renderAutoEquipmentSummary(state.preOpData);
 
   if (window.__renderLogs) window.__renderLogs();
   if (window.__refreshChecklists) window.__refreshChecklists();
