@@ -19,11 +19,30 @@ function nextAutoId(config, section, existingId) {
   return config.idPrefix + pad(count);
 }
 
+// Small inline icon set for section headers — kept local (not ui.js) since
+// nothing outside the sectioned log modal uses them.
+const SECTION_ICONS = {
+  id: '<circle cx="12" cy="5" r="2.2"/><line x1="12" y1="7.2" x2="12" y2="21"/><path d="M5 12a7 7 0 0 0 14 0"/><line x1="5" y1="12" x2="5" y2="15"/><line x1="19" y1="12" x2="19" y2="15"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  gauge: '<rect x="10" y="3" width="4" height="12" rx="2"/><circle cx="12" cy="17.5" r="3.2"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.6 4.9L3 17.3 5.7 20l6.1-6.1a4 4 0 0 0 4.9-5.6l-2.6 2.6-2-2 2.6-2.6z"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r=".5" fill="currentColor"/>',
+};
+
+function sectionIcon(name) {
+  const path = SECTION_ICONS[name] || SECTION_ICONS.id;
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+}
+
 function fieldRow(field, value) {
   const id = 'm_f_' + field.key;
-  const label = `<label class="text-xs font-semibold" style="color:#9AB0C8">${escapeHtml(field.label)}</label>`;
+  const marker = field.required ? '<span class="req">*</span>' : '<span class="opt">optional</span>';
+  const label = `<label>${escapeHtml(field.label)} ${marker}</label>`;
+  const errorMsg = `<span class="log-error-msg">${escapeHtml(field.label)} is required</span>`;
+
   if (field.type === 'textarea') {
-    return `<div>${label}<textarea id="${id}">${escapeHtml(value || '')}</textarea></div>`;
+    return `<div class="log-field" data-field="${field.key}">${label}<textarea id="${id}">${escapeHtml(value || '')}</textarea>${errorMsg}</div>`;
   }
   if (field.type === 'select') {
     let options = field.options;
@@ -44,42 +63,27 @@ function fieldRow(field, value) {
       ? `<option value="" selected>${options.length ? 'Select a dive…' : 'No dives recorded yet'}</option>`
       : '';
     const opts = options.map(o => `<option value="${escapeHtml(o)}"${o === value ? ' selected' : ''}>${escapeHtml(field.optionLabels?.[o] || o)}</option>`).join('');
-    return `<div>${label}<select id="${id}">${placeholder}${opts}</select></div>`;
+    return `<div class="log-field" data-field="${field.key}">${label}<select id="${id}">${placeholder}${opts}</select>${errorMsg}</div>`;
   }
   if (field.type === 'duration') {
-    return `<div>${label}<input id="${id}" value="${escapeHtml(value || '')}" readonly style="color:#6C88A6"></div>`;
+    // Rendered as a signature "readout" box rather than a plain input — the
+    // input itself stays real (still what setupAutoCalc/saveModal read/write),
+    // just visually swapped for a bigger, glanceable value.
+    return `<div class="log-duration-readout" data-field="${field.key}">
+      <div class="log-readout-label"><span class="log-readout-dot"></span>${escapeHtml(field.label)}</div>
+      <div class="log-readout-value" id="${id}-display">${escapeHtml(value || '—')}</div>
+      <input id="${id}" type="hidden" value="${escapeHtml(value || '')}">
+    </div>`;
   }
   if (field.type === 'photos') {
-    return `<div class="pt-3 mt-2" style="border-top:1px solid rgba(120,166,212,0.16)">
+    return `<div class="log-field" data-field="${field.key}" style="padding-top:8px;border-top:1px solid rgba(120,166,212,0.16)">
       ${label}
       <input type="file" id="${id}" multiple class="block w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold" style="color:#9AB0C8" >
       <p class="text-[10px] mt-1" style="color:#6C88A6">${value?.length ? `Current: ${value.map(p => p.name).join(', ')}` : 'No photos selected'}</p>
     </div>`;
   }
   const disabled = field.disabled ? ' disabled style="opacity:0.5;cursor:not-allowed"' : '';
-  return `<div>${label}<input id="${id}" type="${field.type}" value="${escapeHtml(value || '')}"${disabled}></div>`;
-}
-
-// Groups fields into 2-column rows the way the old app's modal markup did
-// (id+rov together, dates paired, etc) rather than one field per line.
-function pairFields(fields) {
-  const pairKeys = new Set(['num,rov', 'id,by', 'date,startTime', 'endDate,endTime', 'status,tech', 'parts,remaining', 'intTemp,intHumidity', 'rain,objective']);
-  const html = [];
-  let i = 0;
-  while (i < fields.length) {
-    const a = fields[i];
-    const b = fields[i + 1];
-    const pairKey = b ? `${a.key},${b.key}` : null;
-    const twoColTypes = ['text', 'date', 'time', 'select'].includes(a.type) && b && ['text', 'date', 'time', 'select'].includes(b.type);
-    if (pairKey && pairKeys.has(pairKey) && twoColTypes) {
-      html.push(`<div class="grid-2">${fieldRow(a, currentEntryValue(a))}${fieldRow(b, currentEntryValue(b))}</div>`);
-      i += 2;
-    } else {
-      html.push(fieldRow(a, currentEntryValue(a)));
-      i += 1;
-    }
-  }
-  return html.join('');
+  return `<div class="log-field" data-field="${field.key}">${label}<input id="${id}" type="${field.type}" value="${escapeHtml(value || '')}"${disabled}>${errorMsg}</div>`;
 }
 
 let currentEntry = {};
@@ -90,11 +94,56 @@ function currentEntryValue(field) {
   return currentEntry[field.key];
 }
 
+// Builds the section cards (icon + title, one or more field-grid rows, and
+// an optional duration readout) that make up a log entry modal's body.
+function renderSections(config) {
+  return config.sections.map(section => {
+    const rowsHtml = section.rows.map(row => {
+      const cols = row.cols || 2;
+      return `<div class="log-grid${cols === 3 ? ' cols-3' : ''}">${row.fields.map(key => {
+        const field = config.fields.find(f => f.key === key);
+        return fieldRow(field, currentEntryValue(field));
+      }).join('')}</div>`;
+    }).join('');
+    // Duration readout renders full-width below the grid rows, not as a
+    // grid cell — it's a signature wide element in this design, not a form field.
+    const durationHtml = section.durationField
+      ? fieldRow(config.fields.find(f => f.key === section.durationField), currentEntryValue(config.fields.find(f => f.key === section.durationField)))
+      : '';
+    return `<div class="log-section">
+      <div class="log-section-head">${sectionIcon(section.icon)}<h4>${escapeHtml(section.title)}</h4></div>
+      ${rowsHtml}${durationHtml}
+    </div>`;
+  }).join('');
+}
+
+function updateModalProgress() {
+  const config = LOG_CONFIGS[modalSection];
+  if (!config) return;
+  const total = config.fields.length;
+  let filled = 0;
+  config.fields.forEach(field => {
+    const el = document.getElementById('m_f_' + field.key);
+    if (el && String(el.value || '').trim() !== '') filled++;
+  });
+  const pct = total ? Math.round((filled / total) * 100) : 0;
+  const text = document.getElementById('modal-progress-text');
+  const fill = document.getElementById('modal-progress-fill');
+  if (text) text.textContent = `${filled} / ${total} fields`;
+  if (fill) fill.style.width = pct + '%';
+}
+
 export function openModal(section, index = -1) {
   if (state.currentUserRole === 'reviewer') { showToast('View only — editing is not available in review mode.', 'warn'); return; }
   modalSection = section;
   modalIndex = index;
-  if (section === 'shiftLogs') { openShiftModal(index); return; }
+  const progressChip = document.querySelector('.log-progress-chip');
+  if (section === 'shiftLogs') {
+    if (progressChip) progressChip.style.display = 'none';
+    openShiftModal(index);
+    return;
+  }
+  if (progressChip) progressChip.style.display = '';
 
   const config = LOG_CONFIGS[section];
   if (!config) return;
@@ -102,9 +151,10 @@ export function openModal(section, index = -1) {
   currentEntry = index > -1 ? state.currentReportData[section][index] : {};
 
   document.getElementById('modal-title').textContent = config.title;
+  document.getElementById('modal-subtitle').textContent = index > -1 ? 'Editing existing entry' : 'MiniSpector Log — Operations';
   document.getElementById('entry-modal').style.display = 'flex';
   const container = document.getElementById('modal-content-area');
-  container.innerHTML = pairFields(config.fields);
+  container.innerHTML = renderSections(config);
 
   const durationField = config.fields.find(f => f.type === 'duration');
   if (durationField) setupAutoCalc(durationField.durationGroup.map(k => 'm_f_' + k), 'm_f_' + durationField.key);
@@ -114,6 +164,12 @@ export function openModal(section, index = -1) {
     const el = document.getElementById('m_f_' + endDateField.key);
     if (el) el.value = currentEntry[endDateField.fallbackFrom] || '';
   }
+
+  container.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', updateModalProgress);
+    el.addEventListener('change', updateModalProgress);
+  });
+  updateModalProgress();
 }
 
 function setupAutoCalc([startDateId, startTimeId, endDateId, endTimeId], durationId) {
@@ -123,15 +179,18 @@ function setupAutoCalc([startDateId, startTimeId, endDateId, endTimeId], duratio
     const eDate = document.getElementById(endDateId)?.value;
     const eTime = document.getElementById(endTimeId)?.value;
     const durEl = document.getElementById(durationId);
+    const durDisplay = document.getElementById(durationId + '-display');
     if (!durEl || !sDate || !sTime || !eDate || !eTime) return;
     const diffMs = new Date(`${eDate}T${eTime}`) - new Date(`${sDate}T${sTime}`);
-    if (diffMs < 0) { durEl.value = 'Check Dates'; return; }
+    if (diffMs < 0) { durEl.value = 'Check Dates'; if (durDisplay) durDisplay.textContent = 'Check Dates'; return; }
     const totalMins = Math.floor(diffMs / 60000);
     const hrs = Math.floor(totalMins / 60), mins = totalMins % 60;
     const parts = [];
     if (hrs > 0) parts.push(`${hrs} hrs`);
     if (mins > 0) parts.push(`${mins} mins`);
     durEl.value = parts.join(' ') || '0 mins';
+    if (durDisplay) durDisplay.textContent = durEl.value;
+    updateModalProgress();
   };
   [startDateId, startTimeId, endDateId, endTimeId].forEach(id => document.getElementById(id)?.addEventListener('input', calc));
 }
@@ -146,6 +205,21 @@ function saveModal() {
   const config = LOG_CONFIGS[modalSection];
   if (!config) return;
   const getV = (id) => document.getElementById(id)?.value ?? '';
+
+  document.querySelectorAll('#modal-content-area .log-field.invalid').forEach(el => el.classList.remove('invalid'));
+  let firstInvalid = null;
+  config.fields.forEach(field => {
+    if (!field.required) return;
+    if (getV('m_f_' + field.key).trim() !== '') return;
+    const wrap = document.querySelector(`#modal-content-area .log-field[data-field="${field.key}"]`);
+    wrap?.classList.add('invalid');
+    if (!firstInvalid) firstInvalid = wrap;
+  });
+  if (firstInvalid) {
+    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstInvalid.querySelector('input, select, textarea')?.focus();
+    return;
+  }
 
   const newEntry = {};
   config.fields.forEach(field => {

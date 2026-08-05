@@ -14,7 +14,7 @@ export const LOG_CONFIGS = {
     idField: 'num',
     idPrefix: 'DL',
     fields: [
-      { key: 'num', label: 'Dive #', type: 'text', auto: true },
+      { key: 'num', label: 'Dive #', type: 'text', auto: true, required: true },
       { key: 'rov', label: 'ROV', type: 'text' },
       { key: 'date', label: 'Start Date', type: 'date' },
       { key: 'startTime', label: 'Start Time', type: 'time' },
@@ -31,6 +31,12 @@ export const LOG_CONFIGS = {
       { key: 'issues', label: 'Issues', type: 'textarea' },
       { key: 'client', label: 'Client Instructions', type: 'textarea' },
       { key: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+    sections: [
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['num', 'rov'] }] },
+      { title: 'Schedule', icon: 'clock', rows: [{ fields: ['date', 'startTime', 'endDate', 'endTime'] }], durationField: 'duration' },
+      { title: 'Conditions', icon: 'gauge', rows: [{ cols: 3, fields: ['depth', 'intTemp', 'intHumidity'] }, { fields: ['rain', 'area'] }] },
+      { title: 'Mission Details', icon: 'target', rows: [{ fields: ['objective'] }, { fields: ['purpose'] }, { fields: ['issues'] }, { fields: ['client'] }, { fields: ['notes'] }] },
     ],
     columns: [
       { key: 'num', label: 'Dive #', accent: 'text-blue-400 font-bold' },
@@ -52,7 +58,7 @@ export const LOG_CONFIGS = {
     idPrefix: 'SB',
     fields: [
       { key: 'id', label: 'ID', type: 'text', auto: true, disabled: true },
-      { key: 'by', label: 'Logged By', type: 'text' },
+      { key: 'by', label: 'Logged By', type: 'text', required: true },
       { key: 'date', label: 'Start Date', type: 'date' },
       { key: 'startTime', label: 'Start Time', type: 'time' },
       { key: 'endDate', label: 'End Date', type: 'date', fallbackFrom: 'date' },
@@ -60,6 +66,11 @@ export const LOG_CONFIGS = {
       { key: 'duration', label: 'Duration', type: 'duration', durationGroup: ['date', 'startTime', 'endDate', 'endTime'] },
       { key: 'category', label: 'Category', type: 'select', options: ['Mechanical Fault', 'Vessel Operations', 'Weather', 'Crew Change', 'Maintenance', 'Client Request'] },
       { key: 'desc', label: 'Description', type: 'textarea' },
+    ],
+    sections: [
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'by'] }] },
+      { title: 'Schedule', icon: 'clock', rows: [{ fields: ['date', 'startTime', 'endDate', 'endTime'] }], durationField: 'duration' },
+      { title: 'Details', icon: 'gauge', rows: [{ fields: ['category'] }, { fields: ['desc'] }] },
     ],
     columns: [
       { key: 'id', label: 'ID', accent: 'text-yellow-500 font-bold' },
@@ -80,10 +91,15 @@ export const LOG_CONFIGS = {
       { key: 'id', label: 'ID', type: 'text', auto: true, disabled: true },
       { key: 'date', label: 'Date', type: 'date' },
       { key: 'by', label: 'By', type: 'text' },
-      { key: 'task', label: 'Task', type: 'text' },
+      { key: 'task', label: 'Task', type: 'text', required: true },
       { key: 'details', label: 'Details', type: 'textarea' },
       { key: 'parts', label: 'Parts Used', type: 'text' },
       { key: 'remarks', label: 'Remarks', type: 'text' },
+    ],
+    sections: [
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'date'] }] },
+      { title: 'Task', icon: 'wrench', rows: [{ fields: ['task', 'by'] }] },
+      { title: 'Details', icon: 'gauge', rows: [{ fields: ['details'] }, { fields: ['parts', 'remarks'] }] },
     ],
     columns: [
       { key: 'id', label: 'ID', accent: 'text-yellow-500 font-bold' },
@@ -104,13 +120,18 @@ export const LOG_CONFIGS = {
     idField: null,
     fields: [
       { key: 'diveNo', label: 'Dive #', type: 'select', dynamicOptionsFrom: 'diveLogs', dynamicOptionsKey: 'num' },
-      { key: 'desc', label: 'Issue Description', type: 'textarea' },
+      { key: 'desc', label: 'Issue Description', type: 'textarea', required: true },
       { key: 'cause', label: 'Cause', type: 'textarea' },
       { key: 'limReading', label: 'Lim Reading', type: 'text' },
       { key: 'actionTaken', label: 'Action Taken', type: 'select', options: ['Replaced', 'Repaired', 'No Action'] },
       { key: 'contactedBy', label: 'Contacted System Support Personnel', type: 'text' },
       { key: 'malfComponent', label: 'Malfunctioning Component No.', type: 'text' },
       { key: 'replacedComponent', label: 'Replaced Component No.', type: 'text' },
+    ],
+    sections: [
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['diveNo', 'actionTaken'] }] },
+      { title: 'Issue', icon: 'alert', rows: [{ fields: ['desc'] }, { fields: ['cause'] }] },
+      { title: 'Resolution', icon: 'wrench', rows: [{ fields: ['limReading', 'contactedBy'] }, { fields: ['malfComponent', 'replacedComponent'] }] },
     ],
     columns: [
       { key: 'diveNo', label: 'Dive #', accent: 'text-blue-400 font-bold', fallback: '—' },

@@ -140,6 +140,45 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 50; }
         .modal-container { background: #101B2C; border: 1px solid rgba(120,166,212,0.16); border-radius: 16px; width: 95%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 25px; box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9); }
+
+        /* Rich log-entry modal (Dive Log, Standby, Maintenance, Issue Report) */
+        .log-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(120,166,212,0.16); }
+        .log-modal-header-left { display:flex; gap:12px; align-items:flex-start; }
+        .log-modal-bar { width:4px; border-radius:4px; background:#f39124; align-self:stretch; min-height:36px; }
+        .log-modal-title { font-size:20px; font-weight:700; color:#E9F0F8; margin:0 0 2px; }
+        .log-modal-sub { font-size:11.5px; color:#6C88A6; margin:0; }
+        .log-modal-header-right { display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
+        .log-modal-close { background:none; border:none; color:#6C88A6; cursor:pointer; padding:2px; line-height:0; transition:color .15s ease; }
+        .log-modal-close:hover { color:#E9F0F8; }
+        .log-progress-chip { display:flex; align-items:center; gap:8px; font-family: ui-monospace, monospace; font-size:11px; color:#9AB0C8; background:#0C1727; border:1px solid rgba(120,166,212,0.16); padding:5px 10px; border-radius:20px; }
+        .log-progress-track { width:60px; height:4px; border-radius:4px; background:#374151; overflow:hidden; }
+        .log-progress-fill { height:100%; background:#f39124; border-radius:4px; transition:width .3s ease; }
+
+        .log-section { margin-bottom:16px; border:1px solid rgba(120,166,212,0.16); background:rgba(16,27,44,0.6); border-radius:12px; padding:16px 18px 18px; }
+        .log-section-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+        .log-section-head svg { color:#f39124; flex-shrink:0; }
+        .log-section-head h4 { font-size:11.5px; letter-spacing:1.2px; text-transform:uppercase; color:#9AB0C8; margin:0; font-weight:700; }
+
+        .log-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px 16px; }
+        .log-grid.cols-3 { grid-template-columns:repeat(3, 1fr); }
+        .log-grid + .log-grid { margin-top:14px; }
+        .log-field { display:flex; flex-direction:column; gap:6px; }
+        .log-field label { font-size:12px; font-weight:600; color:#9AB0C8; display:flex; align-items:center; gap:4px; }
+        .log-field label .req { color:#f39124; }
+        .log-field label .opt { font-weight:500; font-size:10px; color:#6C88A6; text-transform:uppercase; letter-spacing:.4px; }
+        .log-field input, .log-field select, .log-field textarea { width:100%; background:rgba(12,23,39,0.6); border:1px solid rgba(120,166,212,0.16); color:#E9F0F8; font-size:14px; padding:9px 11px; border-radius:8px; outline:none; transition:border-color .15s ease, box-shadow .15s ease; font-family:inherit; }
+        .log-field input:focus, .log-field select:focus, .log-field textarea:focus { border-color:#459fd9; box-shadow:0 0 0 3px rgba(69,159,217,0.15); }
+        .log-field textarea { min-height:60px; resize:vertical; }
+        .log-field.invalid input, .log-field.invalid select, .log-field.invalid textarea { border-color:#ef4444; background:rgba(239,68,68,0.06); }
+        .log-field .log-error-msg { display:none; align-items:center; gap:5px; font-size:11px; color:#f87171; margin-top:2px; }
+        .log-field.invalid .log-error-msg { display:flex; }
+
+        .log-duration-readout { margin-top:14px; display:flex; align-items:center; justify-content:space-between; background:#0C1727; border:1px solid rgba(120,166,212,0.16); border-radius:10px; padding:12px 16px; }
+        .log-readout-label { display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#6C88A6; font-weight:700; }
+        .log-readout-dot { width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981; animation:log-pulse 2s ease-in-out infinite; }
+        @keyframes log-pulse { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+        .log-readout-value { font-family: ui-monospace, monospace; font-size:20px; font-weight:700; color:#f39124; }
+        .log-readout-value span { font-size:11px; color:#6C88A6; font-weight:500; margin-left:3px; }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .hidden { display: none !important; }
@@ -2025,9 +2064,26 @@
 
     <div id="entry-modal" class="modal-overlay">
         <div class="modal-container">
-            <h3 id="modal-title" class="text-xl font-bold text-white mb-6 border-b border-[rgba(120,166,212,0.16)] pb-2">Entry Details</h3>
+            <div class="log-modal-header">
+                <div class="log-modal-header-left">
+                    <div class="log-modal-bar"></div>
+                    <div>
+                        <p id="modal-title" class="log-modal-title">Entry Details</p>
+                        <p id="modal-subtitle" class="log-modal-sub">MiniSpector Log — Operations</p>
+                    </div>
+                </div>
+                <div class="log-modal-header-right">
+                    <button type="button" class="log-modal-close" aria-label="Close" onclick="closeModal()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                    <div class="log-progress-chip">
+                        <span id="modal-progress-text">0 / 0 fields</span>
+                        <div class="log-progress-track"><div class="log-progress-fill" id="modal-progress-fill" style="width:0%"></div></div>
+                    </div>
+                </div>
+            </div>
             <div id="modal-content-area" class="space-y-4"></div>
-            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-[rgba(120,166,212,0.16)]">
+            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-[rgba(120,166,212,0.16)]">
                 <button onclick="closeModal()" class="px-4 py-2 rounded bg-[#16233A] text-white hover:bg-[#1c2d47]">Cancel</button>
                 <button id="modal-save-btn" class="px-4 py-2 rounded bg-blue-500 text-white font-bold hover:bg-blue-600">Save Entry</button>
             </div>
