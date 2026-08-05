@@ -228,15 +228,18 @@ function buildIssueReport() {
 // Project Data Log (Project Details tab export)
 // ============================================================
 
-// Must match public/js/projectDataLog.js's EQUIPMENT_ITEMS keys exactly —
-// duplicated here (rather than imported) because this script only ever
-// runs standalone at dev time, not as part of the server, and the tag
-// naming (`main` + capitalized key) has to line up with what
+// Manually-entered items must match public/js/projectDataLog.js's
+// EQUIPMENT_ITEMS keys exactly; auto-sourced items (from Packing List &
+// Equipment) must match its AUTO_SENSOR_NAMES/deriveAutoEquipment() key
+// naming. Duplicated here (rather than imported) because this script only
+// ever runs standalone at dev time, not as part of the server, and the tag
+// naming (`main`/`backup` + capitalized key) has to line up with what
 // server/routes/export.js's `projectDataLog` buildData produces at runtime.
-const EQUIPMENT_KEYS = ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd'];
+const MANUAL_EQUIPMENT_KEYS = ['powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet'];
+const AUTO_EQUIPMENT_KEYS = ['minispector', 'ptz', 'gvi', 'ut', 'fmd', 'brush'];
 const EQUIPMENT_LABELS = {
-  minispector: 'MiniSpector', powerSupply: 'Power Supply', tether: 'Tether', onDeckStation: 'On Deck Station',
-  hcu: 'HCU', tablet: 'Tablet', ptz: 'PTZ', gvi: 'GVI (Pencil Camera)', ut: 'UT', fmd: 'FMD',
+  powerSupply: 'Power Supply', tether: 'Tether', onDeckStation: 'On Deck Station', hcu: 'HCU', tablet: 'Tablet',
+  minispector: 'MiniSpector', ptz: 'PTZ', gvi: 'GVI (Pencil Camera)', ut: 'UT', fmd: 'FMD', brush: 'Brush',
 };
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -244,21 +247,21 @@ function plainCell(text, { bold = false, ...opts } = {}) {
   return new TableCell({ ...opts, children: [new Paragraph({ children: [new TextRun({ text, size: 18, bold })] })] });
 }
 
-function equipmentTable(setPrefix) {
-  const header = new TableRow({ tableHeader: true, children: EQUIPMENT_KEYS.map(k => navyHeaderCellSmall(EQUIPMENT_LABELS[k])) });
-  const body = new TableRow({ children: EQUIPMENT_KEYS.map(k => bodyCellSmall(`{${setPrefix}${cap(k)}}`)) });
-  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, body] });
+// One combined Item | Main Set ID | Backup Set ID table (rather than
+// separate per-set tables) — matches the on-screen card's layout.
+function equipmentTable(keys) {
+  const header = new TableRow({ tableHeader: true, children: [navyHeaderCell('Item'), navyHeaderCell('Main Set ID'), navyHeaderCell('Backup Set ID')] });
+  const rows = keys.map((k) => new TableRow({
+    children: [bodyCell(EQUIPMENT_LABELS[k]), bodyCell(`{main${cap(k)}}`), bodyCell(`{backup${cap(k)}}`)],
+  }));
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, ...rows] });
 }
 
-function thrusterTable(setPrefix) {
-  const cols = [...Array.from({ length: 11 }, (_, i) => String(i + 1)), 'Brush'];
-  const header = new TableRow({ tableHeader: true, children: cols.map(c => navyHeaderCellSmall(c)) });
-  const body = new TableRow({
-    children: [
-      ...Array.from({ length: 11 }, (_, i) => bodyCellSmall(`{${setPrefix}Thruster${i + 1}}`)),
-      bodyCellSmall(`{${setPrefix}Brush}`),
-    ],
-  });
+// Thruster count varies per project (whatever was added in Packing List &
+// Equipment) — a repeating loop table rather than a fixed 1-11 grid.
+function thrusterLoopTable(loopName) {
+  const header = new TableRow({ tableHeader: true, children: [navyHeaderCellSmall('Thruster No.'), navyHeaderCellSmall('Serial')] });
+  const body = new TableRow({ children: [bodyCellSmall(`{#${loopName}}{number}`), bodyCellSmall(`{serial}{/${loopName}}`)] });
   return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, body] });
 }
 
@@ -309,14 +312,14 @@ function buildProjectDataLog() {
       missionPara,
       sectionHeading('Weather Conditions'),
       weatherTable,
-      sectionHeading('Main Set'),
-      equipmentTable('main'),
-      sectionHeading('Main Set — Thrusters'),
-      thrusterTable('main'),
-      sectionHeading('Backup Set'),
-      equipmentTable('backup'),
-      sectionHeading('Backup Set — Thrusters'),
-      thrusterTable('backup'),
+      sectionHeading('Equipment IDs — Main Set / Backup Set'),
+      equipmentTable(MANUAL_EQUIPMENT_KEYS),
+      sectionHeading('From Packing List & Equipment'),
+      equipmentTable(AUTO_EQUIPMENT_KEYS),
+      sectionHeading('Thrusters — Main Set'),
+      thrusterLoopTable('mainThrusters'),
+      sectionHeading('Thrusters — Backup Set'),
+      thrusterLoopTable('backupThrusters'),
     ])],
   });
 }

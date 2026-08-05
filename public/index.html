@@ -1442,7 +1442,7 @@
             </div>
         </div>
 
-        <details>
+        <details open>
             <summary class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2" style="cursor:pointer">Equipment IDs — Main Set / Backup Set</summary>
             <div class="rcard mt-2" style="overflow-x:auto">
                 <table class="w-full text-left text-sm" style="color:#E9F0F8">
@@ -1452,6 +1452,14 @@
                     <tbody id="equipment-log-body"></tbody>
                 </table>
             </div>
+
+            <!-- MiniSpector, PTZ, GVI, UT, FMD, Brush and the thruster list all already
+                 exist in Packing List & Equipment (pushed from Simulation, with a
+                 Main/Standby assignment already made there) — shown read-only here
+                 instead of re-entering them. See renderAutoEquipmentSummary()
+                 (projectDataLog.js). -->
+            <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2 mt-4">From Packing List &amp; Equipment</p>
+            <div id="auto-equipment-log"></div>
         </details>
 
         <div class="flex justify-end mt-4">

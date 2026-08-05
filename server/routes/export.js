@@ -419,6 +419,67 @@ function sumDurations(strings) {
   return parts.join(' ');
 }
 
+// Duplicated from public/js/projectDataLog.js's deriveAutoEquipment() —
+// see the comment on TEMPLATE_CONFIGS.projectDataLog for why. rovAssignment
+// on sensors/thrusters is either 'Shared' or 'MS-<number>' (see
+// buildAssignmentSelect in simulation/sensors.js), not a raw ROV number.
+function rovNumberFromAssignment(assignment) {
+  const m = /^MS-(\d+)$/.exec(assignment || '');
+  return m ? m[1] : null;
+}
+const AUTO_SENSOR_NAMES = { ptz: 'PTZ Camera', gvi: 'GVI Camera', ut: 'UT', fmd: 'FMD' };
+function deriveAutoEquipment(preOpData) {
+  const empty = { main: {}, backup: {}, thrustersMain: [], thrustersBackup: [] };
+  if (!preOpData) return empty;
+
+  const roleByRov = {};
+  (preOpData.rovs || []).forEach((r) => { roleByRov[String(r.rovNumber)] = r.role; });
+  const mainRov = (preOpData.rovs || []).find((r) => r.role === 'main');
+  const backupRov = (preOpData.rovs || []).find((r) => r.role !== 'main');
+
+  function findSensor(name) {
+    const mission = (preOpData.sensors || []).find((s) => s.name === name);
+    if (mission) return { value: mission.serialNo || mission.model || '', assignment: mission.rovAssignment || 'Shared' };
+    for (const [num, arr] of Object.entries(preOpData.rovSensors || {})) {
+      const hit = (arr || []).find((s) => s.name === name);
+      if (hit) return { value: hit.model || '', assignment: `MS-${num}` };
+    }
+    return null;
+  }
+
+  function valueForRole(found, role) {
+    if (!found) return '';
+    if (found.assignment === 'Shared') return found.value;
+    return roleByRov[rovNumberFromAssignment(found.assignment)] === role ? found.value : '';
+  }
+
+  const main = { minispector: mainRov?.serial || '' };
+  const backup = { minispector: backupRov?.serial || '' };
+  Object.entries(AUTO_SENSOR_NAMES).forEach(([key, name]) => {
+    const found = findSensor(name);
+    main[key] = valueForRole(found, 'main');
+    backup[key] = valueForRole(found, 'standby');
+  });
+
+  const isBrush = (n) => (n || '').trim().toLowerCase() === 'brush';
+  function thrustersForRole(role) {
+    return (preOpData.thrusters || []).filter((t) => {
+      if (!t.rovAssignment || t.rovAssignment === 'Shared') return true;
+      return roleByRov[rovNumberFromAssignment(t.rovAssignment)] === role;
+    });
+  }
+  const mainThrusters = thrustersForRole('main');
+  const backupThrusters = thrustersForRole('standby');
+  main.brush = mainThrusters.find((t) => isBrush(t.number))?.serial || '';
+  backup.brush = backupThrusters.find((t) => isBrush(t.number))?.serial || '';
+
+  return {
+    main, backup,
+    thrustersMain: mainThrusters.filter((t) => !isBrush(t.number)),
+    thrustersBackup: backupThrusters.filter((t) => !isBrush(t.number)),
+  };
+}
+
 const TEMPLATE_CONFIGS = {
   standby: {
     file: 'Standby.docx',
@@ -516,28 +577,31 @@ const TEMPLATE_CONFIGS = {
   projectDataLog: {
     // Matches the client's ROV Technical Logbook "Project Data Log" page —
     // see the comment on `dive` above for how/why this template was
-    // generated. Equipment key list/casing must match public/js/
-    // projectDataLog.js's EQUIPMENT_ITEMS and scripts/generate-report-templates.js.
+    // generated. Manual equipment keys must match public/js/
+    // projectDataLog.js's EQUIPMENT_ITEMS; auto-sourced keys/derivation must
+    // match that same file's AUTO_SENSOR_NAMES/deriveAutoEquipment() — this
+    // is a CommonJS route and can't import that ES module, so the logic is
+    // duplicated (see deriveAutoEquipment below) rather than shared.
     file: 'ProjectDataLog.docx',
     buildData: (data) => {
       const crew = data.crew || [];
       const operators = {};
       for (let i = 1; i <= 6; i++) operators['operator' + i] = crew[i - 1]?.name || '';
 
-      const eqKeys = ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd'];
       const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+      const manualKeys = ['powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet'];
       const eq = data.projectDataLog?.equipment || {};
       const equipTags = {};
-      eqKeys.forEach((k) => {
+      manualKeys.forEach((k) => {
         equipTags['main' + cap(k)] = eq.main?.[k] || '';
         equipTags['backup' + cap(k)] = eq.backup?.[k] || '';
       });
-      for (let i = 1; i <= 11; i++) {
-        equipTags['mainThruster' + i] = eq.main?.['thruster' + i] || '';
-        equipTags['backupThruster' + i] = eq.backup?.['thruster' + i] || '';
-      }
-      equipTags.mainBrush = eq.main?.brush || '';
-      equipTags.backupBrush = eq.backup?.brush || '';
+
+      const auto = deriveAutoEquipment(data.preOperationData);
+      ['minispector', 'ptz', 'gvi', 'ut', 'fmd', 'brush'].forEach((k) => {
+        equipTags['main' + cap(k)] = auto.main[k] || '';
+        equipTags['backup' + cap(k)] = auto.backup[k] || '';
+      });
 
       return {
         projectName: data.projectName || '',
@@ -554,6 +618,8 @@ const TEMPLATE_CONFIGS = {
         weatherNotes: data.projectDataLog?.weatherNotes || '',
         ...operators,
         ...equipTags,
+        mainThrusters: auto.thrustersMain.map((t) => ({ number: t.number || '', serial: t.serial || '' })),
+        backupThrusters: auto.thrustersBackup.map((t) => ({ number: t.number || '', serial: t.serial || '' })),
       };
     },
   },
