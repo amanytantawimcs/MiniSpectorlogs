@@ -23,6 +23,7 @@ function downloadBlob(blob, filename) {
 const SECTION_FROM_FILENAME = {
   'Faults.docx': 'faultLogs',
   'HSE.docx': 'hseReports',
+  'IssueReport.docx': 'issueReports',
 };
 
 // Standby/Dive/Maintenance have real client-supplied .docx templates

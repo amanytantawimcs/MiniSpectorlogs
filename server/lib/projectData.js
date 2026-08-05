@@ -174,6 +174,15 @@ async function upsertOperationProject(client, { project_code, project_name, crea
     );
   }
 
+  await client.query('DELETE FROM issue_reports WHERE project_id = $1', [projectId]);
+  for (const l of d.issueReports || []) {
+    await client.query(
+      `INSERT INTO issue_reports (project_id, dive_no, description, cause, lim_reading, action_taken, contacted_by, malf_component, replaced_component)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [projectId, l.diveNo || '', l.desc || '', l.cause || '', l.limReading || '', l.actionTaken || '', l.contactedBy || '', l.malfComponent || '', l.replacedComponent || '']
+    );
+  }
+
   return rows[0];
 }
 
@@ -249,7 +258,7 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
 
 async function buildOperationData(project) {
   const projectId = project.id;
-  const [crew, shifts, dives, maint, hse, standby, faults] = await Promise.all([
+  const [crew, shifts, dives, maint, hse, standby, faults, issues] = await Promise.all([
     pool.query('SELECT * FROM crew_members WHERE project_id = $1 ORDER BY id', [projectId]),
     pool.query('SELECT * FROM shift_logs WHERE project_id = $1 ORDER BY id', [projectId]),
     pool.query('SELECT * FROM dive_logs WHERE project_id = $1 ORDER BY id', [projectId]),
@@ -257,6 +266,7 @@ async function buildOperationData(project) {
     pool.query('SELECT * FROM hse_reports WHERE project_id = $1 ORDER BY id', [projectId]),
     pool.query('SELECT * FROM standby_logs WHERE project_id = $1 ORDER BY id', [projectId]),
     pool.query('SELECT * FROM fault_logs WHERE project_id = $1 ORDER BY id', [projectId]),
+    pool.query('SELECT * FROM issue_reports WHERE project_id = $1 ORDER BY id', [projectId]),
   ]);
 
   const diveLogs = dives.rows.map(l => ({
@@ -308,6 +318,10 @@ async function buildOperationData(project) {
     hseReports: hse.rows.map(l => ({ id: l.entry_ref, type: l.type, desc: l.description, action: l.action, root: l.root_cause, prev: l.prevention })),
     standbyLogs,
     faultLogs: faults.rows.map(l => ({ status: l.status, tech: l.tech, desc: l.description, action: l.action, parts: l.parts, remaining: l.remaining, photos: l.photos || [] })),
+    issueReports: issues.rows.map(l => ({
+      diveNo: l.dive_no, desc: l.description, cause: l.cause, limReading: l.lim_reading,
+      actionTaken: l.action_taken, contactedBy: l.contacted_by, malfComponent: l.malf_component, replacedComponent: l.replaced_component,
+    })),
 
     totalStandbyTime: fmtDur(sbMinutes),
     totalDiveDuration: fmtDur(diveMinutes),

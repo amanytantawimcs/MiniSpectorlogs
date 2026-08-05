@@ -101,6 +101,19 @@ const SECTIONS = {
       { label: 'Remaining Issues', get: r => r.remaining },
     ],
   },
+  issueReports: {
+    heading: 'Issue Report',
+    columns: [
+      { label: 'Dive #', get: r => r.diveNo },
+      { label: 'Issue Description', get: r => r.desc },
+      { label: 'Cause', get: r => r.cause },
+      { label: 'Lim Reading', get: r => r.limReading },
+      { label: 'Action Taken', get: r => r.actionTaken },
+      { label: 'Contacted System Support Personnel', get: r => r.contactedBy },
+      { label: 'Malfunctioning Component No.', get: r => r.malfComponent },
+      { label: 'Replaced Component No.', get: r => r.replacedComponent },
+    ],
+  },
   shiftLogs: {
     heading: 'Shift Log',
     columns: [
@@ -115,7 +128,7 @@ const SECTIONS = {
     ],
   },
 };
-const SECTION_ORDER = ['shiftLogs', 'diveLogs', 'standbyLogs', 'maintenanceLogs', 'hseReports', 'faultLogs'];
+const SECTION_ORDER = ['shiftLogs', 'diveLogs', 'standbyLogs', 'maintenanceLogs', 'hseReports', 'faultLogs', 'issueReports'];
 
 function buildOperationDocChildren(data, section) {
   const children = [

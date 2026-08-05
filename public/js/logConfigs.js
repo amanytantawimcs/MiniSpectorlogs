@@ -131,4 +131,32 @@ export const LOG_CONFIGS = {
       { key: '_photos', label: 'Photos' },
     ],
   },
+
+  // Per-dive issue log — mirrors the "Issue Report" page of the client's
+  // ROV Technical Logbook (Dive #, Cause, Lim Reading, Contacted Support
+  // Personnel, Malfunctioning/Replaced Component No.), distinct from the
+  // general faultLogs above which isn't tied to a specific dive.
+  issueReports: {
+    title: 'Issue Report Entry',
+    containerId: 'issue-log-container',
+    emptyMessage: 'No issues recorded.',
+    idField: null,
+    fields: [
+      { key: 'diveNo', label: 'Dive #', type: 'text' },
+      { key: 'desc', label: 'Issue Description', type: 'textarea' },
+      { key: 'cause', label: 'Cause', type: 'textarea' },
+      { key: 'limReading', label: 'Lim Reading', type: 'text' },
+      { key: 'actionTaken', label: 'Action Taken', type: 'select', options: ['Replaced', 'Repaired', 'No Action'] },
+      { key: 'contactedBy', label: 'Contacted System Support Personnel', type: 'text' },
+      { key: 'malfComponent', label: 'Malfunctioning Component No.', type: 'text' },
+      { key: 'replacedComponent', label: 'Replaced Component No.', type: 'text' },
+    ],
+    columns: [
+      { key: 'diveNo', label: 'Dive #', accent: 'text-blue-400 font-bold', fallback: '—' },
+      { key: '_desc', label: 'Issue Description' },
+      { key: 'cause', label: 'Cause', fallback: '-' },
+      { key: 'actionTaken', label: 'Action Taken', fallback: '-' },
+      { key: 'malfComponent', label: 'Malfunctioning Component', fallback: '-' },
+    ],
+  },
 };

@@ -118,6 +118,7 @@ export function collectAllData() {
     hseReports: state.currentReportData.hseReports || [],
     standbyLogs: state.currentReportData.standbyLogs || [],
     faultLogs: state.currentReportData.faultLogs || [],
+    issueReports: state.currentReportData.issueReports || [],
 
     totalStandbyTime: fmtDur(sbMinutes),
     totalDiveDuration: fmtDur(diveMinutes),
@@ -136,6 +137,7 @@ export function populateUI(data) {
     hseReports: data.hseReports || [],
     standbyLogs: data.standbyLogs || [],
     faultLogs: data.faultLogs || [],
+    issueReports: data.issueReports || [],
     shiftLogs: data.shiftLogs || [],
     checklists: data.checklists || { mobilization: {}, startup: {}, preOp: {}, postOp: {}, shutdown: {}, demob: {} },
     finalSetup: data.finalSetup || null,

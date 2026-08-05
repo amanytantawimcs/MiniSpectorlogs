@@ -196,6 +196,23 @@ CREATE TABLE fault_logs (
 );
 CREATE INDEX idx_fault_logs_project ON fault_logs(project_id);
 
+-- Per-dive issue log, distinct from fault_logs above — mirrors the "Issue
+-- Report" page of the client's ROV Technical Logbook, tied to a dive_no
+-- rather than being a standalone technical fault.
+CREATE TABLE issue_reports (
+  id                  BIGSERIAL PRIMARY KEY,
+  project_id          UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  dive_no             TEXT,
+  description         TEXT,
+  cause               TEXT,
+  lim_reading         TEXT,
+  action_taken        TEXT,   -- 'Replaced' | 'Repaired' | 'No Action'
+  contacted_by        TEXT,   -- Contacted System Support Personnel
+  malf_component      TEXT,   -- Malfunctioning Component No.
+  replaced_component  TEXT    -- Replaced Component No.
+);
+CREATE INDEX idx_issue_reports_project ON issue_reports(project_id);
+
 -- ============================================================
 -- SIMULATION (mission planning — collectSimState() / loadSimulationState())
 -- ============================================================

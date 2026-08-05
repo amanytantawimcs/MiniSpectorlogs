@@ -13,7 +13,7 @@ export const state = {
   isDirty: false,
 
   currentReportData: {
-    diveLogs: [], maintenanceLogs: [], hseReports: [], standbyLogs: [], faultLogs: [], shiftLogs: [],
+    diveLogs: [], maintenanceLogs: [], hseReports: [], standbyLogs: [], faultLogs: [], issueReports: [], shiftLogs: [],
     checklists: { mobilization: {}, startup: {}, preOp: {}, postOp: {}, shutdown: {}, demob: {} },
     finalSetup: null,
   },
