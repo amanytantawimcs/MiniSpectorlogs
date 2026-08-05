@@ -93,50 +93,6 @@ export const LOG_CONFIGS = {
     ],
   },
 
-  hseReports: {
-    title: 'HSE Entry',
-    containerId: 'hse-log-container',
-    emptyMessage: 'No HSE incidents.',
-    idField: 'id',
-    idPrefix: 'HSE',
-    fields: [
-      { key: 'id', label: 'ID', type: 'text', auto: true, disabled: true },
-      { key: 'type', label: 'Type', type: 'select', options: ['Incident', 'Near Miss', 'Hazard Observation'] },
-      { key: 'desc', label: 'Description', type: 'textarea' },
-      { key: 'action', label: 'Immediate Action', type: 'textarea' },
-      { key: 'root', label: 'Root Cause', type: 'textarea' },
-      { key: 'prev', label: 'Prevention', type: 'textarea' },
-    ],
-    columns: [
-      { key: 'id', label: 'ID', accent: 'text-red-400 font-bold' },
-      { key: 'type', label: 'Type', accent: 'font-bold' },
-      { key: '_desc', label: 'Description' },
-    ],
-  },
-
-  faultLogs: {
-    title: 'Fault Entry',
-    containerId: 'fault-log-container',
-    emptyMessage: 'No active faults recorded.',
-    idField: null,
-    fields: [
-      { key: 'status', label: 'Status', type: 'select', options: ['Open', 'Closed', 'Monitoring'], optionLabels: { Open: 'Open (Active)', Closed: 'Closed (Resolved)', Monitoring: 'Monitoring' } },
-      { key: 'tech', label: 'Technician', type: 'text' },
-      { key: 'desc', label: 'Fault Description', type: 'textarea' },
-      { key: 'action', label: 'Corrective Action', type: 'textarea' },
-      { key: 'parts', label: 'Parts Used', type: 'text' },
-      { key: 'remaining', label: 'Remaining Issues', type: 'text' },
-      { key: 'photos', label: 'Photos', type: 'photos' },
-    ],
-    columns: [
-      { key: '_status', label: 'Status' },
-      { key: 'desc', label: 'Description', accent: 'font-bold text-white' },
-      { key: 'action', label: 'Action Taken' },
-      { key: 'parts', label: 'Parts', fallback: '-' },
-      { key: '_photos', label: 'Photos' },
-    ],
-  },
-
   // Per-dive issue log — mirrors the "Issue Report" page of the client's
   // ROV Technical Logbook (Dive #, Cause, Lim Reading, Contacted Support
   // Personnel, Malfunctioning/Replaced Component No.), distinct from the

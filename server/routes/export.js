@@ -437,6 +437,30 @@ const TEMPLATE_CONFIGS = {
       };
     },
   },
+  // Dive Log offers two separate export buttons — the client's original
+  // portrait template ("MiniSpector® DIVE LOG") and the newer branded
+  // landscape sheet matching the ROV Technical Logbook's Operation Daily
+  // Log page. Kept as two distinct keys/files rather than one, since they're
+  // different documents with different column sets, not two versions of
+  // the same one.
+  diveClassic: {
+    file: 'Divelog.docx',
+    buildData: (data) => {
+      const logs = data.diveLogs || [];
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        supervisorName: data.supervisorName || '',
+        date: todayFormatted(),
+        totalDiveCount: logs.length,
+        totalDiveDuration: sumDurations(logs.map(r => r.duration)),
+        diveLogs: logs.map(r => ({
+          num: r.num || '', date: r.date || '', startTime: r.startTime || '', endTime: r.endTime || '',
+          duration: r.duration || '', depth: r.depth || '', purpose: r.purpose || '', area: r.area || '', notes: r.notes || '',
+        })),
+      };
+    },
+  },
   dive: {
     // Matches the client's "ROV Technical Logbook" Operation Daily Log page
     // (landscape, MCS-branded, navy header row) — generated once via

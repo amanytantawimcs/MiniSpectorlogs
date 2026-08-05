@@ -20,21 +20,19 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
-const SECTION_FROM_FILENAME = {
-  'Faults.docx': 'faultLogs',
-  'HSE.docx': 'hseReports',
-};
-
-// Standby/Dive/Maintenance have real client-supplied .docx templates
+// Standby/Dive(Classic)/Maintenance have real client-supplied .docx templates
 // (server/templates/*.docx) that get filled via docxtemplater — pixel-
 // identical to the client's own layout/branding, not a recreation of it.
-// Dive Log and Issue Report use generated equivalents matching the client's
-// "ROV Technical Logbook" Operation Daily Log / Issue Report pages (see
-// scripts/generate-report-templates.js). Everything else still goes through
-// the programmatic docx-library builder.
+// Operation Daily Log and Issue Report use generated equivalents matching
+// the client's "ROV Technical Logbook" Operation Daily Log / Issue Report
+// pages (see scripts/generate-report-templates.js). Dive Log offers both:
+// the original template ("MiniSpector® DIVE LOG") and the newer branded
+// sheet ("Operation Daily Log"), as two separate export buttons. Everything
+// else still goes through the programmatic docx-library builder.
 const TEMPLATE_LOG_TYPE_FROM_FILENAME = {
   'Standby.docx': 'standby',
-  'Divelog.docx': 'dive',
+  'Divelog.docx': 'diveClassic',
+  'OperationDailyLog.docx': 'dive',
   'Maintenance.docx': 'maintenance',
   'IssueReport.docx': 'issue',
 };
@@ -53,7 +51,7 @@ export async function exportWord(arg) {
       : await fetch('/api/export/operation-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, section: SECTION_FROM_FILENAME[arg] || 'all' }),
+        body: JSON.stringify({ data, section: 'all' }),
       });
     if (!res.ok) throw new Error(`Server returned ${res.status}`);
     const blob = await res.blob();

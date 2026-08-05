@@ -930,12 +930,10 @@
         <span id="cl-badge-preop" class="nav-tag flex-shrink-0">0/74</span>
     </div>
 
-    <div onclick="showTab('standby', this)" class="nav-item">Standby Time Log</div>
     <div onclick="showTab('divelog', this)" class="nav-item">Dive Log</div>
-    <div onclick="showTab('maint', this)" class="nav-item">Maintenance Log</div>
-    <div onclick="showTab('fault', this)" class="nav-item">Technical / Faults</div>
     <div onclick="showTab('issues', this)" class="nav-item">Issue Report</div>
-    <div onclick="showTab('hse', this)" class="nav-item">HSE Report</div>
+    <div onclick="showTab('standby', this)" class="nav-item">Standby Time Log</div>
+    <div onclick="showTab('maint', this)" class="nav-item">Maintenance Log</div>
 
     <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-postop">
         <div class="flex items-center gap-2">
@@ -1700,7 +1698,8 @@
             </button>
             
             <button onclick="openModal('diveLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button>
-            <button onclick="exportWord('Divelog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button>
+            <button onclick="exportWord('Divelog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">MiniSpector&reg; DIVE LOG</button>
+            <button onclick="exportWord('OperationDailyLog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Operation Daily Log</button>
         </div>
     </div>
     <div id="dive-log-container" class="space-y-3"></div>
@@ -1718,22 +1717,6 @@
     <div id="standby-log-container" class="space-y-3"></div>
 
 </div>        
-<div id="tab-fault" class="tab-content hidden max-w-full w-full">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-bold text-white">Technical Fault Log</h3>
-        <div class="flex gap-3">
-            <button onclick="openModal('faultLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
-                + Add Fault
-            </button>
-            <button onclick="exportWord('Faults.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">
-                Export Report
-            </button>
-        </div>
-    </div>
-
-    <div id="fault-log-container" class="space-y-3">
-        </div>
-</div>
 <div id="tab-issues" class="tab-content hidden max-w-full w-full">
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl font-bold text-white">Issue Report</h3>
@@ -1751,7 +1734,6 @@
         </div>
 </div>
                 <div id="tab-maint" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">Maintenance Log</h3><div class="flex gap-3"><button onclick="openModal('maintenanceLogs')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('Maintenance.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="maint-log-container" class="space-y-3"></div></div>
-                <div id="tab-hse" class="tab-content hidden max-w-full w-full"><div class="flex items-center justify-between mb-4"><h3 class="text-xl font-bold text-white">HSE Report</h3><div class="flex gap-3"><button onclick="openModal('hseReports')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">+ Add Entry</button><button onclick="exportWord('HSE.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Report</button></div></div><div id="hse-log-container" class="space-y-3"></div></div>
                 <div id="tab-checklists" class="tab-content hidden max-w-full w-full">
                     <div id="cl-container"></div>
                 </div>
