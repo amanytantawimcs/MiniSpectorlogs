@@ -453,8 +453,9 @@ function deriveAutoEquipment(preOpData) {
     return roleByRov[rovNumberFromAssignment(found.assignment)] === role ? found.value : '';
   }
 
-  const main = { minispector: mainRov?.serial || '' };
-  const backup = { minispector: backupRov?.serial || '' };
+  const setEq = preOpData.setEquipment || {};
+  const main = { minispector: mainRov?.serial || '', ...(setEq.main || {}) };
+  const backup = { minispector: backupRov?.serial || '', ...(setEq.backup || {}) };
   Object.entries(AUTO_SENSOR_NAMES).forEach(([key, name]) => {
     const found = findSensor(name);
     main[key] = valueForRole(found, 'main');
@@ -577,11 +578,10 @@ const TEMPLATE_CONFIGS = {
   projectDataLog: {
     // Matches the client's ROV Technical Logbook "Project Data Log" page —
     // see the comment on `dive` above for how/why this template was
-    // generated. Manual equipment keys must match public/js/
-    // projectDataLog.js's EQUIPMENT_ITEMS; auto-sourced keys/derivation must
-    // match that same file's AUTO_SENSOR_NAMES/deriveAutoEquipment() — this
-    // is a CommonJS route and can't import that ES module, so the logic is
-    // duplicated (see deriveAutoEquipment below) rather than shared.
+    // generated. Every equipment item is derived from Topology/Packing List
+    // & Equipment (see deriveAutoEquipment above) — key naming must match
+    // public/js/projectDataLog.js's own deriveAutoEquipment(), which this is
+    // a duplicate of (CommonJS route, can't import that ES module).
     file: 'ProjectDataLog.docx',
     buildData: (data) => {
       const crew = data.crew || [];
@@ -589,16 +589,9 @@ const TEMPLATE_CONFIGS = {
       for (let i = 1; i <= 6; i++) operators['operator' + i] = crew[i - 1]?.name || '';
 
       const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-      const manualKeys = ['powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet'];
-      const eq = data.projectDataLog?.equipment || {};
-      const equipTags = {};
-      manualKeys.forEach((k) => {
-        equipTags['main' + cap(k)] = eq.main?.[k] || '';
-        equipTags['backup' + cap(k)] = eq.backup?.[k] || '';
-      });
-
       const auto = deriveAutoEquipment(data.preOperationData);
-      ['minispector', 'ptz', 'gvi', 'ut', 'fmd', 'brush'].forEach((k) => {
+      const equipTags = {};
+      ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd', 'brush'].forEach((k) => {
         equipTags['main' + cap(k)] = auto.main[k] || '';
         equipTags['backup' + cap(k)] = auto.backup[k] || '';
       });

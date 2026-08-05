@@ -15,7 +15,7 @@ import { stopSimAutoSave } from './simulation/core.js';
 import { PREOP_CHECKLIST } from './simulation/config.js';
 import { scopeName } from './simulation/scopeCatalog.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
-import { renderAutoEquipmentSummary } from './projectDataLog.js';
+import { renderAutoEquipmentSummary, deriveAutoEquipment } from './projectDataLog.js';
 
 // Bridges the shared DOM-based renderSectionCard() into this file's
 // string-concatenation table-building flow. Collapsed by default — this
@@ -54,6 +54,10 @@ export async function pushToOperation() {
     issues: (simState.shared.issues || []).map(i => ({ title: i.title || '', description: i.description || '', severity: i.severity || 'medium', status: i.status || 'open' })),
     thrusters: (simState.shared.thrusters || []).map(t => ({ ...t })),
     systemIPs: (simState.shared.sysarch?.systemIPs || []).map(p => ({ ...p })),
+    setEquipment: {
+      main: { ...(simState.shared.sysarch?.setEquipment?.main || {}) },
+      backup: { ...(simState.shared.sysarch?.setEquipment?.backup || {}) },
+    },
     additions: { sensors: [], machines: [] },
     signOff: PREOP_CHECKLIST.map(item => ({ label: item, checked: false })),
     locked: false,
@@ -162,8 +166,11 @@ export function renderPreOpTab() {
         <p class="text-lg font-bold text-[#E9F0F8] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
         <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')} · Pushed ${pushedDate}</p>
       </div>
-      <div class="flex gap-2 flex-wrap justify-end">
-        ${preOpData.rovs.map(r => `<span class="text-xs font-bold px-2.5 py-1 rounded-lg ${r.role === 'main' ? 'text-[#f39124] border border-[rgba(243,145,36,0.4)] bg-[rgba(243,145,36,0.08)]' : 'text-[#9AB0C8] border border-[rgba(120,166,212,0.16)] bg-[#101B2C]'}">MS-${r.rovNumber} · ${r.role.toUpperCase()}</span>`).join('')}
+      <div class="flex flex-col items-end gap-2">
+        <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
+        <div class="flex gap-2 flex-wrap justify-end">
+          ${preOpData.rovs.map(r => `<span class="text-xs font-bold px-2.5 py-1 rounded-lg ${r.role === 'main' ? 'text-[#f39124] border border-[rgba(243,145,36,0.4)] bg-[rgba(243,145,36,0.08)]' : 'text-[#9AB0C8] border border-[rgba(120,166,212,0.16)] bg-[#101B2C]'}">MS-${r.rovNumber} · ${r.role.toUpperCase()}</span>`).join('')}
+        </div>
       </div>
     </div>
     <div class="grid grid-cols-5" style="border-top:1px solid rgba(120,166,212,0.16);">
@@ -253,6 +260,36 @@ export function renderPreOpTab() {
     html += sectionWrap('#f39124', 'Thrusters List', `${allThrusters.length} units`,
       `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Thruster No.</th><th class="${thL}">Serial</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${rows}</tbody></table>`);
   }
+
+  // Same derivation feeding the Project Data Log export's Equipment IDs
+  // table (see deriveAutoEquipment in projectDataLog.js) — shown here too
+  // since this is where the underlying data (ROV serials, PTZ/GVI/UT/FMD
+  // assignment, thrusters, Topology's Equipment IDs card) actually lives.
+  const auto = deriveAutoEquipment(preOpData);
+  const eqRows = [
+    ['MiniSpector', auto.main.minispector, auto.backup.minispector],
+    ['Power Supply', auto.main.powerSupply, auto.backup.powerSupply],
+    ['Tether', auto.main.tether, auto.backup.tether],
+    ['On Deck Station', auto.main.onDeckStation, auto.backup.onDeckStation],
+    ['HCU', auto.main.hcu, auto.backup.hcu],
+    ['Tablet', auto.main.tablet, auto.backup.tablet],
+    ['PTZ', auto.main.ptz, auto.backup.ptz],
+    ['GVI (Pencil Camera)', auto.main.gvi, auto.backup.gvi],
+    ['UT', auto.main.ut, auto.backup.ut],
+    ['FMD', auto.main.fmd, auto.backup.fmd],
+    ['Brush', auto.main.brush, auto.backup.brush],
+  ].map(([label, main, backup]) => `<tr>
+    <td class="px-4 py-2.5 text-sm font-medium text-[#E9F0F8]">${escapeHtml(label)}</td>
+    <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(main || '—')}</td>
+    <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(backup || '—')}</td>
+  </tr>`).join('');
+  const thrusterList = (list) => list.length ? list.map(t => `${escapeHtml(t.number || '—')}: ${escapeHtml(t.serial || '—')}`).join(', ') : '—';
+  html += sectionWrap('#459fd9', 'Equipment IDs — Main Set / Backup Set', 'from Topology & Packing List',
+    `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL}">Item</th><th class="${thL}">Main Set ID</th><th class="${thL}">Backup Set ID</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${eqRows}</tbody></table>
+     <div class="px-4 py-3 text-xs" style="color:#9AB0C8;border-top:1px solid rgba(120,166,212,0.16)">
+       <p><span class="font-bold text-[#6C88A6] uppercase tracking-wider text-[10px]">Thrusters — Main:</span> ${thrusterList(auto.thrustersMain)}</p>
+       <p class="mt-1"><span class="font-bold text-[#6C88A6] uppercase tracking-wider text-[10px]">Thrusters — Backup:</span> ${thrusterList(auto.thrustersBackup)}</p>
+     </div>`);
 
   const allSystemIPs = preOpData.systemIPs || [];
   if (allSystemIPs.length > 0) {

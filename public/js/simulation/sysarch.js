@@ -17,8 +17,22 @@ function ensureSysarch() {
   if (!sa.deliverables) sa.deliverables = {};
   if (!sa.systemIPs || sa.systemIPs.length === 0) sa.systemIPs = DEFAULT_SYSTEM_IPS.map(p => ({ ...p }));
   if (!simState.shared.issues) simState.shared.issues = [];
+  if (!sa.setEquipment) sa.setEquipment = { main: {}, backup: {} };
   return sa;
 }
+
+// Fixed Main Set / Backup Set ID rows for the handful of items that don't
+// fit the generic Equipment table above (no category/qty/batch — just an
+// ID per set) — feeds the Project Data Log export's Equipment IDs table
+// directly (see deriveAutoEquipment() in public/js/projectDataLog.js and
+// its server/routes/export.js duplicate). Key names there must match this.
+const SET_EQUIPMENT_ITEMS = [
+  { key: 'powerSupply', label: 'Power Supply' },
+  { key: 'tether', label: 'Tether' },
+  { key: 'onDeckStation', label: 'On Deck Station' },
+  { key: 'hcu', label: 'HCU' },
+  { key: 'tablet', label: 'Tablet' },
+];
 
 // Collapse state lives outside any render call so it survives the full
 // re-render that follows every edit (renderSimContent() rebuilds every
@@ -189,6 +203,32 @@ function renderEquipment(sa) {
 
     tr.append(tdCat, tdItem, tdSerial, tdQty, tdBatch, tdAss, tdComments);
     tr.appendChild(removeBtnCell(() => { sa.equipment.splice(i, 1); renderSimContent(); scheduleSimSync(); }));
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  body.appendChild(table);
+  return el;
+}
+
+// ---- Equipment IDs — Main Set / Backup Set (fixed items, not user-addable) ----
+function renderSetEquipment(sa) {
+  const { el, body } = card('Equipment IDs — Main Set / Backup Set', 'setEquipment');
+
+  const table = document.createElement('table');
+  table.style.cssText = 'width:100%;border-collapse:collapse';
+  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-left">Main Set ID</th><th class="px-3 py-2 text-left">Backup Set ID</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+
+  SET_EQUIPMENT_ITEMS.forEach(({ key, label }) => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    const tdLabel = document.createElement('td'); tdLabel.className = 'px-3 py-2 text-xs text-gray-200'; tdLabel.textContent = label;
+    const tdMain = document.createElement('td'); tdMain.className = 'px-3 py-2';
+    tdMain.appendChild(textCell(sa.setEquipment.main[key], 'ID...', (v) => { sa.setEquipment.main[key] = v; }, true));
+    const tdBackup = document.createElement('td'); tdBackup.className = 'px-3 py-2';
+    tdBackup.appendChild(textCell(sa.setEquipment.backup[key], 'ID...', (v) => { sa.setEquipment.backup[key] = v; }, true));
+    tr.append(tdLabel, tdMain, tdBackup);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -406,7 +446,7 @@ export function renderSysArchContent(area) {
   sectionHeading.textContent = 'Inspection Systems';
   wrap.appendChild(sectionHeading);
 
-  wrap.append(renderMachines(sa), renderSimStatus(sa), renderDeliverables(sa), renderSystemIPs(sa), renderIssues());
+  wrap.append(renderMachines(sa), renderSetEquipment(sa), renderSimStatus(sa), renderDeliverables(sa), renderSystemIPs(sa), renderIssues());
 
   const payloadsHeading = document.createElement('div');
   payloadsHeading.className = 'text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3 mt-2';

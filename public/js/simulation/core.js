@@ -107,6 +107,10 @@ export function collectSimState() {
       simStatus: (simState.shared.sysarch?.simStatus || []).map(s => ({ ...s })),
       deliverables: { ...(simState.shared.sysarch?.deliverables || {}) },
       systemIPs: (simState.shared.sysarch?.systemIPs || []).map(p => ({ ...p })),
+      setEquipment: {
+        main: { ...(simState.shared.sysarch?.setEquipment?.main || {}) },
+        backup: { ...(simState.shared.sysarch?.setEquipment?.backup || {}) },
+      },
     },
     issues: (simState.shared.issues || []).map(i => ({ ...i })),
     thrusters: (simState.shared.thrusters || []).map(t => ({ ...t })),
@@ -159,6 +163,10 @@ export function loadSimulationState(data, isSimLocked, renderShell = true) {
       simStatus: (data.sysarch?.simStatus || []).map(s => ({ ...s })),
       deliverables: data.sysarch?.deliverables ? { ...data.sysarch.deliverables } : {},
       systemIPs: (data.sysarch?.systemIPs || DEFAULT_SYSTEM_IPS).map(p => ({ ...p })),
+      setEquipment: {
+        main: { ...(data.sysarch?.setEquipment?.main || {}) },
+        backup: { ...(data.sysarch?.setEquipment?.backup || {}) },
+      },
     },
   };
   for (const [num] of simState.selectedROVs.entries()) {

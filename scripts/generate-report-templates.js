@@ -228,15 +228,14 @@ function buildIssueReport() {
 // Project Data Log (Project Details tab export)
 // ============================================================
 
-// Manually-entered items must match public/js/projectDataLog.js's
-// EQUIPMENT_ITEMS keys exactly; auto-sourced items (from Packing List &
-// Equipment) must match its AUTO_SENSOR_NAMES/deriveAutoEquipment() key
-// naming. Duplicated here (rather than imported) because this script only
-// ever runs standalone at dev time, not as part of the server, and the tag
-// naming (`main`/`backup` + capitalized key) has to line up with what
+// Every item here is now derived (deriveAutoEquipment() in public/js/
+// projectDataLog.js — Power Supply/Tether/On-Deck Station/HCU/Tablet come
+// from Topology's Equipment IDs card, the rest from Packing List &
+// Equipment). Duplicated here (rather than imported) because this script
+// only ever runs standalone at dev time, not as part of the server, and the
+// tag naming (`main`/`backup` + capitalized key) has to line up with what
 // server/routes/export.js's `projectDataLog` buildData produces at runtime.
-const MANUAL_EQUIPMENT_KEYS = ['powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet'];
-const AUTO_EQUIPMENT_KEYS = ['minispector', 'ptz', 'gvi', 'ut', 'fmd', 'brush'];
+const EQUIPMENT_KEYS = ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd', 'brush'];
 const EQUIPMENT_LABELS = {
   powerSupply: 'Power Supply', tether: 'Tether', onDeckStation: 'On Deck Station', hcu: 'HCU', tablet: 'Tablet',
   minispector: 'MiniSpector', ptz: 'PTZ', gvi: 'GVI (Pencil Camera)', ut: 'UT', fmd: 'FMD', brush: 'Brush',
@@ -313,9 +312,7 @@ function buildProjectDataLog() {
       sectionHeading('Weather Conditions'),
       weatherTable,
       sectionHeading('Equipment IDs — Main Set / Backup Set'),
-      equipmentTable(MANUAL_EQUIPMENT_KEYS),
-      sectionHeading('From Packing List & Equipment'),
-      equipmentTable(AUTO_EQUIPMENT_KEYS),
+      equipmentTable(EQUIPMENT_KEYS),
       sectionHeading('Thrusters — Main Set'),
       thrusterLoopTable('mainThrusters'),
       sectionHeading('Thrusters — Backup Set'),

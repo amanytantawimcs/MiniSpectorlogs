@@ -4,7 +4,7 @@
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
 import { restoreSensorTables } from './sensorTable.js';
-import { collectEquipmentLog, populateEquipmentLog, renderAutoEquipmentSummary } from './projectDataLog.js';
+import { renderAutoEquipmentSummary } from './projectDataLog.js';
 
 const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
@@ -100,7 +100,6 @@ export function collectAllData() {
       weatherLow: getValue('pdlWeatherLow'),
       weatherHumidity: getValue('pdlWeatherHumidity'),
       weatherNotes: getValue('pdlWeatherNotes'),
-      equipment: collectEquipmentLog(),
     },
 
     auxToolStatus: {},
@@ -179,7 +178,6 @@ export function populateUI(data) {
   setVal('pdlWeatherLow', data.projectDataLog?.weatherLow);
   setVal('pdlWeatherHumidity', data.projectDataLog?.weatherHumidity);
   setVal('pdlWeatherNotes', data.projectDataLog?.weatherNotes);
-  populateEquipmentLog(data.projectDataLog?.equipment);
 
   setVal('preDiveRemarks', data.preDive?.overallRemarks);
 

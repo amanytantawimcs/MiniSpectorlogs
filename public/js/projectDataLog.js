@@ -1,58 +1,14 @@
 // "Project Data Log" card (Project Details tab) — matches the client's ROV
-// Technical Logbook Project Data Log page. Only Power Supply, Tether,
-// On-Deck Station, HCU and Tablet are manually entered here — MiniSpector,
-// PTZ, GVI, UT, FMD and the thruster list all already exist in Packing List
-// & Equipment (preOp.js / state.preOpData, pushed from Simulation) with a
-// Main/Standby assignment already made there, so they're derived live
-// instead of duplicating that data entry.
+// Technical Logbook Project Data Log page. Every Equipment ID item —
+// MiniSpector, Power Supply, Tether, On-Deck Station, HCU, Tablet, PTZ,
+// GVI, UT, FMD, and the thruster list — already exists in Topology
+// (simulation/sysarch.js's Equipment IDs card + the generic Equipment/
+// thruster lists) or Packing List & Equipment (preOp.js / state.preOpData,
+// pushed from Simulation), with a Main/Standby assignment already made
+// there, so everything here is derived live and shown read-only rather
+// than re-entered.
 
 import { escapeHtml } from './ui.js';
-
-export const EQUIPMENT_ITEMS = [
-  { key: 'powerSupply', label: 'Power Supply' },
-  { key: 'tether', label: 'Tether' },
-  { key: 'onDeckStation', label: 'On Deck Station' },
-  { key: 'hcu', label: 'HCU' },
-  { key: 'tablet', label: 'Tablet' },
-];
-
-function idInput(id) {
-  return `<input type="text" id="${id}" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-9 rounded-lg px-2 text-white text-sm w-full font-mono">`;
-}
-
-export function renderEquipmentTable() {
-  const tbody = document.getElementById('equipment-log-body');
-  if (!tbody) return;
-  tbody.innerHTML = EQUIPMENT_ITEMS.map(({ key, label }) => `
-    <tr style="border-bottom:1px solid rgba(120,166,212,0.16)">
-      <td class="px-3 py-1.5 text-sm text-[#E9F0F8]">${escapeHtml(label)}</td>
-      <td class="px-3 py-1.5">${idInput('eq_main_' + key)}</td>
-      <td class="px-3 py-1.5">${idInput('eq_backup_' + key)}</td>
-    </tr>`).join('');
-}
-
-export function collectEquipmentLog() {
-  const getV = (id) => document.getElementById(id)?.value || '';
-  const main = {}, backup = {};
-  EQUIPMENT_ITEMS.forEach(({ key }) => {
-    main[key] = getV('eq_main_' + key);
-    backup[key] = getV('eq_backup_' + key);
-  });
-  return { main, backup };
-}
-
-export function populateEquipmentLog(equipmentLog) {
-  renderEquipmentTable();
-  const setV = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-  EQUIPMENT_ITEMS.forEach(({ key }) => {
-    setV('eq_main_' + key, equipmentLog?.main?.[key]);
-    setV('eq_backup_' + key, equipmentLog?.backup?.[key]);
-  });
-}
-
-// ============================================================
-// Auto-sourced from Packing List & Equipment (read-only)
-// ============================================================
 
 // rovAssignment on sensors/thrusters is either 'Shared' or 'MS-<number>'
 // (see buildAssignmentSelect in simulation/sensors.js) — not a raw ROV
@@ -93,8 +49,9 @@ export function deriveAutoEquipment(preOpData) {
     return roleByRov[rovNumberFromAssignment(found.assignment)] === role ? found.value : '';
   }
 
-  const main = { minispector: mainRov?.serial || '' };
-  const backup = { minispector: backupRov?.serial || '' };
+  const setEq = preOpData.setEquipment || {};
+  const main = { minispector: mainRov?.serial || '', ...(setEq.main || {}) };
+  const backup = { minispector: backupRov?.serial || '', ...(setEq.backup || {}) };
   Object.entries(AUTO_SENSOR_NAMES).forEach(([key, name]) => {
     const found = findSensor(name);
     main[key] = valueForRole(found, 'main');
@@ -146,6 +103,11 @@ export function renderAutoEquipmentSummary(preOpData) {
         </thead>
         <tbody>
           ${autoRow('MiniSpector', main.minispector, backup.minispector)}
+          ${autoRow('Power Supply', main.powerSupply, backup.powerSupply)}
+          ${autoRow('Tether', main.tether, backup.tether)}
+          ${autoRow('On Deck Station', main.onDeckStation, backup.onDeckStation)}
+          ${autoRow('HCU', main.hcu, backup.hcu)}
+          ${autoRow('Tablet', main.tablet, backup.tablet)}
           ${autoRow('PTZ', main.ptz, backup.ptz)}
           ${autoRow('GVI (Pencil Camera)', main.gvi, backup.gvi)}
           ${autoRow('UT', main.ut, backup.ut)}
@@ -161,6 +123,5 @@ export function renderAutoEquipmentSummary(preOpData) {
 }
 
 export function installProjectDataLog() {
-  renderEquipmentTable();
   renderAutoEquipmentSummary(null);
 }
