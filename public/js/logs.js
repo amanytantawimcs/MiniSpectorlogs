@@ -334,7 +334,7 @@ function renderLogTable(section) {
   if (!container) return;
   const logs = state.currentReportData[section] || [];
 
-  if (section === 'diveLogs') updateDiveLogSummary(logs);
+  updateLogSummary(section, logs);
 
   if (logs.length === 0) { container.innerHTML = emptyState(config.emptyMessage); return; }
 
@@ -367,12 +367,28 @@ function renderLogTable(section) {
   container.querySelectorAll('.log-del-btn').forEach(btn => btn.addEventListener('click', () => removeLog(btn.dataset.section, parseInt(btn.dataset.idx, 10))));
 }
 
-function updateDiveLogSummary(logs) {
-  const el = document.getElementById('dive-log-summary');
+// Toolbar live-status line for each log tab (mirrors Dive Log's "N dives
+// logged · M in progress") — "In Progress" tracking only applies to the two
+// log types with a quick-start flow (triggerQuickDive/triggerQuickStandby).
+const LOG_SUMMARY_CONFIG = {
+  diveLogs: { elId: 'dive-log-summary', singular: 'dive logged', plural: 'dives logged', empty: 'No dives recorded', trackInProgress: true },
+  standbyLogs: { elId: 'standby-log-summary', singular: 'standby entry logged', plural: 'standby entries logged', empty: 'No standby time recorded', trackInProgress: true },
+  maintenanceLogs: { elId: 'maint-log-summary', singular: 'maintenance entry logged', plural: 'maintenance entries logged', empty: 'No maintenance recorded' },
+  issueReports: { elId: 'issue-log-summary', singular: 'issue logged', plural: 'issues logged', empty: 'No issues recorded' },
+};
+
+function updateLogSummary(section, logs) {
+  const cfg = LOG_SUMMARY_CONFIG[section];
+  if (!cfg) return;
+  const el = document.getElementById(cfg.elId);
   if (!el) return;
-  if (logs.length === 0) { el.textContent = 'No dives recorded'; return; }
-  const inProgress = logs.filter(l => l.duration === 'In Progress').length;
-  el.textContent = `${logs.length} dive${logs.length !== 1 ? 's' : ''} logged` + (inProgress ? ` · ${inProgress} in progress` : '');
+  if (logs.length === 0) { el.textContent = cfg.empty; return; }
+  let text = `${logs.length} ${logs.length !== 1 ? cfg.plural : cfg.singular}`;
+  if (cfg.trackInProgress) {
+    const inProgress = logs.filter(l => l.duration === 'In Progress').length;
+    if (inProgress) text += ` · ${inProgress} in progress`;
+  }
+  el.textContent = text;
 }
 
 export function renderGrids() {
