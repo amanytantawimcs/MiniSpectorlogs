@@ -1338,8 +1338,8 @@
 
     <!-- Hidden fields kept for collectAllData / updateOperationalId compatibility.
          operationalIdAuto is still computed and saved (used as the export filename
-         fallback and in the generic Word report) — just no longer shown in this tab. -->
-    <input type="hidden" id="startDate">
+         fallback and in the generic Word report) — just no longer shown in this tab.
+         startDate moved to a visible input in the Project Data Log card below. -->
     <input type="hidden" id="endDate">
     <input type="hidden" id="shiftno">
     <input type="hidden" id="weather">
@@ -1387,6 +1387,75 @@
         <div style="border-top:1px solid rgba(120,166,212,0.12);margin-top:18px;padding-top:16px;">
             <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-3">Project Team</p>
             <div id="team-container-op"></div>
+        </div>
+    </div>
+
+    <!-- Project Data Log — matches the client's ROV Technical Logbook Project
+         Data Log page (Job Start Date/Contractor/PM/Mission Details/Weather,
+         plus a Main Set/Backup Set equipment ID inventory). Operators 1-6 for
+         the export are derived from the crew roster above, not re-entered here. -->
+    <div class="chart-card mb-5">
+        <div class="chart-card-header">
+            <span class="chart-title">
+                <span class="chart-dot" style="background:#459fd9"></span>
+                Project Data Log
+            </span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div>
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Job Start Date</label>
+                <input type="date" id="startDate" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+            <div>
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Contractor</label>
+                <input type="text" id="contractor" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+            <div>
+                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Manager</label>
+                <input type="text" id="projectManager" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Mission Details</label>
+            <textarea id="missionDetails" rows="2" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] rounded-lg px-3 py-2 text-white w-full"></textarea>
+        </div>
+
+        <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2">Weather Conditions</p>
+        <div class="grid grid-cols-4 gap-4 mb-5">
+            <div>
+                <label class="block text-[#6C88A6] text-xs mb-1">High Temperature</label>
+                <input type="text" id="pdlWeatherHigh" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+            <div>
+                <label class="block text-[#6C88A6] text-xs mb-1">Low Temperature</label>
+                <input type="text" id="pdlWeatherLow" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+            <div>
+                <label class="block text-[#6C88A6] text-xs mb-1">Humidity</label>
+                <input type="text" id="pdlWeatherHumidity" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+            <div>
+                <label class="block text-[#6C88A6] text-xs mb-1">General Notes</label>
+                <input type="text" id="pdlWeatherNotes" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+            </div>
+        </div>
+
+        <details>
+            <summary class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2" style="cursor:pointer">Equipment IDs — Main Set / Backup Set</summary>
+            <div class="rcard mt-2" style="overflow-x:auto">
+                <table class="w-full text-left text-sm" style="color:#E9F0F8">
+                    <thead class="text-xs uppercase font-bold" style="background:#16233A;color:#9AB0C8">
+                        <tr><th class="px-3 py-2">Item</th><th class="px-3 py-2">Main Set ID</th><th class="px-3 py-2">Backup Set ID</th></tr>
+                    </thead>
+                    <tbody id="equipment-log-body"></tbody>
+                </table>
+            </div>
+        </details>
+
+        <div class="flex justify-end mt-4">
+            <button type="button" onclick="exportWord('ProjectDataLog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Project Data Log</button>
         </div>
     </div>
 

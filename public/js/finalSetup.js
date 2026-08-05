@@ -101,10 +101,17 @@ export function renderFinalSetupTab() {
   const revCount = (fs.revisions || []).length;
   let headerButtonsHtml;
   if (fs._pendingChange) {
+    // Item/Main Set ID/Replacement ID are optional, structured alongside the
+    // freeform reason — feeds the "Replacement Data Log" export (Date | Item
+    // | Main Set ID | Replacement ID), matching the client's ROV Technical
+    // Logbook. Not every logged change is a part swap, so these stay blank-able.
     headerButtonsHtml = `<div class="flex flex-col items-end gap-2">
       <span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(243,145,36,0.15);color:#f39124;">CHANGE IN PROGRESS</span>
-      <div class="flex items-center gap-2">
-        <input id="final-change-reason" type="text" placeholder="Reason for change…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:220px">
+      <div class="flex items-center gap-2 flex-wrap justify-end" style="max-width:520px">
+        <input id="final-change-item" type="text" placeholder="Item (e.g. Tether, Thruster 3)…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:170px">
+        <input id="final-change-old-id" type="text" placeholder="Main Set ID…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
+        <input id="final-change-new-id" type="text" placeholder="Replacement ID…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
+        <input id="final-change-reason" type="text" placeholder="Reason for change…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:180px">
         <button type="button" id="final-commit-btn" style="padding:5px 14px;border-radius:7px;font-size:11px;font-weight:700;background:#f39124;color:#0A111C;border:none;cursor:pointer;">✓ Commit</button>
         <button type="button" id="final-cancel-btn" style="padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;background:rgba(120,166,212,0.12);color:#9AB0C8;border:1px solid rgba(120,166,212,0.3);cursor:pointer;">✗ Cancel</button>
       </div>
@@ -128,7 +135,10 @@ export function renderFinalSetupTab() {
         <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')}</p>
       </div>
       <div class="flex flex-col items-end gap-2">
-        <button type="button" onclick="exportFinalSetupWord()" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Report</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="exportFinalSetupWord()" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Report</button>
+          <button type="button" onclick="exportWord('ReplacementDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Replacement Data Log</button>
+        </div>
         ${headerButtonsHtml}
       </div>
     </div>
@@ -257,6 +267,12 @@ export function renderFinalSetupTab() {
       const label = isBaseline ? 'Initial Confirmation' : `Change #${idx}`;
       const reasonTxt = isBaseline ? 'Setup confirmed for operation.' : escapeHtml(rev.reason || '—');
       const byTxt = rev.by ? `by ${escapeHtml(rev.by)}` : '';
+      // A logged replacement (item + at least one ID typed in) gets its own
+      // line — matches the Date | Item | Main Set ID | Replacement ID shape
+      // the Replacement Data Log export reads from these same fields.
+      const replacementTxt = (!isBaseline && rev.item)
+        ? `<p class="text-xs mt-0.5" style="color:#f39124"><span class="font-semibold">${escapeHtml(rev.item)}</span>: ${escapeHtml(rev.mainSetId || '—')} → ${escapeHtml(rev.replacementId || '—')}</p>`
+        : '';
       return `<div class="flex gap-3" style="position:relative;">
         <div class="flex flex-col items-center flex-shrink-0" style="width:20px;">
           <div style="width:10px;height:10px;border-radius:50%;background:${dotColor};margin-top:2px;flex-shrink:0"></div>
@@ -264,6 +280,7 @@ export function renderFinalSetupTab() {
         </div>
         <div class="pb-4" style="flex:1;min-width:0;">
           <div class="flex items-center gap-2 flex-wrap"><span style="font-size:10px;font-weight:700;color:${dotColor}">${label}</span>${byTxt ? `<span class="text-[10px] text-[#6C88A6]">${byTxt}</span>` : ''}<span class="text-[10px] text-[#6C88A6] ml-auto">${dt}</span></div>
+          ${replacementTxt}
           <p class="text-xs text-[#9AB0C8] mt-0.5">${reasonTxt}</p>
         </div>
       </div>`;
@@ -306,8 +323,11 @@ function commitFinalChange() {
   const fs = state.currentReportData.finalSetup;
   if (!fs) return;
   const reason = document.getElementById('final-change-reason')?.value?.trim() || 'No reason provided';
+  const item = document.getElementById('final-change-item')?.value?.trim() || '';
+  const mainSetId = document.getElementById('final-change-old-id')?.value?.trim() || '';
+  const replacementId = document.getElementById('final-change-new-id')?.value?.trim() || '';
   if (!fs.revisions) fs.revisions = [];
-  fs.revisions.push({ at: new Date().toISOString(), by: state.currentUserId || 'Operator', reason });
+  fs.revisions.push({ at: new Date().toISOString(), by: state.currentUserId || 'Operator', reason, item, mainSetId, replacementId });
   fs._pendingChange = false;
   fs.lockedAt = new Date().toISOString();
   showToast('Operational change logged and setup re-confirmed.', 'success');

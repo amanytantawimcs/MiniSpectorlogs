@@ -14,6 +14,7 @@ import { installChecklists } from './checklists.js';
 import { installDashboard } from './dashboard.js';
 import { installExport } from './export.js';
 import { installProjectTeam } from './projectTeam.js';
+import { installProjectDataLog } from './projectDataLog.js';
 import { installDevPreview } from './devPreviewSim.js'; // TEMPORARY — see file header
 import { flushOfflineQueue, hasPersistedSessionToken } from './api.js';
 
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   installDashboard();
   installExport();
   installProjectTeam();
+  installProjectDataLog();
   installDevPreview(); // TEMPORARY — see devPreviewSim.js header
 
   // Silently re-authenticate and rejoin the last active project if a

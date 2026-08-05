@@ -126,6 +126,38 @@ function landscapeSection(children) {
   };
 }
 
+function portraitSection(children) {
+  return {
+    properties: { margin: { top: 720, bottom: 720, left: 720, right: 720 } },
+    headers: { default: pageHeader() },
+    footers: { default: pageFooter() },
+    children,
+  };
+}
+
+// Smaller header cell for the Project Data Log's dense 10-12 column
+// equipment/thruster rows — a portrait page can't give those the room
+// navyHeaderCell's default size gets on a landscape one.
+function navyHeaderCellSmall(text, opts = {}) {
+  return new TableCell({
+    shading: { type: ShadingType.CLEAR, fill: NAVY },
+    verticalAlign: VerticalAlign.CENTER,
+    ...opts,
+    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text, bold: true, color: 'FFFFFF', size: 13 })] })],
+  });
+}
+function bodyCellSmall(runText, opts = {}) {
+  return new TableCell({
+    verticalAlign: VerticalAlign.CENTER,
+    ...opts,
+    children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: runText, size: 13 })] })],
+  });
+}
+
+function sectionHeading(text) {
+  return new Paragraph({ spacing: { before: 240, after: 100 }, children: [new TextRun({ text, bold: true, size: 20 })] });
+}
+
 // ============================================================
 // Operation Daily Log (Dive Log export)
 // ============================================================
@@ -192,6 +224,122 @@ function buildIssueReport() {
   });
 }
 
+// ============================================================
+// Project Data Log (Project Details tab export)
+// ============================================================
+
+// Must match public/js/projectDataLog.js's EQUIPMENT_ITEMS keys exactly —
+// duplicated here (rather than imported) because this script only ever
+// runs standalone at dev time, not as part of the server, and the tag
+// naming (`main` + capitalized key) has to line up with what
+// server/routes/export.js's `projectDataLog` buildData produces at runtime.
+const EQUIPMENT_KEYS = ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd'];
+const EQUIPMENT_LABELS = {
+  minispector: 'MiniSpector', powerSupply: 'Power Supply', tether: 'Tether', onDeckStation: 'On Deck Station',
+  hcu: 'HCU', tablet: 'Tablet', ptz: 'PTZ', gvi: 'GVI (Pencil Camera)', ut: 'UT', fmd: 'FMD',
+};
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+function plainCell(text, { bold = false, ...opts } = {}) {
+  return new TableCell({ ...opts, children: [new Paragraph({ children: [new TextRun({ text, size: 18, bold })] })] });
+}
+
+function equipmentTable(setPrefix) {
+  const header = new TableRow({ tableHeader: true, children: EQUIPMENT_KEYS.map(k => navyHeaderCellSmall(EQUIPMENT_LABELS[k])) });
+  const body = new TableRow({ children: EQUIPMENT_KEYS.map(k => bodyCellSmall(`{${setPrefix}${cap(k)}}`)) });
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, body] });
+}
+
+function thrusterTable(setPrefix) {
+  const cols = [...Array.from({ length: 11 }, (_, i) => String(i + 1)), 'Brush'];
+  const header = new TableRow({ tableHeader: true, children: cols.map(c => navyHeaderCellSmall(c)) });
+  const body = new TableRow({
+    children: [
+      ...Array.from({ length: 11 }, (_, i) => bodyCellSmall(`{${setPrefix}Thruster${i + 1}}`)),
+      bodyCellSmall(`{${setPrefix}Brush}`),
+    ],
+  });
+  return new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [header, body] });
+}
+
+function buildProjectDataLog() {
+  const infoTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: [navyHeaderCell('Job Start Date'), navyHeaderCell('Dive Location'), navyHeaderCell('Contractor'), navyHeaderCell('Type of Operation'), navyHeaderCell('Project Manager')],
+      }),
+      new TableRow({ children: [bodyCell('{jobStartDate}'), bodyCell('{diveLocation}'), bodyCell('{contractor}'), bodyCell('{typeOfOperation}'), bodyCell('{projectManager}')] }),
+    ],
+  });
+
+  const opRow = (labelA, tagA, labelB, tagB) => new TableRow({
+    children: [plainCell(labelA, { bold: true }), plainCell(tagA), plainCell(labelB, { bold: true }), plainCell(tagB)],
+  });
+  const operatorsTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      opRow('Operator 1', '{operator1}', 'Operator 4', '{operator4}'),
+      opRow('Operator 2', '{operator2}', 'Operator 5', '{operator5}'),
+      opRow('Operator 3', '{operator3}', 'Operator 6', '{operator6}'),
+    ],
+  });
+
+  const missionPara = new Paragraph({
+    spacing: { before: 120, after: 120 },
+    children: [new TextRun({ text: 'Mission Details: ', bold: true }), new TextRun('{missionDetails}')],
+  });
+
+  const weatherTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({ tableHeader: true, children: [navyHeaderCell('High Temperature'), navyHeaderCell('Low Temperature'), navyHeaderCell('Humidity'), navyHeaderCell('General Notes')] }),
+      new TableRow({ children: [bodyCell('{weatherHigh}'), bodyCell('{weatherLow}'), bodyCell('{weatherHumidity}'), bodyCell('{weatherNotes}')] }),
+    ],
+  });
+
+  return new Document({
+    sections: [portraitSection([
+      title('Project Data Log'),
+      projectLine(),
+      infoTable,
+      sectionHeading('Operators'),
+      operatorsTable,
+      missionPara,
+      sectionHeading('Weather Conditions'),
+      weatherTable,
+      sectionHeading('Main Set'),
+      equipmentTable('main'),
+      sectionHeading('Main Set — Thrusters'),
+      thrusterTable('main'),
+      sectionHeading('Backup Set'),
+      equipmentTable('backup'),
+      sectionHeading('Backup Set — Thrusters'),
+      thrusterTable('backup'),
+    ])],
+  });
+}
+
+// ============================================================
+// Replacement Data Log (Final Setup tab export)
+// ============================================================
+
+function buildReplacementDataLog() {
+  const headerRow = new TableRow({
+    tableHeader: true,
+    children: [navyHeaderCell('Date'), navyHeaderCell('Item'), navyHeaderCell('Main Set ID'), navyHeaderCell('Replacement ID')],
+  });
+  const bodyRow = new TableRow({
+    children: [bodyCell('{#revisions}{date}'), bodyCell('{item}'), bodyCell('{mainSetId}'), bodyCell('{replacementId}{/revisions}')],
+  });
+  const table = new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow, bodyRow] });
+
+  return new Document({
+    sections: [portraitSection([title('Replacement Data Log'), projectLine(), table])],
+  });
+}
+
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -202,6 +350,14 @@ async function main() {
   const issueDoc = buildIssueReport();
   fs.writeFileSync(path.join(OUT_DIR, 'IssueReport.docx'), await Packer.toBuffer(issueDoc));
   console.log('Wrote', path.join(OUT_DIR, 'IssueReport.docx'));
+
+  const pdlDoc = buildProjectDataLog();
+  fs.writeFileSync(path.join(OUT_DIR, 'ProjectDataLog.docx'), await Packer.toBuffer(pdlDoc));
+  console.log('Wrote', path.join(OUT_DIR, 'ProjectDataLog.docx'));
+
+  const replDoc = buildReplacementDataLog();
+  fs.writeFileSync(path.join(OUT_DIR, 'ReplacementDataLog.docx'), await Packer.toBuffer(replDoc));
+  console.log('Wrote', path.join(OUT_DIR, 'ReplacementDataLog.docx'));
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

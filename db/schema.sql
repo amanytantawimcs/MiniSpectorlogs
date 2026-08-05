@@ -82,6 +82,7 @@ CREATE TABLE projects (
   pre_operation_data   JSONB,                          -- snapshot pushed from simulation (preOpData)
   final_setup          JSONB,
   remarks              TEXT,
+  project_data_log     JSONB,                          -- {contractor, projectManager, missionDetails, weatherHigh/Low/Humidity/Notes, equipment:{main,backup}}
 
   created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()

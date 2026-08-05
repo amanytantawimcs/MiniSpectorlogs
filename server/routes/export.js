@@ -513,6 +513,68 @@ const TEMPLATE_CONFIGS = {
       };
     },
   },
+  projectDataLog: {
+    // Matches the client's ROV Technical Logbook "Project Data Log" page —
+    // see the comment on `dive` above for how/why this template was
+    // generated. Equipment key list/casing must match public/js/
+    // projectDataLog.js's EQUIPMENT_ITEMS and scripts/generate-report-templates.js.
+    file: 'ProjectDataLog.docx',
+    buildData: (data) => {
+      const crew = data.crew || [];
+      const operators = {};
+      for (let i = 1; i <= 6; i++) operators['operator' + i] = crew[i - 1]?.name || '';
+
+      const eqKeys = ['minispector', 'powerSupply', 'tether', 'onDeckStation', 'hcu', 'tablet', 'ptz', 'gvi', 'ut', 'fmd'];
+      const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+      const eq = data.projectDataLog?.equipment || {};
+      const equipTags = {};
+      eqKeys.forEach((k) => {
+        equipTags['main' + cap(k)] = eq.main?.[k] || '';
+        equipTags['backup' + cap(k)] = eq.backup?.[k] || '';
+      });
+      for (let i = 1; i <= 11; i++) {
+        equipTags['mainThruster' + i] = eq.main?.['thruster' + i] || '';
+        equipTags['backupThruster' + i] = eq.backup?.['thruster' + i] || '';
+      }
+      equipTags.mainBrush = eq.main?.brush || '';
+      equipTags.backupBrush = eq.backup?.brush || '';
+
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        jobStartDate: data.dailySummary?.startDate || '',
+        diveLocation: data.dailySummary?.location || '',
+        contractor: data.projectDataLog?.contractor || '',
+        typeOfOperation: data.dailySummary?.scope || '',
+        projectManager: data.projectDataLog?.projectManager || '',
+        missionDetails: data.projectDataLog?.missionDetails || '',
+        weatherHigh: data.projectDataLog?.weatherHigh || '',
+        weatherLow: data.projectDataLog?.weatherLow || '',
+        weatherHumidity: data.projectDataLog?.weatherHumidity || '',
+        weatherNotes: data.projectDataLog?.weatherNotes || '',
+        ...operators,
+        ...equipTags,
+      };
+    },
+  },
+  replacementLog: {
+    // Matches the client's "Replacement Data Log" page — reads the same
+    // structured item/mainSetId/replacementId fields Final Setup's "Log
+    // Operational Change" now captures (finalSetup.js). Only revisions with
+    // an item set are included — a freeform-only change isn't a replacement.
+    file: 'ReplacementDataLog.docx',
+    buildData: (data) => {
+      const revisions = (data.finalSetup?.revisions || []).filter((r) => r.item);
+      return {
+        projectName: data.projectName || '',
+        projectCode: data.projectCode || '',
+        revisions: revisions.map((r) => ({
+          date: r.at ? r.at.slice(0, 10) : '',
+          item: r.item || '', mainSetId: r.mainSetId || '', replacementId: r.replacementId || '',
+        })),
+      };
+    },
+  },
 };
 
 router.post('/log-template-word', (req, res) => {

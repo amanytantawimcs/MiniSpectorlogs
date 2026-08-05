@@ -4,6 +4,7 @@
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
 import { restoreSensorTables } from './sensorTable.js';
+import { collectEquipmentLog, populateEquipmentLog } from './projectDataLog.js';
 
 const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
@@ -91,6 +92,17 @@ export function collectAllData() {
     preOperationData: state.preOpData || null,
     finalSetup: state.currentReportData.finalSetup || null,
 
+    projectDataLog: {
+      contractor: getValue('contractor'),
+      projectManager: getValue('projectManager'),
+      missionDetails: getValue('missionDetails'),
+      weatherHigh: getValue('pdlWeatherHigh'),
+      weatherLow: getValue('pdlWeatherLow'),
+      weatherHumidity: getValue('pdlWeatherHumidity'),
+      weatherNotes: getValue('pdlWeatherNotes'),
+      equipment: collectEquipmentLog(),
+    },
+
     auxToolStatus: {},
     softwareStatus: { pilot: getCheck('soft_pilot'), hmi: getCheck('soft_hmi'), logging: getCheck('soft_logging') },
     larsStatus: {
@@ -159,6 +171,15 @@ export function populateUI(data) {
   setVal('visibility', data.dailySummary?.visibility);
   setVal('temperature', data.dailySummary?.temperature);
   setVal('shiftno', data.dailySummary?.shiftno);
+
+  setVal('contractor', data.projectDataLog?.contractor);
+  setVal('projectManager', data.projectDataLog?.projectManager);
+  setVal('missionDetails', data.projectDataLog?.missionDetails);
+  setVal('pdlWeatherHigh', data.projectDataLog?.weatherHigh);
+  setVal('pdlWeatherLow', data.projectDataLog?.weatherLow);
+  setVal('pdlWeatherHumidity', data.projectDataLog?.weatherHumidity);
+  setVal('pdlWeatherNotes', data.projectDataLog?.weatherNotes);
+  populateEquipmentLog(data.projectDataLog?.equipment);
 
   setVal('preDiveRemarks', data.preDive?.overallRemarks);
 

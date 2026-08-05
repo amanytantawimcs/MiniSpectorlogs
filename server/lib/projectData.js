@@ -61,13 +61,13 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        operational_id_auto, minispector_number, supervisor_name,
        daily_summary, pre_dive, post_dive, lars_status, software_status,
        aux_tool_status, camera_systems, other_sensors, fault_report, checklists,
-       minispector_systems, pre_operation_data, final_setup, remarks
+       minispector_systems, pre_operation_data, final_setup, remarks, project_data_log
      ) VALUES (
        $1,$2,'operation',$3,$4,$5,$6,
        $7,$8,$9,
        $10,$11,$12,$13,$14,
        $15,$16,$17,$18,$19,
-       $20,$21,$22,$23
+       $20,$21,$22,$23,$24
      )
      ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
@@ -91,7 +91,8 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        minispector_systems = EXCLUDED.minispector_systems,
        pre_operation_data = EXCLUDED.pre_operation_data,
        final_setup = EXCLUDED.final_setup,
-       remarks = EXCLUDED.remarks`}
+       remarks = EXCLUDED.remarks,
+       project_data_log = EXCLUDED.project_data_log`}
      RETURNING id, updated_at`,
     [
       project_code, project_name || '', created_by || '',
@@ -106,6 +107,7 @@ async function upsertOperationProject(client, { project_code, project_name, crea
       d.preOperationData ? JSON.stringify(d.preOperationData) : null,
       d.finalSetup ? JSON.stringify(d.finalSetup) : null,
       d.remarks || '',
+      d.projectDataLog ? JSON.stringify(d.projectDataLog) : null,
     ]
   );
   if (rows.length === 0) return { conflict: true }; // createOnly + project_code already existed
@@ -306,6 +308,7 @@ async function buildOperationData(project) {
     otherSensors: project.other_sensors || [],
     preOperationData: project.pre_operation_data || null,
     finalSetup: project.final_setup || null,
+    projectDataLog: project.project_data_log || null,
 
     auxToolStatus: project.aux_tool_status || {},
     softwareStatus: project.software_status || {},

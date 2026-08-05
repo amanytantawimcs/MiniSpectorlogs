@@ -35,6 +35,8 @@ const TEMPLATE_LOG_TYPE_FROM_FILENAME = {
   'OperationDailyLog.docx': 'dive',
   'Maintenance.docx': 'maintenance',
   'IssueReport.docx': 'issue',
+  'ProjectDataLog.docx': 'projectDataLog',
+  'ReplacementDataLog.docx': 'replacementLog',
 };
 
 export async function exportWord(arg) {
