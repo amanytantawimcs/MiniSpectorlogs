@@ -15,6 +15,28 @@ const BADGE_MAP = {
   demob: 'cl-badge-demob',
 };
 
+// Mobilization+Start-Up and Shutdown+Demobilization share one sidebar item
+// each with a two-button sub-tab bar (#cl-subtabs-<group> in index.html) —
+// Pre-Op/Post-Op stay their own separate sidebar items, so they're not in
+// any group here. Mirrors Operation Logs' switchOpLogsSubTab pattern
+// (logs.js), but folded into setChecklistType() itself since every existing
+// checklist nav item/sub-tab button already calls it — no separate
+// sub-tab-switch function needed.
+const CHECKLIST_GROUPS = { mobStartup: ['mobilization', 'startup'], shutdownDemob: ['shutdown', 'demob'] };
+const clGroupActiveType = { mobStartup: 'mobilization', shutdownDemob: 'shutdown' };
+
+function groupForType(type) {
+  return Object.keys(CHECKLIST_GROUPS).find(g => CHECKLIST_GROUPS[g].includes(type)) || null;
+}
+
+// Sidebar entry point for the two merged groups — remembers whichever
+// sub-tab was last open in that group instead of always resetting to the
+// first one.
+function enterChecklistGroup(group) {
+  setChecklistType(clGroupActiveType[group] || CHECKLIST_GROUPS[group][0]);
+  renderChecklistsTab();
+}
+
 function ensureChecklistsState() {
   if (!state.currentReportData.checklists) {
     state.currentReportData.checklists = { mobilization: {}, startup: {}, preOp: {}, postOp: {}, shutdown: {}, demob: {} };
@@ -93,6 +115,12 @@ function updateChecklistBadge() {
 
 function setChecklistType(type) {
   state.activeChecklistType = type;
+  const activeGroup = groupForType(type);
+  if (activeGroup) clGroupActiveType[activeGroup] = type;
+  Object.keys(CHECKLIST_GROUPS).forEach(g => {
+    document.getElementById(`cl-subtabs-${g}`)?.classList.toggle('hidden', g !== activeGroup);
+    CHECKLIST_GROUPS[g].forEach(t => document.getElementById(`cl-subtab-${t}`)?.classList.toggle('active', g === activeGroup && t === type));
+  });
 }
 
 function switchChecklistDive(type, key) {
@@ -233,5 +261,6 @@ export function renderChecklistsTab() {
 export function installChecklists() {
   window.setChecklistType = setChecklistType;
   window.renderChecklistsTab = renderChecklistsTab;
+  window.enterChecklistGroup = enterChecklistGroup;
   window.__refreshChecklists = renderChecklistsTab;
 }
