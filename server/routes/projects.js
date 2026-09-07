@@ -202,6 +202,54 @@ router.delete('/:code/members/:userId', requireAuth, asyncRoute(async (req, res)
   res.json({ success: true });
 }));
 
+// Quick "add this team member to the crew roster" action from the Project
+// Management tab — name+role only (shift/sign-on/off stay editable via the
+// full Crew Roster in Operation's Project Details tab). Matched by
+// trimmed/lowercased name, same as the read side in GET /:code/members;
+// upserts so re-checking after unchecking (or just changing the role
+// dropdown) doesn't create a duplicate row for the same person. Safe
+// against Operation's Project Details full crew-list replace-on-save:
+// that save always loads existing crew_members first, so a row added here
+// shows up in that list before it's ever overwritten — the only race is if
+// someone had that tab open with a stale list at the exact moment this runs.
+router.post('/:code/crew-member', requireAuth, asyncRoute(async (req, res) => {
+  if (!(await assertCanWrite(req.userId, req.params.code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
+  const { name, role } = req.body || {};
+  if (!name || !name.trim()) return res.status(400).json({ success: false, error: 'name required' });
+  const project = await getProjectRowByCode(req.params.code);
+  if (!project) return res.status(404).json({ success: false, error: 'Project not found' });
+
+  const { rows: existing } = await pool.query(
+    `SELECT id FROM crew_members WHERE project_id = $1 AND lower(trim(name)) = lower(trim($2))`,
+    [project.id, name]
+  );
+  if (existing.length) {
+    await pool.query('UPDATE crew_members SET role = $1 WHERE id = $2', [role || '', existing[0].id]);
+  } else {
+    await pool.query(
+      'INSERT INTO crew_members (project_id, name, role) VALUES ($1, $2, $3)',
+      [project.id, name.trim(), role || '']
+    );
+  }
+  res.json({ success: true });
+}));
+
+router.delete('/:code/crew-member', requireAuth, asyncRoute(async (req, res) => {
+  if (!(await assertCanWrite(req.userId, req.params.code))) {
+    return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
+  }
+  const { name } = req.body || {};
+  const project = await getProjectRowByCode(req.params.code);
+  if (!project || !name) return res.json({ success: true });
+  await pool.query(
+    `DELETE FROM crew_members WHERE project_id = $1 AND lower(trim(name)) = lower(trim($2))`,
+    [project.id, name]
+  );
+  res.json({ success: true });
+}));
+
 // A configured team is an allowlist for *write* access, not for entry —
 // anyone can still open the project, they just land as a viewer if they
 // aren't on the team. { allowed: false } is reserved for a code that

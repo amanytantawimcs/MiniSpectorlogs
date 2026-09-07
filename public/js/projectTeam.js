@@ -6,10 +6,10 @@
 //   - team has 1+ people -> only listed people can edit; everyone else who
 //     opens the project (Join flow) lands as a read-only viewer
 //
-// Embedded directly in each mode's project-identity card: Operation's
-// Project Details tab (#team-container-op) and Simulation's Mission Info
-// "Project details" card (#team-container-sim). Each caller resolves
-// whatever holds its own project code and calls
+// Embedded in each mode's own team container: Operation's Project Details
+// tab (#team-container-op) and Simulation's Project Management tab
+// (#team-container-sim, see simulation/projectManagement.js). Each caller
+// resolves whatever holds its own project code and calls
 // renderProjectTeam(containerId, projectCode).
 
 import { state } from './state.js';
@@ -43,20 +43,42 @@ function explainerHTML(hasTeam, isPending) {
     : `<div class="mb-4" style="font-size:12.5px;color:#9AB0C8;">This project is currently open — anyone logged in can edit it. Add people below to restrict editing to just them; everyone else will still be able to view the project, read-only.</div>`;
 }
 
-function memberRowHTML(m, readOnly) {
+// Same role list as the full Crew Roster editor (Operation's Project
+// Details tab, projectDetails.js) — kept in sync manually since they're
+// two different UIs over the same crew_members.role text column.
+const CREW_ROLES = ['ROV Supervisor', 'ROV Operator', 'ROV Technician', 'CSWIP 3.4U Ispector', 'PRC Engineer', 'Inspection Engineer'];
+
+function crewSectionHTML(m, readOnly, isPending) {
+  if (readOnly) {
+    return m.is_crew
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:10.5px;color:#459fd9;">
+          <i class="ti ti-anchor" aria-hidden="true"></i> Crew${m.crew_role ? ` · ${escapeHtml(m.crew_role)}` : ''}${m.crew_shift ? ` · ${escapeHtml(m.crew_shift)}` : ''}
+          ${(m.sign_on || m.sign_off) ? ` · ${escapeHtml(m.sign_on || '—')}–${escapeHtml(m.sign_off || '—')}` : ''}
+        </span>`
+      : `<span style="display:block;margin-top:3px;font-size:10.5px;color:#6C88A6;">Not on crew roster</span>`;
+  }
+  if (isPending) {
+    return `<span style="display:block;margin-top:3px;font-size:10.5px;color:#6C88A6;">Save the project to manage crew status</span>`;
+  }
+  return `<div class="crew-toggle-wrap" data-user-id="${escapeHtml(m.user_id)}" data-name="${escapeHtml(m.name || '')}" style="display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap;">
+    <label style="display:flex;align-items:center;gap:5px;font-size:10.5px;color:#9AB0C8;cursor:pointer;">
+      <input type="checkbox" class="crew-toggle-checkbox" ${m.is_crew ? 'checked' : ''} />
+      Crew roster
+    </label>
+    <select class="crew-role-mini-select rfield" style="${m.is_crew ? '' : 'display:none;'}height:24px;font-size:10.5px;padding:0 6px;width:auto;">
+      ${CREW_ROLES.map(r => `<option value="${escapeHtml(r)}" ${m.crew_role === r ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('')}
+    </select>
+  </div>`;
+}
+
+function memberRowHTML(m, readOnly, isPending) {
   const isSelf = String(m.user_id) === String(state.currentUserId);
   const displayName = m.name || `User ${m.user_id}`;
-  const crewBadge = m.is_crew
-    ? `<span style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:10.5px;color:#459fd9;">
-        <i class="ti ti-anchor" aria-hidden="true"></i> Crew${m.crew_role ? ` · ${escapeHtml(m.crew_role)}` : ''}${m.crew_shift ? ` · ${escapeHtml(m.crew_shift)}` : ''}
-        ${(m.sign_on || m.sign_off) ? ` · ${escapeHtml(m.sign_on || '—')}–${escapeHtml(m.sign_off || '—')}` : ''}
-      </span>`
-    : `<span style="display:block;margin-top:3px;font-size:10.5px;color:#6C88A6;">Not on crew roster</span>`;
   return `<div class="team-member-row" data-user-id="${escapeHtml(m.user_id)}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.12);margin-bottom:6px;">
     <div style="flex:1;min-width:0;">
       <div style="font-size:13px;font-weight:600;color:#D3DAE3;">${escapeHtml(displayName)}${isSelf ? ' <span style="color:#6C88A6;font-weight:500;">(you)</span>' : ''}</div>
       <div style="font-size:11px;color:#6C88A6;">ID ${escapeHtml(m.user_id)}</div>
-      ${crewBadge}
+      ${crewSectionHTML(m, readOnly, isPending)}
     </div>
     ${readOnly
       ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;color:${m.role === 'viewer' ? '#6C88A6' : '#459fd9'};">${m.role === 'viewer' ? 'Viewer' : 'Operator'}</span>`
@@ -114,7 +136,7 @@ export async function renderProjectTeam(containerId, projectCode) {
         </div>`}
         <div id="team-member-list">
           ${members.length
-            ? members.map(m => memberRowHTML(m, readOnly)).join('')
+            ? members.map(m => memberRowHTML(m, readOnly, isPending)).join('')
             : `<div style="padding:20px;text-align:center;color:#4b5563;font-style:italic;font-size:0.85rem;">No one added yet — this project is open to all logged-in users.</div>`}
         </div>
       </div>
@@ -202,6 +224,36 @@ export async function renderProjectTeam(containerId, projectCode) {
       const r = await api.removeProjectMember(projectCode, userId);
       if (r.success) { showToast('Removed from project team.', 'success'); renderProjectTeam(containerId, projectCode); }
       else showToast('Could not remove member.', 'error');
+    });
+  });
+
+  // Quick "add this member to the crew roster" toggle + role picker — a
+  // lightweight name+role add, distinct from the full Crew Roster editor
+  // (Operation's Project Details tab), which also covers shift/sign-on/off.
+  container.querySelectorAll('.crew-toggle-wrap').forEach(wrap => {
+    const name = wrap.dataset.name;
+    const checkbox = wrap.querySelector('.crew-toggle-checkbox');
+    const roleSelect = wrap.querySelector('.crew-role-mini-select');
+    if (!name) return; // no display name to key a crew row on — nothing to wire up
+
+    checkbox?.addEventListener('change', async () => {
+      if (checkbox.checked) {
+        roleSelect.style.display = '';
+        const r = await api.addToCrew(projectCode, name, roleSelect.value);
+        if (r.success) showToast(`${name} added to crew roster.`, 'success');
+        else { checkbox.checked = false; roleSelect.style.display = 'none'; showToast('Could not add to crew: ' + (r.error || 'unknown error'), 'error'); }
+      } else {
+        roleSelect.style.display = 'none';
+        const r = await api.removeFromCrew(projectCode, name);
+        if (r.success) showToast(`${name} removed from crew roster.`, 'success');
+        else { checkbox.checked = true; roleSelect.style.display = ''; showToast('Could not remove from crew.', 'error'); }
+      }
+    });
+
+    roleSelect?.addEventListener('change', async () => {
+      const r = await api.addToCrew(projectCode, name, roleSelect.value);
+      if (r.success) showToast('Crew role updated.', 'success');
+      else showToast('Could not update crew role.', 'error');
     });
   });
 }

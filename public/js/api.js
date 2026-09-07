@@ -276,6 +276,20 @@ export const api = {
     return { success: r.ok };
   },
 
+  addToCrew: async (projectCode, name, role) => {
+    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/crew-member', {
+      method: 'POST', body: JSON.stringify({ name, role }),
+    });
+    return { success: r.ok, error: r.data.error };
+  },
+
+  removeFromCrew: async (projectCode, name) => {
+    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/crew-member', {
+      method: 'DELETE', body: JSON.stringify({ name }),
+    });
+    return { success: r.ok };
+  },
+
   logSyncAction: async (entry) => {
     const r = await request('/sync-log', { method: 'POST', body: JSON.stringify(entry) });
     return { success: r.ok };
