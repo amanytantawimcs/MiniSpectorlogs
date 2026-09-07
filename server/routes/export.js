@@ -4,6 +4,7 @@ const path = require('path');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
 const { Document, Paragraph, TextRun, HeadingLevel, Packer, Table, TableRow, TableCell, WidthType } = require('docx');
+const ExcelJS = require('exceljs');
 
 const router = express.Router();
 
@@ -156,6 +157,119 @@ function buildOperationDocChildren(data, section) {
   });
 
   return children;
+}
+
+// Colors lifted directly from the client's own "JOB SIMULATION &
+// DELIVERABLES" packing-list template (section header teal, table-header
+// dark teal w/ white text, field-label gray) — see server/lib/... no, this
+// isn't templated from a bundled file; it's rebuilt from scratch with
+// ExcelJS because the client-side SheetJS build this app otherwise uses for
+// Excel exports (public/js/export.js) is the free Community Edition, which
+// cannot write cell styles at all (verified: a fill written with it reads
+// back as no fill). ExcelJS runs server-side and writes fills/fonts/borders
+// correctly, same reason Word exports already go through a server route
+// instead of a client-side library.
+const JSD_SECTION_FILL = 'FFCCEBE8';
+const JSD_HEADER_FILL = 'FF274C47';
+const JSD_LABEL_FILL = 'FFF2F2F2';
+
+function buildJobSimulationDeliverablesWorkbook(data) {
+  const wb = new ExcelJS.Workbook();
+  const sheet = wb.addWorksheet('Job Simulation & Deliverables');
+  sheet.columns = [
+    { width: 10 }, { width: 26 }, { width: 20 }, { width: 22 }, { width: 20 }, { width: 16 }, { width: 32 },
+  ];
+  const COLS = 7;
+  let r = 1;
+
+  const merge = (row, cols = COLS) => { if (cols > 1) sheet.mergeCells(row, 1, row, cols); };
+  const titleRow = () => {
+    const cell = sheet.getCell(r, 1);
+    cell.value = 'JOB SIMULATION & DELIVERABLES';
+    cell.font = { bold: true, size: 14 };
+    merge(r);
+    r++;
+  };
+  const blank = () => { r++; };
+  const section = (label) => {
+    const cell = sheet.getCell(r, 1);
+    cell.value = label;
+    cell.font = { bold: true };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_SECTION_FILL } };
+    merge(r);
+    r++;
+  };
+  const field = (label, value) => {
+    const labelCell = sheet.getCell(r, 1);
+    labelCell.value = label;
+    labelCell.font = { bold: true };
+    labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_LABEL_FILL } };
+    sheet.getCell(r, 2).value = value ?? '';
+    r++;
+  };
+  const tableHeader = (labels) => {
+    labels.forEach((label, i) => {
+      const cell = sheet.getCell(r, i + 1);
+      cell.value = label;
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_HEADER_FILL } };
+    });
+    r++;
+  };
+  const dataRow = (values) => {
+    values.forEach((v, i) => { sheet.getCell(r, i + 1).value = v; });
+    r++;
+  };
+
+  const del = data.sysarch?.deliverables || {};
+
+  titleRow();
+  blank();
+  section('PROJECT DETAILS');
+  field('Project Name:', data.projectName);
+  field('Job Code:', data.projectCode);
+  field('Project Scope:', data.scopeName || data.projectScope);
+  field('Date:', data.reportDate);
+  field('Project Manager:', '');
+  field('Job Supervisor:', '');
+  field('Job Team:', '');
+  field('Prepared By [IT Representative]:', data.preparedBy);
+  field('Delivered To:', del.deliveredTo);
+  field('Technical Support Approval:', '');
+  blank();
+
+  section('MACHINES');
+  tableHeader(['Item #', 'Machine Name', 'IP Address', 'Installed Software', 'Software Version', 'Activated', 'Comments']);
+  (data.sysarch?.machines || []).forEach((m, i) => dataRow([i + 1, m.name || '', m.ip || '', m.software || '', m.version || '', m.activated || '', m.comments || '']));
+  blank();
+
+  section('HARDWARE & CONSUMABLES');
+  tableHeader(['Item #', 'Item', 'Quantity', 'Comments']);
+  (data.sysarch?.equipment || []).forEach((e, i) => dataRow([i + 1, e.item || '', e.qty || 0, e.comments || '']));
+  blank();
+
+  section('DELIVERABLES');
+  field('Delivered To:', del.deliveredTo);
+  field('Date:', del.date);
+  field('Wallet HDD', del.walletHDD || 0);
+  field('Other HDD', del.otherHDD || 0);
+  field('Memory Flash Drives', del.flashDrives || 0);
+  blank();
+
+  section('DELIVERABLES NOTES');
+  if ((del.notes || []).length) del.notes.forEach(n => dataRow([n]));
+  else dataRow(['']);
+  blank();
+
+  section('SIMULATION NOTES');
+  field('Simulation Date:', '');
+  blank();
+
+  section('SIMULATION STATUS');
+  tableHeader(['Item #', 'Machine Name', 'Testing Scenario', 'Expected Outcome', '% Complete', 'Status', 'Comments']);
+  (data.sysarch?.simStatus || []).forEach((s, i) => dataRow([i + 1, s.machine || '', s.scenario || '', s.expected || '', s.completion || 0, s.status || '', s.comments || '']));
+
+  return wb;
 }
 
 function buildSimulationDocChildren(data) {
@@ -359,6 +473,24 @@ router.post('/simulation-word', async (req, res) => {
     });
     res.send(buffer);
   } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/job-simulation-deliverables-excel', async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ success: false, error: 'Missing data' });
+    const wb = buildJobSimulationDeliverablesWorkbook(data);
+    const buffer = await wb.xlsx.writeBuffer();
+    const key = data.projectCode || 'SIM';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="JobSimulationDeliverables-${key}.xlsx"`,
+    });
+    res.send(buffer);
+  } catch (e) {
+    console.error('[export/job-simulation-deliverables-excel]', e);
     res.status(500).json({ success: false, error: e.message });
   }
 });

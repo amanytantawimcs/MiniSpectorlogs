@@ -155,75 +155,33 @@ export function exportSimulationExcel() {
   XLSX.writeFile(wb, `PackingList-${data.projectCode || 'SIM'}.xlsx`);
 }
 
-// Field/section layout ported from the client's own "JOB SIMULATION &
-// DELIVERABLES" packing-list template (single "Packing List" sheet, plus a
-// "Lookup" sheet of dropdown-validation lists we can't reproduce — SheetJS's
-// free client-side build doesn't support writing data validation). Rows here
-// mirror that template's section headers/columns 1:1 where the app actually
-// has the data (machines, equipment, deliverables, simulation status);
-// fields the app has no source for (Project Manager, Job Supervisor, Job
-// Team, Technical Support Approval, Simulation Notes/Date) are left as
-// blank cells for manual fill-in, same as the original template.
-export function exportJobSimulationDeliverables() {
-  const data = collectSimState();
-  const del = data.sysarch.deliverables || {};
-  const rows = [];
-  const blank = () => rows.push([]);
-  const section = (title) => rows.push([title]);
-  const field = (label, value) => rows.push([label, value ?? '']);
-
-  rows.push(['JOB SIMULATION & DELIVERABLES']);
-  blank();
-  section('PROJECT DETAILS');
-  field('Project Name:', data.projectName);
-  field('Job Code:', data.projectCode);
-  field('Project Scope:', data.scopeName || data.projectScope);
-  field('Date:', data.reportDate);
-  field('Project Manager:', '');
-  field('Job Supervisor:', '');
-  field('Job Team:', '');
-  field('Prepared By [IT Representative]:', state.currentUserName);
-  field('Delivered To:', del.deliveredTo);
-  field('Technical Support Approval:', '');
-  blank();
-
-  section('MACHINES');
-  rows.push(['Item #', 'Machine Name', 'IP Address', 'Installed Software', 'Software Version', 'Activated', 'Comments']);
-  (data.sysarch.machines || []).forEach((m, i) => rows.push([i + 1, m.name || '', m.ip || '', m.software || '', m.version || '', m.activated || '', m.comments || '']));
-  blank();
-
-  section('HARDWARE & CONSUMABLES');
-  rows.push(['Item #', 'Item', 'Quantity', 'Comments']);
-  (data.sysarch.equipment || []).forEach((e, i) => rows.push([i + 1, e.item || '', e.qty || 0, e.comments || '']));
-  blank();
-
-  section('DELIVERABLES');
-  field('Delivered To:', del.deliveredTo);
-  field('Date:', del.date);
-  field('Wallet HDD', del.walletHDD || 0);
-  field('Other HDD', del.otherHDD || 0);
-  field('Memory Flash Drives', del.flashDrives || 0);
-  blank();
-
-  section('DELIVERABLES NOTES');
-  if ((del.notes || []).length) del.notes.forEach(n => rows.push([n]));
-  else rows.push(['']);
-  blank();
-
-  section('SIMULATION NOTES');
-  field('Simulation Date:', '');
-  rows.push(['']);
-  blank();
-
-  section('SIMULATION STATUS');
-  rows.push(['Item #', 'Machine Name', 'Testing Scenario', 'Expected Outcome', '% Complete', 'Status', 'Comments']);
-  (data.sysarch.simStatus || []).forEach((s, i) => rows.push([i + 1, s.machine || '', s.scenario || '', s.expected || '', s.completion || 0, s.status || '', s.comments || '']));
-
-  const sheet = XLSX.utils.aoa_to_sheet(rows);
-  sheet['!cols'] = [{ wch: 22 }, { wch: 26 }, { wch: 18 }, { wch: 20 }, { wch: 18 }, { wch: 14 }, { wch: 30 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, sheet, 'Job Simulation & Deliverables');
-  XLSX.writeFile(wb, `JobSimulationDeliverables-${data.projectCode || 'SIM'}.xlsx`);
+// Field/section layout and colors ported from the client's own "JOB
+// SIMULATION & DELIVERABLES" packing-list template (section header teal,
+// table-header dark teal, field-label gray — see server/routes/export.js's
+// buildJobSimulationDeliverablesWorkbook). Goes through a server route
+// instead of the client-side SheetJS library the other Excel export uses
+// because that library's free build can't write cell colors at all
+// (verified: a fill written with it silently reads back as none) — same
+// reason Word exports already go through the server rather than a
+// client-side library. Fields the app has no source for (Project Manager,
+// Job Supervisor, Job Team, Technical Support Approval, Simulation Notes/
+// Date) are left as blank cells for manual fill-in, same as the original
+// template.
+export async function exportJobSimulationDeliverables() {
+  const data = { ...collectSimState(), preparedBy: state.currentUserName };
+  showToast('Generating Job Simulation & Deliverables…', 'info');
+  try {
+    const res = await fetch('/api/export/job-simulation-deliverables-excel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data }),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const blob = await res.blob();
+    downloadBlob(blob, `JobSimulationDeliverables-${data.projectCode || 'SIM'}.xlsx`);
+  } catch (e) {
+    showToast('Export failed: ' + e.message, 'error');
+  }
 }
 
 export function saveSimulationJSON() {
