@@ -371,7 +371,7 @@
         aside {
             background: #17253D; border-color: #33455F;
             width: 280px; margin: 0; border-radius: 0 20px 20px 0; border: none; overflow: visible;
-            border-right: 1px solid #33455F;
+            border-right: 2px solid #F9921C;
             backdrop-filter: none; box-shadow: none;
         }
         .blur-me { background: #0D111C !important; }
@@ -509,7 +509,7 @@
         }
         .rcard-head { border-bottom-color: rgba(120,166,212,0.16) !important; }
         .rcard-bar { width: 3px; height: 15px; border-radius: 3px; background: #F0912D; flex-shrink: 0; }
-        .rcard-title { font-size: 14.5px; font-weight: 600; color: #E9F0F8; }
+        .rcard-title { font-size: 17px; font-weight: 600; color: #E9F0F8; }
         .rcard-hint { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #6C88A6; }
 
         /* Collapsible rcard sections (renderSectionCard's collapsed:true option,
@@ -1970,8 +1970,8 @@
                                 <label class="rfield-label" style="margin-bottom:0;">Description</label>
                                 <span id="sim-desc-count" class="text-[10px] font-mono text-[#6C88A6]">0 / 280</span>
                             </div>
-                            <textarea id="sim-project-desc" rows="2" maxlength="280" placeholder="Optional mission description..."
-                                class="w-full rfield placeholder-[#6C88A6] resize-none" style="height:auto;padding-top:10px;padding-bottom:10px;"></textarea>
+                            <textarea id="sim-project-desc" rows="1" maxlength="280" placeholder="Optional mission description..."
+                                class="w-full rfield placeholder-[#6C88A6] resize-y" style="height:42px;min-height:42px;padding-top:10px;padding-bottom:10px;"></textarea>
                         </div>
                         <!-- Project Team hidden for now (per request) — team-container-sim and
                              its render/data logic are untouched, just not shown/called here. -->
