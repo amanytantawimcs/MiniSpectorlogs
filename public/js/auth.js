@@ -178,7 +178,6 @@ function showModeScreen(userName) {
 
   document.getElementById('btn-mode-new').onclick = () => enterSimMode(userName);
   document.getElementById('btn-mode-join-btn').onclick = () => modeShowStep('mode-step2-join');
-  document.getElementById('btn-skip-to-op').onclick = () => enterOpMode(userName);
   document.getElementById('btn-back-join').onclick = () => modeShowStep('mode-step1');
   document.getElementById('btn-join-confirm').onclick = () => handleJoin(userName);
 }
@@ -227,11 +226,11 @@ function setLoginPasscodeMode(hasPasscode) {
   const confirmWrap = document.getElementById('login-pin-confirm-wrap');
   const hint = document.getElementById('login-pin-hint');
   if (hasPasscode) {
-    label.firstChild.textContent = 'Passcode ';
+    label.textContent = 'Passcode';
     confirmWrap.classList.add('hidden');
     hint.classList.add('hidden');
   } else {
-    label.firstChild.textContent = 'Set a Passcode ';
+    label.textContent = 'Set a passcode';
     confirmWrap.classList.remove('hidden');
     hint.classList.remove('hidden');
   }
@@ -273,6 +272,7 @@ export function installAuth() {
   document.getElementById('btn-reset-passcode')?.addEventListener('click', showPasscodeResetGuidance);
 
   document.getElementById('btn-login').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-login');
     const userId = idInput.value.trim();
     const pin = document.getElementById('login-pin-input').value.trim();
     const pinConfirm = document.getElementById('login-pin-confirm-input').value.trim();
@@ -284,6 +284,10 @@ export function installAuth() {
       errEl.classList.remove('hidden');
       return;
     }
+
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Signing in…';
 
     try {
       const result = await lookupUser(userId);
@@ -335,6 +339,9 @@ export function installAuth() {
       console.error('Login error:', err);
       errEl.innerText = 'System error. Please try again.';
       errEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalLabel;
     }
   });
 
