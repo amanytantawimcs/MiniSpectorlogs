@@ -6,11 +6,11 @@ import { state } from './state.js';
 import { escapeHtml } from './ui.js';
 import { CHECKLISTS } from './checklistConfig.js';
 
+// Pre-Op/Post-Op have no sidebar badge (plain nav items, no icon/count) —
+// only the four job-once checklist types show progress in the sidebar.
 const BADGE_MAP = {
   mobilization: 'cl-badge-mobilization',
   startup: 'cl-badge-startup',
-  preOp: 'cl-badge-preop',
-  postOp: 'cl-badge-postop',
   shutdown: 'cl-badge-shutdown',
   demob: 'cl-badge-demob',
 };

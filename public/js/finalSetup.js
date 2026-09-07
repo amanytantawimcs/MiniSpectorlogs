@@ -65,7 +65,7 @@ export function renderFinalSetupTab() {
   if (!state.preOpData || !state.preOpData.rovs || state.preOpData.rovs.length === 0) {
     el.innerHTML = `<div class="flex flex-col items-center justify-center py-24 text-center">
       <p class="text-[#6C88A6] font-semibold">No Pre-Operation Data</p>
-      <p class="text-[#6C88A6] text-sm mt-1">Push from Simulation to populate Final Setup.</p>
+      <p class="text-[#6C88A6] text-sm mt-1">This fills in automatically once you open Operation from Simulation.</p>
     </div>`;
     return;
   }
@@ -128,12 +128,8 @@ export function renderFinalSetupTab() {
     </div>`;
   }
   header.innerHTML = `
-    <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:rgba(243,145,36,0.15);">
-      <div>
-        <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-0.5">Final Setup Configuration</p>
-        <p class="text-lg font-bold text-[#D3DAE3] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
-        <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')}</p>
-      </div>
+    <div class="flex items-center justify-between px-6 py-3.5 flex-wrap gap-3">
+      <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest">Final Setup Configuration</p>
       <div class="flex flex-col items-end gap-2">
         <div class="flex items-center gap-2">
           <button type="button" onclick="exportFinalSetupWord()" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Report</button>

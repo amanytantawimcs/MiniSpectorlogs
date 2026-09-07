@@ -344,6 +344,13 @@
         #nav-simulation-section div[role="group"] + div[role="group"] {
             border-top: 1px solid #33455F; margin-top: 8px; padding-top: 8px;
         }
+        /* Same divider, between the Mission/MiniSpectors/Equipment setup/
+           Topology group and the rest of the sidebar — the Operations/
+           Close-Out/etc. section labels that used to separate these are
+           gone, so this line is what marks the boundary now. */
+        #nav-simulation-section + #nav-operation-sections {
+            border-top: 1px solid #33455F; margin-top: 8px; padding-top: 8px;
+        }
 
         /* Brand block: logo + product name centered, divider below
            separating it from nav. */
@@ -1047,56 +1054,6 @@
         </div>
 <nav id="main-sidebar-nav" class="flex-1 overflow-y-auto py-4 space-y-1 px-2" aria-label="Main navigation">
 
-    <div id="nav-operation-sections">
-
-    <!-- ── Project (also covers Crew Roster / Shift Log — merged in) ──── -->
-    <div onclick="showTab('project', this); renderProjectTeamOp();" class="nav-item active">Project Details</div>
-
-    <!-- Packing List & Equipment (visible; content populated after simulation push) -->
-    <div id="nav-preop-item" onclick="showTab('preop', this); renderPreOpTab();" class="nav-item">Packing List &amp; Equipment</div>
-
-    <!-- Final Setup (shown after simulation push) -->
-    <div id="nav-finalsetup-item" onclick="showTab('finalsetup', this); renderFinalSetupTab();" class="nav-item flex items-center gap-2 hidden" style="background:rgba(243,145,36,0.06);border-left:2px solid rgba(243,145,36,0.5);">
-        <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#f39124]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-        <span class="text-[#f39124] font-medium">Final Setup</span>
-    </div>
-
-    <!-- ── Mobilization & Start-Up ──────────────────────── -->
-    <div class="sim-nav-label sim-nav-label-accent">Mobilization &amp; Start-Up</div>
-    <div onclick="showTab('checklists', this); enterChecklistGroup('mobStartup');" class="nav-item" id="nav-cl-mobstartup">Mobilization &amp; Start-Up</div>
-
-    <!-- ── Operations ────────────────────────────────── -->
-    <div class="sim-nav-label sim-nav-label-accent">Operations</div>
-
-    <div onclick="setChecklistType('preOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-preop">
-        <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-            <span>Pre-Op Checklist</span>
-        </div>
-        <span id="cl-badge-preop" class="nav-tag flex-shrink-0">0/74</span>
-    </div>
-
-    <div onclick="showTab('oplogs', this); enterOperationLogs();" class="nav-item">Operation Logs</div>
-
-    <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item flex items-center justify-between" id="nav-cl-postop">
-        <div class="flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 flex-shrink-0 text-[#6C88A6]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-            <span>Post-Op Checklist</span>
-        </div>
-        <span id="cl-badge-postop" class="nav-tag flex-shrink-0">0/19</span>
-    </div>
-
-    <!-- ── Close-Out ──────────────────────────────────── -->
-    <div class="sim-nav-label sim-nav-label-accent">Close-Out</div>
-    <div onclick="showTab('lars', this)" class="nav-item">LARS Status</div>
-    <div onclick="showTab('checklists', this); enterChecklistGroup('shutdownDemob');" class="nav-item" id="nav-cl-shutdowndemob">Shutdown &amp; Demobilization</div>
-
-    <div id="nav-dash" onclick="showTab('infographics', this); renderInfographics();" class="hidden nav-item">
-        <span class="nav-icon">📊</span> Infographics
-    </div>
-
-    </div><!-- end nav-operation-sections -->
-
     <div id="nav-simulation-section" class="hidden">
         <div id="nav-prep-group" role="group" aria-label="Preparation">
         <div onclick="goToPreparationTab('mission')" class="nav-item" id="sim-nav-mission" data-tooltip="Mission information">
@@ -1118,6 +1075,31 @@
         </div>
         </div>
     </div>
+
+    <div id="nav-operation-sections">
+
+    <!-- ── Project (also covers Crew Roster / Shift Log — merged in) ──── -->
+    <div onclick="showTab('project', this); renderProjectTeamOp();" class="nav-item active">Project Details</div>
+
+    <!-- Packing List & Equipment + Final Setup — one item, two sub-tabs (see #tab-preopfinal) -->
+    <div onclick="showTab('preopfinal', this); enterPreOpFinal();" class="nav-item">Packing List &amp; Final Setup</div>
+
+    <div onclick="showTab('checklists', this); enterChecklistGroup('mobStartup');" class="nav-item" id="nav-cl-mobstartup">Mobilization &amp; Start-Up</div>
+
+    <div onclick="setChecklistType('preOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item" id="nav-cl-preop">Pre-Op Checklist</div>
+
+    <div onclick="showTab('oplogs', this); enterOperationLogs();" class="nav-item">Operation Logs</div>
+
+    <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item" id="nav-cl-postop">Post-Op Checklist</div>
+
+    <div onclick="showTab('lars', this)" class="nav-item">LARS Status</div>
+    <div onclick="showTab('checklists', this); enterChecklistGroup('shutdownDemob');" class="nav-item" id="nav-cl-shutdowndemob">Shutdown &amp; Demobilization</div>
+
+    <div id="nav-dash" onclick="showTab('infographics', this); renderInfographics();" class="hidden nav-item">
+        <span class="nav-icon">📊</span> Infographics
+    </div>
+
+    </div><!-- end nav-operation-sections -->
 
 
 </nav>
@@ -1168,7 +1150,19 @@
 <!-- ============================================================ -->
 <!-- PRE-OPERATION TAB                                           -->
 <!-- ============================================================ -->
-<div id="tab-preop" class="tab-content hidden max-w-full w-full">
+<div id="tab-preopfinal" class="tab-content hidden max-w-full w-full">
+    <!-- Shared identity header (project name/code/scope/ROV badges) —
+         renderPreOpFinalHeader() in preOp.js. Trims the duplication that
+         used to show this same block on both Packing List and Final Setup
+         separately; each panel below now renders only what's specific to it. -->
+    <div id="preopfinal-header"></div>
+
+    <div class="subtab-bar">
+        <button type="button" id="preopfinal-subtab-preop" class="subtab-btn" onclick="switchPreOpFinalSubTab('preop')">Packing List &amp; Equipment</button>
+        <button type="button" id="preopfinal-subtab-finalsetup" class="subtab-btn" onclick="switchPreOpFinalSubTab('finalsetup')">Final Setup</button>
+    </div>
+
+    <div id="preopfinal-panel-preop" class="preopfinal-panel">
     <div id="preop-content" class="space-y-6">
         <!-- Rendered dynamically by renderPreOpTab() -->
         <div class="flex flex-col items-center justify-center py-24 text-center">
@@ -1179,10 +1173,10 @@
             <p class="text-[#6C88A6] text-sm mt-1">This fills in automatically once you open Operation from Simulation.</p>
         </div>
     </div>
-</div>
+    </div>
 
-<div id="tab-finalsetup" class="tab-content hidden max-w-full w-full">
-    <div id="finalsetup-content" class="space-y-4 p-6">
+    <div id="preopfinal-panel-finalsetup" class="preopfinal-panel hidden">
+    <div id="finalsetup-content" class="space-y-4">
         <!-- Rendered dynamically by renderFinalSetupTab() -->
         <div class="flex flex-col items-center justify-center py-24 text-center">
             <svg class="w-16 h-16 mb-4 opacity-20 text-[#6C88A6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1191,6 +1185,7 @@
             <p class="text-[#6C88A6] font-semibold">No Pre-Operation Data</p>
             <p class="text-[#6C88A6] text-sm mt-1">This fills in automatically once you open Operation from Simulation.</p>
         </div>
+    </div>
     </div>
 </div>
 

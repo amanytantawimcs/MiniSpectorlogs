@@ -220,11 +220,7 @@ export function populateUI(data) {
   restoreSensorTables(data.cameraSystems, data.otherSensors);
 
   state.preOpData = data.preOperationData || null;
-  if (state.preOpData) {
-    document.getElementById('nav-preop-item')?.classList.remove('hidden');
-    document.getElementById('nav-finalsetup-item')?.classList.remove('hidden');
-    if (window.__renderProjectSimInfo) window.__renderProjectSimInfo();
-  }
+  if (state.preOpData && window.__renderProjectSimInfo) window.__renderProjectSimInfo();
 
   if (window.__renderLogs) window.__renderLogs();
   if (window.__refreshChecklists) window.__refreshChecklists();
