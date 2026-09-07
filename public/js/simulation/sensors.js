@@ -595,10 +595,9 @@ export function renderSensorsContent(area) {
   area.innerHTML = '';
   const wrap = document.createElement('div');
   wrap.className = 'mx-auto pb-6';
-  wrap.style.maxWidth = '1400px';
   const titleWrap = document.createElement('div');
   titleWrap.className = 'mb-6';
-  titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Sensors and equipment</h3>
+  titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Equipment setup</h3>
     <p class="text-gray-400 mt-1 text-sm">Log every sensor going in the water, with its model, serial and certificate.</p>`;
   wrap.appendChild(titleWrap);
   if (simState.locked) wrap.appendChild(renderLockedNotice());

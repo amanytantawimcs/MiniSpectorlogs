@@ -433,7 +433,6 @@ export function renderSysArchContent(area) {
 
   const wrap = document.createElement('div');
   wrap.className = 'mx-auto pb-6';
-  wrap.style.maxWidth = '1400px';
   const titleWrap = document.createElement('div');
   titleWrap.className = 'mb-6';
   titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Topology</h3>
