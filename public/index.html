@@ -1137,6 +1137,9 @@
             <span>Topology</span>
             <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
+        <div onclick="goToWorkspaceSubTab('projectManagement', 'sim-nav-project-mgmt')" class="nav-item hidden" id="sim-nav-project-mgmt" data-tooltip="Project management">
+            <span>Project management</span>
+        </div>
         </div>
     </div>
 
@@ -1972,12 +1975,6 @@
                             </div>
                             <textarea id="sim-project-desc" rows="1" maxlength="280" placeholder="Optional mission description..."
                                 class="w-full rfield placeholder-[#6C88A6] resize-y" style="height:42px;min-height:42px;padding-top:10px;padding-bottom:10px;"></textarea>
-                        </div>
-                        <!-- Project Team hidden for now (per request) — team-container-sim and
-                             its render/data logic are untouched, just not shown/called here. -->
-                        <div class="col-span-3 hidden" style="border-top:1px solid rgba(120,166,212,0.12);margin-top:4px;padding-top:16px;">
-                            <label class="rfield-label">Project Team</label>
-                            <div id="team-container-sim"></div>
                         </div>
                     </div>
                 </div>

@@ -139,12 +139,23 @@ router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) =
   res.json({ success: true, updated_at: updatedAt });
 }));
 
+// crew_members has no FK to users (its rows are free-text names typed into
+// the Operation Project Details crew roster, not tied to a login) — this is
+// a best-effort name match (trimmed, case-insensitive) against this same
+// project's crew list, not a guaranteed link. A member with no matching
+// crew row just gets is_crew: false; nothing about their edit access
+// depends on this, it's informational only.
 router.get('/:code/members', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true, members: [] });
   const { rows } = await pool.query(
-    `SELECT pm.user_id, pm.role, pm.added_by, pm.added_at, u.name
-     FROM project_members pm LEFT JOIN users u ON u.id = pm.user_id
+    `SELECT pm.user_id, pm.role, pm.added_by, pm.added_at, u.name,
+            (c.id IS NOT NULL) AS is_crew, c.role AS crew_role, c.shift AS crew_shift,
+            c.sign_on, c.sign_off
+     FROM project_members pm
+     LEFT JOIN users u ON u.id = pm.user_id
+     LEFT JOIN crew_members c ON c.project_id = pm.project_id
+       AND lower(trim(c.name)) = lower(trim(u.name))
      WHERE pm.project_id = $1 ORDER BY pm.added_at`,
     [project.id]
   );

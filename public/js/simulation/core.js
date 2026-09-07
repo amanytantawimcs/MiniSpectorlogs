@@ -190,11 +190,12 @@ export function renderWorkspaceShell() {
   switchSimSubTab(simState.activeSubTab || 'sensors');
 }
 
-const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology' };
-const SUBTAB_TITLES = { sensors: 'Equipment setup', sysarch: 'Topology' };
+const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology', projectManagement: 'sim-nav-project-mgmt' };
+const SUBTAB_TITLES = { sensors: 'Equipment setup', sysarch: 'Topology', projectManagement: 'Project management' };
 
 export function switchSimSubTab(tab) {
   simState.activeSubTab = tab;
+  if (SUBTAB_TITLES[tab]) setCurrentSimSection(SUBTAB_TITLES[tab]);
   document.querySelectorAll('.sim-subtab').forEach(btn => {
     btn.classList.remove('border-orange-500', 'text-white');
     btn.classList.add('border-transparent', 'text-gray-400');
@@ -225,6 +226,9 @@ export async function renderSimContent() {
   if (simState.activeSubTab === 'sysarch') {
     const { renderSysArchContent } = await import('./sysarch.js');
     renderSysArchContent(area);
+  } else if (simState.activeSubTab === 'projectManagement') {
+    const { renderProjectManagementContent } = await import('./projectManagement.js');
+    renderProjectManagementContent(area);
   } else {
     const { renderSensorsContent } = await import('./sensors.js');
     renderSensorsContent(area);
@@ -282,6 +286,30 @@ function updateSimProgress() {
 
 let lastCodeTakenWarned = null;
 
+// Which section the user is actively in, for Project Management's history
+// feed — set by whichever tab-switch function is currently active
+// (goToPreparationTab in setup.js, switchSimSubTab below). Deliberately
+// coarse ("who edited what section, when" — not a field-level diff): every
+// save while in that section would otherwise flood the log, so writes are
+// throttled per section below instead of happening on every autosave tick.
+let currentSimSection = 'Mission info';
+export function setCurrentSimSection(label) { currentSimSection = label; }
+
+const HISTORY_THROTTLE_MS = 60_000;
+const lastHistoryLoggedAt = {};
+function maybeLogHistory() {
+  const now = Date.now();
+  if (lastHistoryLoggedAt[currentSimSection] && now - lastHistoryLoggedAt[currentSimSection] < HISTORY_THROTTLE_MS) return;
+  lastHistoryLoggedAt[currentSimSection] = now;
+  api.logSyncAction({
+    project_code: simState.projectData.code,
+    device_role: state.currentDeviceRole || 'vessel',
+    user_name: state.currentUserName,
+    action: 'update',
+    meta: { mode: 'simulation', section: currentSimSection },
+  });
+}
+
 export async function saveSimulation({ silent } = {}) {
   if (!simState.projectData.code) {
     if (!silent) showToast('Enter a Project Code before saving.', 'warn');
@@ -305,6 +333,7 @@ export async function saveSimulation({ silent } = {}) {
   if (result.success) {
     lastSavedAt = Date.now();
     noteSavedUpdatedAt(result.updated_at);
+    maybeLogHistory();
     if (isFirstSave) { await flushPendingTeam(simState.projectData.code); renderProjectTeam('team-container-sim', simState.projectData.code); }
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');

@@ -14,6 +14,7 @@ import {
 import {
   loadFreshScope, mergeWithNewScope, renderWorkspaceShell, switchSimSubTab, labelNavItem,
   markNewSimProject, markSimulationStarted, isSimulationStarted, scheduleSimSync, saveSimulation,
+  setCurrentSimSection,
 } from './core.js';
 import { renderProjectTeam } from '../projectTeam.js';
 
@@ -467,6 +468,11 @@ function updateWorkspaceNavAvailability() {
   ['sim-nav-sensors', 'sim-nav-topology'].forEach(id => {
     document.getElementById(id)?.classList.toggle('nav-item-disabled', !hasCode);
   });
+  // Project Management doesn't exist until there's an actual simulation to
+  // manage — hidden entirely (not just locked-with-an-icon like Sensors/
+  // Topology above) until Start Simulation has actually run, or an existing
+  // project was loaded straight into the workspace.
+  document.getElementById('sim-nav-project-mgmt')?.classList.toggle('hidden', !(inWorkspace || isSimulationStarted()));
 }
 
 // The exclusive entry point for the "New Project" wizard — Join/Continue
@@ -643,6 +649,7 @@ function goToPreparationTab(tab) {
   showSimSetupTab(tab);
   const pageTitleEl = document.getElementById('page-title');
   if (pageTitleEl) pageTitleEl.innerText = tab === 'mission' ? 'Mission information' : 'MiniSpectors';
+  setCurrentSimSection(tab === 'mission' ? 'Mission information' : 'MiniSpectors');
   updateWorkspaceNavAvailability();
 }
 

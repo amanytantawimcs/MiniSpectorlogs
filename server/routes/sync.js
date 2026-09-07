@@ -19,7 +19,7 @@ router.post('/sync-log', asyncRoute(async (req, res) => {
 router.get('/sync-log/:code', asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true, log: [] });
-  const { rows } = await pool.query('SELECT * FROM sync_log WHERE project_id = $1 ORDER BY synced_at DESC LIMIT 10', [project.id]);
+  const { rows } = await pool.query('SELECT * FROM sync_log WHERE project_id = $1 ORDER BY synced_at DESC LIMIT 200', [project.id]);
   res.json({ success: true, log: rows });
 }));
 

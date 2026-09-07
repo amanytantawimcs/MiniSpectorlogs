@@ -281,6 +281,12 @@ export const api = {
     return { success: r.ok };
   },
 
+  getSyncLog: async (projectCode) => {
+    const r = await request('/sync-log/' + encodeURIComponent(projectCode));
+    if (!r.ok) return { success: false, log: [] };
+    return { success: true, log: r.data.log || [] };
+  },
+
   saveSessionMeta: async (meta) => {
     const r = await request('/session-meta', { method: 'POST', body: JSON.stringify(meta) });
     return { success: r.ok };

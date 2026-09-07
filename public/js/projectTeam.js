@@ -46,10 +46,17 @@ function explainerHTML(hasTeam, isPending) {
 function memberRowHTML(m, readOnly) {
   const isSelf = String(m.user_id) === String(state.currentUserId);
   const displayName = m.name || `User ${m.user_id}`;
+  const crewBadge = m.is_crew
+    ? `<span style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:10.5px;color:#459fd9;">
+        <i class="ti ti-anchor" aria-hidden="true"></i> Crew${m.crew_role ? ` · ${escapeHtml(m.crew_role)}` : ''}${m.crew_shift ? ` · ${escapeHtml(m.crew_shift)}` : ''}
+        ${(m.sign_on || m.sign_off) ? ` · ${escapeHtml(m.sign_on || '—')}–${escapeHtml(m.sign_off || '—')}` : ''}
+      </span>`
+    : `<span style="display:block;margin-top:3px;font-size:10.5px;color:#6C88A6;">Not on crew roster</span>`;
   return `<div class="team-member-row" data-user-id="${escapeHtml(m.user_id)}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.12);margin-bottom:6px;">
     <div style="flex:1;min-width:0;">
       <div style="font-size:13px;font-weight:600;color:#D3DAE3;">${escapeHtml(displayName)}${isSelf ? ' <span style="color:#6C88A6;font-weight:500;">(you)</span>' : ''}</div>
       <div style="font-size:11px;color:#6C88A6;">ID ${escapeHtml(m.user_id)}</div>
+      ${crewBadge}
     </div>
     ${readOnly
       ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;color:${m.role === 'viewer' ? '#6C88A6' : '#459fd9'};">${m.role === 'viewer' ? 'Viewer' : 'Operator'}</span>`
