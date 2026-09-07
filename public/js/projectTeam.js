@@ -80,14 +80,8 @@ function memberRowHTML(m, readOnly, isPending) {
       <div style="font-size:11px;color:#6C88A6;">ID ${escapeHtml(m.user_id)}</div>
       ${crewSectionHTML(m, readOnly, isPending)}
     </div>
-    ${readOnly
-      ? `<span style="font-size:11px;font-weight:700;text-transform:uppercase;color:${m.role === 'viewer' ? '#6C88A6' : '#459fd9'};">${m.role === 'viewer' ? 'Viewer' : 'Operator'}</span>`
-      : `<select class="team-role-select rfield" data-user-id="${escapeHtml(m.user_id)}" style="width:120px;height:32px;font-size:12px;padding:0 8px;">
-          <option value="operator" ${m.role !== 'viewer' ? 'selected' : ''}>Operator</option>
-          <option value="viewer" ${m.role === 'viewer' ? 'selected' : ''}>Viewer</option>
-        </select>
-        <button type="button" class="team-remove-btn" data-user-id="${escapeHtml(m.user_id)}" title="Remove from team" style="background:rgba(239,68,68,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#ef4444;cursor:pointer;font-size:0.95rem;flex-shrink:0;">✕</button>`
-    }
+    <span style="font-size:11px;font-weight:700;text-transform:uppercase;color:${m.role === 'viewer' ? '#6C88A6' : '#459fd9'};">${m.role === 'viewer' ? 'Viewer' : 'Operator'}</span>
+    ${readOnly ? '' : `<button type="button" class="team-remove-btn" data-user-id="${escapeHtml(m.user_id)}" title="Remove from team" style="background:rgba(239,68,68,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#ef4444;cursor:pointer;font-size:0.95rem;flex-shrink:0;">✕</button>`}
   </div>`;
 }
 
@@ -185,27 +179,6 @@ export async function renderProjectTeam(containerId, projectCode) {
       }
       resultsBox.classList.remove('hidden');
     }, 250);
-  });
-
-  container.querySelectorAll('.team-role-select').forEach(sel => {
-    sel.addEventListener('change', async () => {
-      const userId = sel.dataset.userId;
-      const newRole = sel.value;
-      const isSelf = String(userId) === String(state.currentUserId);
-      if (isSelf && newRole === 'viewer') {
-        const proceed = confirm('This removes your own edit access to this project — you will only be able to view it afterward. Continue?');
-        if (!proceed) { sel.value = 'operator'; return; }
-      }
-      if (isPending) {
-        const m = pendingMembers.find(p => String(p.user_id) === String(userId));
-        if (m) m.role = newRole;
-        renderProjectTeam(containerId, projectCode);
-        return;
-      }
-      const r = await api.setProjectMember(projectCode, userId, newRole, state.currentUserName);
-      if (r.success) { showToast('Role updated.', 'success'); renderProjectTeam(containerId, projectCode); }
-      else { showToast('Could not update role: ' + (r.error || 'unknown error'), 'error'); renderProjectTeam(containerId, projectCode); }
-    });
   });
 
   container.querySelectorAll('.team-remove-btn').forEach(btn => {

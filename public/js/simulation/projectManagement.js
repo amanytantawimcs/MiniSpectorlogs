@@ -1,7 +1,9 @@
-// "Project management" workspace sub-tab: the Project Team (operators who
-// can edit this project — moved here from Mission Info, see
-// projectTeam.js) and a read-only Project History feed built from
-// sync_log (server/routes/sync.js), which every save already writes to via
+// "Project management" modal, opened from an icon in the simulation
+// workspace header (not a sidebar/sub-tab destination — see
+// openProjectManagement() below): the Project Team (operators who can edit
+// this project — moved here from Mission Info, see projectTeam.js) and a
+// read-only Project History feed built from sync_log
+// (server/routes/sync.js), which every save already writes to via
 // core.js's maybeLogHistory(). Deliberately coarse — "who edited what
 // section, when" — not a field-level diff; see core.js's comment on
 // currentSimSection for why.
@@ -56,13 +58,11 @@ async function renderHistoryCard(projectCode) {
 export async function renderProjectManagementContent(area) {
   area.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.className = 'mx-auto pb-6';
 
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'mb-6';
-  titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Project management</h3>
-    <p class="text-gray-400 mt-1 text-sm">Manage who can edit this project, and see its recent edit history.</p>`;
-  wrap.appendChild(titleWrap);
+  const subtitle = document.createElement('p');
+  subtitle.className = 'text-gray-400 mb-5 text-sm';
+  subtitle.textContent = 'Manage who can edit this project, and see its recent edit history.';
+  wrap.appendChild(subtitle);
 
   // renderProjectTeam builds its own rcard (a <details> disclosure) directly
   // inside this container — no extra card wrapper needed here, that would
@@ -77,4 +77,22 @@ export async function renderProjectManagementContent(area) {
 
   area.appendChild(wrap);
   renderProjectTeam('team-container-sim', projectCode);
+}
+
+export function openProjectManagement() {
+  const modal = document.getElementById('project-mgmt-modal');
+  const body = document.getElementById('project-mgmt-modal-body');
+  if (!modal || !body) return;
+  modal.style.display = 'flex';
+  renderProjectManagementContent(body);
+}
+
+export function closeProjectManagement() {
+  const modal = document.getElementById('project-mgmt-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+export function installProjectManagement() {
+  window.openProjectManagement = openProjectManagement;
+  window.closeProjectManagement = closeProjectManagement;
 }

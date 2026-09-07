@@ -1137,9 +1137,6 @@
             <span>Topology</span>
             <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
-        <div onclick="goToWorkspaceSubTab('projectManagement', 'sim-nav-project-mgmt')" class="nav-item hidden" id="sim-nav-project-mgmt" data-tooltip="Project management">
-            <span>Project management</span>
-        </div>
         </div>
     </div>
 
@@ -2082,6 +2079,10 @@
                     class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m0 12a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m0 0v12a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
                 </button>
+                <button onclick="openProjectManagement()" title="Project management"
+                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
+                </button>
               </div>
             </div>
             <div id="sim-content-area"></div>
@@ -2174,6 +2175,16 @@
                 <div class="flex items-center gap-3"><a href="mailto:m.antar@mcsoil.com" class="text-white hover:text-blue-400">m.antar@mcsoil.com</a></div>
             </div>
             <button onclick="closeSupport()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold w-full">Close</button>
+        </div>
+    </div>
+
+    <div id="project-mgmt-modal" class="modal-overlay" style="display: none; z-index: 100;">
+        <div class="modal-container max-w-2xl bg-[#101B2C] border border-[rgba(120,166,212,0.16)] text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-[rgba(120,166,212,0.16)] pb-4">
+                <h3 class="text-xl font-bold text-white">Project management</h3>
+                <button onclick="closeProjectManagement()" class="text-[#9AB0C8] hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="project-mgmt-modal-body"></div>
         </div>
     </div>
 

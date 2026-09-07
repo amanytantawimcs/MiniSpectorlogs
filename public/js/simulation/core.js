@@ -190,8 +190,8 @@ export function renderWorkspaceShell() {
   switchSimSubTab(simState.activeSubTab || 'sensors');
 }
 
-const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology', projectManagement: 'sim-nav-project-mgmt' };
-const SUBTAB_TITLES = { sensors: 'Equipment setup', sysarch: 'Topology', projectManagement: 'Project management' };
+const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology' };
+const SUBTAB_TITLES = { sensors: 'Equipment setup', sysarch: 'Topology' };
 
 export function switchSimSubTab(tab) {
   simState.activeSubTab = tab;
@@ -226,9 +226,6 @@ export async function renderSimContent() {
   if (simState.activeSubTab === 'sysarch') {
     const { renderSysArchContent } = await import('./sysarch.js');
     renderSysArchContent(area);
-  } else if (simState.activeSubTab === 'projectManagement') {
-    const { renderProjectManagementContent } = await import('./projectManagement.js');
-    renderProjectManagementContent(area);
   } else {
     const { renderSensorsContent } = await import('./sensors.js');
     renderSensorsContent(area);

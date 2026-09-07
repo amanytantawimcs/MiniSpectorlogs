@@ -468,11 +468,6 @@ function updateWorkspaceNavAvailability() {
   ['sim-nav-sensors', 'sim-nav-topology'].forEach(id => {
     document.getElementById(id)?.classList.toggle('nav-item-disabled', !hasCode);
   });
-  // Project Management doesn't exist until there's an actual simulation to
-  // manage — hidden entirely (not just locked-with-an-icon like Sensors/
-  // Topology above) until Start Simulation has actually run, or an existing
-  // project was loaded straight into the workspace.
-  document.getElementById('sim-nav-project-mgmt')?.classList.toggle('hidden', !(inWorkspace || isSimulationStarted()));
 }
 
 // The exclusive entry point for the "New Project" wizard — Join/Continue
