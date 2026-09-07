@@ -21,8 +21,7 @@ export function installDevPreview() {
   document.getElementById('mode-screen')?.classList.add('hidden');
   document.getElementById('session-screen')?.classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
-  document.getElementById('nav-operation-sections').classList.add('hidden');
-  document.getElementById('header-operation-buttons')?.classList.add('hidden');
+  document.getElementById('nav-operation-sections').classList.remove('hidden');
   document.getElementById('nav-simulation-section').classList.remove('hidden');
   setUserCardName('Preview User');
   setUserCardRole('operator');

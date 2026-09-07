@@ -26,16 +26,17 @@ export function notImplemented(feature) {
   showToast(`${feature} — coming in a later update.`, 'info');
 }
 
-// Shown at the top of Sensors/Topology once a simulation has been pushed to
-// Operation (simState.locked) — those tabs stay editable, but Pre-Op/Final
-// Setup are a snapshot taken at push time, so further edits here won't show
-// up anywhere until the simulation is pushed again.
+// Shown at the top of Sensors/Topology once a simulation has synced to
+// Operation at least once (simState.locked) — those tabs stay editable, and
+// further edits here sync into Pre-Op automatically the next time Operation
+// is opened (see syncSimulationIntoOperation() in preOp.js). Final Setup is
+// a snapshot taken at first sync, so it won't reflect later sim edits.
 export function renderLockedNotice() {
   const div = document.createElement('div');
   div.className = 'mb-5 flex items-center gap-3 px-4 py-3 rounded-xl';
   div.style.cssText = 'background:rgba(243,145,36,0.08);border:1px solid rgba(243,145,36,0.25);';
   div.innerHTML = `<span style="font-size:16px;line-height:1">⚠</span>
-    <span class="text-xs" style="color:#f39124">This simulation has already been pushed to Operation. Edits made here won't appear in Pre-Op or Final Setup until you push again.</span>`;
+    <span class="text-xs" style="color:#f39124">This simulation is synced to Operation. Edits made here carry over automatically the next time Operation is opened.</span>`;
   return div;
 }
 

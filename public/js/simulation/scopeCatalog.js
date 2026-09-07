@@ -11,7 +11,7 @@
 // custom-bundle id. Every other module that needs a resolved name or final
 // sensor list goes through findScope()/scopeName() here, never BASE_SCOPES
 // directly, so custom bundles and composite ids work everywhere (readiness,
-// sensors, pre-op, push-to-operation).
+// sensors, pre-op, sync-to-operation).
 
 import { BASE_SCOPES, SCOPE_ADD_ONS, LEGACY_SCOPE_IDS } from './config.js';
 

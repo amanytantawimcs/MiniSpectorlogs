@@ -1,17 +1,15 @@
-// Bridges a pushed simulation into Operation mode: builds the preOpData
-// snapshot, pre-fills Project Details, and renders the read-mostly Pre-Op
-// tab (per-ROV fixed sensors, sensor packing list, machines, equipment,
-// thrusters, system IPs, flagged issues) plus an operation-time additions
-// form for anything not covered by the simulation.
+// Bridges Simulation into Operation: keeps the preOpData snapshot synced
+// from the current simulation (see syncSimulationIntoOperation() below) and
+// renders the read-mostly Pre-Op tab (per-ROV fixed sensors, sensor packing
+// list, machines, equipment, thrusters, system IPs, flagged issues) plus an
+// operation-time additions form for anything not covered by the simulation.
 
 import { escapeHtml, showToast, renderSectionCard, calBadge, tstBadge, rdyBadge } from './ui.js';
 import { api } from './api.js';
 import { state } from './state.js';
-import { enterDashboard, showTab } from './navigation.js';
-import { startProjectAutoSave, saveProject, applyProjectIdentityLock } from './projectDetails.js';
+import { saveProject, applyProjectIdentityLock } from './projectDetails.js';
 import { addSensorRow, showSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
-import { stopSimAutoSave } from './simulation/core.js';
 import { PREOP_CHECKLIST } from './simulation/config.js';
 import { scopeName } from './simulation/scopeCatalog.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
@@ -29,17 +27,26 @@ function sectionWrap(dotColor, title, subtitle, body) {
 const thL = 'px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider';
 const thC = 'px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider';
 
-export async function pushToOperation() {
+// Keeps Operation's Pre-Op snapshot up to date with the current simulation.
+// Runs every time someone crosses from a Simulation tab into an Operation
+// tab (see sidebarUX.js's crossing guard) rather than as a one-time manual
+// push, so it merges into whatever preOpData already exists instead of
+// replacing it outright: operation-side-only data (manual "additions", the
+// sign-off checklist, the locked flag) survives a re-sync — only the fields
+// actually mirrored from the simulation get refreshed. Doesn't touch
+// state.currentReportData.finalSetup — ensureFinalSetup() (finalSetup.js)
+// already only builds it once and incrementally merges new additions after
+// that, so leaving it alone here is what keeps Final Setup's own edits
+// (opNotes, revisions, sign-off) from being wiped on every crossing.
+// Doesn't touch sidebar/header visibility or navigate anywhere either —
+// the crossing guard (sidebarUX.js) owns that, and the click that triggered
+// this is about to navigate to whatever the user actually clicked, not
+// necessarily Pre-Op.
+export async function syncSimulationIntoOperation() {
   if (state.currentUserRole === 'reviewer') return;
   const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
   const machines = simState.shared.sysarch?.machines || [];
-  const notReady = sensors.filter(s => !s.calibrated || !s.tested);
-
-  let msg = `Push to Operation will transfer ${sensors.length} sensor(s) and ${machines.length} machine(s), and pre-fill Project Details.\n`;
-  if (notReady.length > 0) msg += `\n⚠ ${notReady.length} sensor(s) not fully verified.\n`;
-  if (state.preOpData) msg += '\n⚠ Simulation was already pushed once — this replaces the previous Pre-Op data.\n';
-  msg += '\nProceed?';
-  if (!confirm(msg)) return;
+  const existing = state.preOpData;
 
   state.preOpData = {
     pushedAt: new Date().toISOString(),
@@ -58,32 +65,11 @@ export async function pushToOperation() {
       main: { ...(simState.shared.sysarch?.setEquipment?.main || {}) },
       backup: { ...(simState.shared.sysarch?.setEquipment?.backup || {}) },
     },
-    additions: { sensors: [], machines: [] },
-    signOff: PREOP_CHECKLIST.map(item => ({ label: item, checked: false })),
-    locked: false,
+    // Operation-side-only fields — preserved across re-syncs, not reset.
+    additions: existing?.additions || { sensors: [], machines: [] },
+    signOff: existing?.signOff || PREOP_CHECKLIST.map(item => ({ label: item, checked: false })),
+    locked: existing?.locked || false,
   };
-  // Final Setup builds itself from preOpData once and then caches
-  // (state.currentReportData.finalSetup._initialized) — clear it so a
-  // re-push actually rebuilds it instead of silently keeping stale data.
-  state.currentReportData.finalSetup = null;
-
-  stopSimAutoSave();
-  state.currentMode = 'operation';
-  document.body.classList.remove('sim-mode');
-  // Simulation's Sensors/Topology review tabs stay visible — Operation's
-  // items unlock into the same sidebar list alongside them. Preparation
-  // (Mission Info, MiniSpectors) is done once the push happens, so it's
-  // removed from the sidebar rather than staying alongside the rest.
-  document.getElementById('sim-heading-prep')?.classList.add('hidden');
-  document.getElementById('nav-prep-group')?.classList.add('hidden');
-  document.getElementById('nav-operation-sections').classList.remove('hidden');
-  document.getElementById('header-operation-buttons')?.classList.remove('hidden');
-  document.getElementById('header-push-to-operation-btn')?.classList.add('hidden');
-  const contentArea = document.getElementById('main-content-area');
-  if (contentArea) { contentArea.style.padding = ''; contentArea.style.overflow = ''; contentArea.style.position = ''; }
-
-  enterDashboard();
-  startProjectAutoSave();
 
   const pName = document.getElementById('projectName');
   const pCode = document.getElementById('projectCode');
@@ -108,17 +94,11 @@ export async function pushToOperation() {
   });
 
   document.getElementById('nav-finalsetup-item')?.classList.remove('hidden');
-  const preOpNav = document.getElementById('nav-preop-item');
-  showTab('preop', preOpNav);
-  renderPreOpTab();
-
-  const fixedTotal = Object.values(state.preOpData.rovSensors || {}).reduce((s, a) => s + a.length, 0);
-  showToast(`Simulation pushed — ${state.preOpData.rovs.length} ROV(s), ${fixedTotal} fixed + ${state.preOpData.sensors.length} mission sensors loaded.`, 'success');
 
   // Save immediately instead of waiting for the 20s operation autosave tick —
-  // otherwise projects.mode stays 'simulation' server-side for up to 20s after
-  // push, and a second device pulling the project in that window sees stale
-  // simulation data instead of what was just pushed.
+  // otherwise projects.mode stays 'simulation' server-side for a while after
+  // syncing, and a second device pulling the project in that window sees
+  // stale simulation data instead of what was just synced.
   await saveProject({ silent: true });
   if (simState.projectData.code) {
     const lockResult = await api.lockSimulation(simState.projectData.code);
@@ -389,6 +369,5 @@ function confirmAndLockPreOp() {
 
 export function installPreOp() {
   window.renderPreOpTab = renderPreOpTab;
-  window.pushToOperation = pushToOperation;
   window.__renderProjectSimInfo = renderProjectSimInfo;
 }

@@ -329,7 +329,7 @@ export function renderInfographics() {
     });
   }
 
-  // ── F. Pre-Op readiness panel (from pushed simulation, if any) ────────
+  // ── F. Pre-Op readiness panel (synced from simulation, if any) ────────
   renderPreOpReadinessPanel();
 }
 
@@ -345,7 +345,7 @@ function renderPreOpReadinessPanel() {
           <svg width="20" height="20" fill="none" stroke="#6C88A6" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         </div>
         <p style="font-size:12px;font-weight:600;color:#6C88A6;margin:0;">No simulation data</p>
-        <p style="font-size:11px;color:#6C88A6;margin-top:4px;line-height:1.5;">Run a simulation and push<br>to operation to see readiness here.</p>
+        <p style="font-size:11px;color:#6C88A6;margin-top:4px;line-height:1.5;">Open Operation from a Simulation<br>tab to see readiness here.</p>
       </div>`;
     return;
   }
@@ -412,7 +412,7 @@ function renderPreOpReadinessPanel() {
         </div>
       </div>` : ''}
       <div style="border-top:1px solid rgba(120,166,212,0.16);padding-top:8px;">
-        <span style="font-size:10px;color:#6C88A6;">Pushed from simulation · ${pushedDate}</span>
+        <span style="font-size:10px;color:#6C88A6;">Synced from simulation · ${pushedDate}</span>
       </div>
     </div>`;
 }

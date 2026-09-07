@@ -12,13 +12,13 @@ import { showStaleDataBanner } from './ui.js';
 
 let knownUpdatedAt = null;
 let pollTimer = null;
-// Bumped on every local save/lock. Push-to-Operation fires two writes back
-// to back (saveProject + lockSimulation) — if a poll's pull request happens
-// to be in flight while those land, it can resolve with a pre-push snapshot
-// *after* knownUpdatedAt has already moved on locally, which reads as a
-// mismatch even though nobody else touched the project. Comparing the epoch
-// before/after the await lets us discard that one stale round instead of
-// flashing a false banner; the next tick re-checks cleanly.
+// Bumped on every local save/lock. syncSimulationIntoOperation() fires two
+// writes back to back (saveProject + lockSimulation) — if a poll's pull
+// request happens to be in flight while those land, it can resolve with a
+// pre-sync snapshot *after* knownUpdatedAt has already moved on locally,
+// which reads as a mismatch even though nobody else touched the project.
+// Comparing the epoch before/after the await lets us discard that one stale
+// round instead of flashing a false banner; the next tick re-checks cleanly.
 let epoch = 0;
 
 export function noteSavedUpdatedAt(ts) {

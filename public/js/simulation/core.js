@@ -120,15 +120,13 @@ export function collectSimState() {
 }
 
 // renderShell controls whether the visible workspace UI (page title, active
-// sidebar highlight, Push-to-Operation header button, the sensors/topology
-// content area) updates immediately — correct when Simulation is the tab
-// about to be shown (enterSimMode's existingProject branch), wrong when it
-// isn't (handleJoin() in auth.js loading an already-operation project's
-// attached simulation data purely for later review: the Project Details tab
-// is what's actually on screen, so renderWorkspaceShell() would incorrectly
-// stomp the page title to "Sensors and equipment" and could flash the
-// Push-to-Operation button into the header if simState.activeSubTab happened
-// to be left on 'sysarch' from an earlier session). false still fully
+// sidebar highlight, the sensors/topology content area) updates immediately
+// — correct when Simulation is the tab about to be shown (enterSimMode's
+// existingProject branch), wrong when it isn't (handleJoin() in auth.js
+// loading an already-operation project's attached simulation data purely
+// for later review: the Project Details tab is what's actually on screen,
+// so renderWorkspaceShell() would incorrectly stomp the page title to
+// "Sensors and equipment"). false still fully
 // populates simState and flips step1/step2's hidden state (safe — that's
 // inside the not-currently-visible #tab-simulation container, and is what
 // lets a later goToWorkspaceSubTab() click find the workspace already
@@ -209,13 +207,6 @@ export function switchSimSubTab(tab) {
   setActiveNavItem(navEl, '#nav-simulation-section .nav-item');
   const titleEl = document.getElementById('page-title');
   if (titleEl && SUBTAB_TITLES[tab]) titleEl.innerText = SUBTAB_TITLES[tab];
-
-  // Push to Operation lives in the top header bar, visible only on Topology
-  // — not a standing header button across every sim tab, and not buried in
-  // Sensors and equipment's page body like it used to be. pushToOperation()
-  // itself already no-ops for a reviewer; hiding it here too so it's not a
-  // visible dead button for view-only access.
-  document.getElementById('header-push-to-operation-btn')?.classList.toggle('hidden', tab !== 'sysarch' || state.currentUserRole === 'reviewer');
 
   renderSimContent();
 }

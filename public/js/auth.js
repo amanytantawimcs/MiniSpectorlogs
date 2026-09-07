@@ -34,39 +34,66 @@ async function saveSessionMeta(code, role, userName) {
   } catch (e) { /* non-fatal */ }
 }
 
-function enterOpMode(userName) {
+// Shared by enterOpMode()/enterSimMode() (initial project entry) and
+// sidebarUX.js's crossing guard (moving between the two sides after entry)
+// — toggles which side's layout is on screen and keeps state.currentMode
+// accurate. That's load-bearing, not cosmetic: main.js's beforeunload
+// handler picks which autosave to flush based on it, so it has to track
+// whichever side is actually being viewed/edited right now, not just
+// which mode the project originated as.
+export function applyOperationVisualMode() {
   state.currentMode = 'operation';
-  state.currentUserName = userName;
   document.body.classList.remove('sim-mode');
+  const contentArea = document.getElementById('main-content-area');
+  if (contentArea) { contentArea.style.padding = ''; contentArea.style.overflow = ''; contentArea.style.position = ''; }
+  startProjectAutoSave();
+}
+
+export function applySimVisualMode() {
+  state.currentMode = 'simulation';
+  document.body.classList.add('sim-mode');
+  const contentArea = document.getElementById('main-content-area');
+  if (contentArea) { contentArea.style.padding = '0'; contentArea.style.overflow = 'hidden'; contentArea.style.position = 'relative'; }
+  startSimAutoSave();
+}
+
+// Both nav sections (#nav-operation-sections and #nav-simulation-section)
+// stay visible together now — Simulation and Operation are one unified
+// sidebar, not two separate tracks (see sidebarUX.js's crossing guard for
+// how moving between them is confirmed and synced). This just picks which
+// content lands on screen first and makes sure simState has *something* to
+// show for the Simulation tabs — a real loaded simulation if this project
+// was ever pushed/synced from one, otherwise a fresh empty one so a project
+// that predates this merge doesn't show broken Simulation tabs.
+function enterOpMode(userName, project) {
+  applyOperationVisualMode();
+  state.currentUserName = userName;
   document.getElementById('mode-screen').classList.add('hidden');
-  document.getElementById('nav-simulation-section').classList.add('hidden');
+  document.getElementById('nav-simulation-section').classList.remove('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
-  document.getElementById('header-push-to-operation-btn')?.classList.add('hidden');
-  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Operation navigation');
+  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Main navigation');
   setUserCardRole(state.currentUserProjectRole);
   if (state.currentProjectCode) clearPendingTeam(); // joining an existing project — drop any stale staged picks
   applyProjectIdentityLock();
   enterDashboard();
-  startProjectAutoSave();
+
+  if (project?.data?.simulationData) loadSimulationState(project.data.simulationData, true, false);
+  else initSimROVGrid();
+
   startStaleCheck();
   renderProjectTeam('team-container-op', state.currentProjectCode);
 }
 
 function enterSimMode(userName, existingProject) {
-  state.currentMode = 'simulation';
+  applySimVisualMode();
   state.currentUserName = userName;
-  document.body.classList.add('sim-mode');
-  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Simulation navigation');
+  document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Main navigation');
   setUserCardRole(state.currentUserProjectRole);
   document.getElementById('mode-screen').classList.add('hidden');
-  document.getElementById('nav-operation-sections').classList.add('hidden');
-  document.getElementById('header-operation-buttons')?.classList.add('hidden');
+  document.getElementById('nav-operation-sections').classList.remove('hidden');
   document.getElementById('nav-simulation-section').classList.remove('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
   enterDashboard();
-
-  const contentArea = document.getElementById('main-content-area');
-  if (contentArea) { contentArea.style.padding = '0'; contentArea.style.overflow = 'hidden'; contentArea.style.position = 'relative'; }
 
   const simNavItem = document.querySelector('#nav-simulation-section .nav-item');
   if (simNavItem) showTab('simulation', simNavItem);
@@ -74,7 +101,6 @@ function enterSimMode(userName, existingProject) {
   if (existingProject) loadSimulationState(existingProject.data, existingProject.is_sim_locked);
   else initSimROVGrid();
   if (existingProject) clearPendingTeam(); // joining an existing project — drop any stale staged picks
-  startSimAutoSave();
   startStaleCheck();
   renderProjectTeam('team-container-sim', simState.projectData.code);
 }
@@ -112,25 +138,13 @@ async function joinProjectByCode(code, userName) {
   if (project.mode === 'simulation') {
     enterSimMode(userName, project);
   } else {
-    enterOpMode(userName);
+    // enterOpMode() itself loads project.data.simulationData into simState
+    // when present (a project synced from a simulation at some point — the
+    // server only attaches simulationData when project.is_sim_locked), or
+    // starts a fresh empty simulation otherwise, so the Simulation sidebar
+    // tabs always have something real to show regardless of who's joining.
+    enterOpMode(userName, project);
     populateUI(project.data);
-    // This project was pushed from a simulation at some point (the server
-    // only attaches simulationData when project.is_sim_locked) — load it
-    // into simState and surface the Simulation sidebar section (Sensors/
-    // Topology only, not Preparation, matching what pushToOperation()
-    // itself leaves visible in the same-session case) so someone joining
-    // from a different device/session later can still review it, not just
-    // whoever was present for the live push. renderShell:false because
-    // Project Details, not Simulation, is the tab actually on screen right
-    // now — see loadSimulationState()'s own comment for why rendering the
-    // workspace shell here would be wrong (stomps the page title, could
-    // flash the Push-to-Operation button into the header).
-    if (project.data.simulationData) {
-      loadSimulationState(project.data.simulationData, true, false);
-      document.getElementById('sim-heading-prep')?.classList.add('hidden');
-      document.getElementById('nav-prep-group')?.classList.add('hidden');
-      document.getElementById('nav-simulation-section')?.classList.remove('hidden');
-    }
   }
   saveSessionMeta(code, 'office', userName);
   return { success: true };

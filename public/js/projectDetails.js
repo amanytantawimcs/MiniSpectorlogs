@@ -135,7 +135,7 @@ export async function saveProject({ silent } = {}) {
   // would otherwise wipe out an in-progress search the user is typing there.
   // Also doubles as the "is this a brand-new project" signal for createOnly
   // below: state.currentProjectCode is only ever set by Join, Load Project,
-  // a sim→operation push, or a previous successful save here — never
+  // a sim→operation sync, or a previous successful save here — never
   // speculatively, so !state.currentProjectCode reliably means "nothing has
   // confirmed this project_code is ours yet."
   const isFirstSave = !state.currentProjectCode;

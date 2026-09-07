@@ -2,6 +2,9 @@
 // off-canvas drawer (mobile, <900px). Shared by both Operation and
 // Simulation mode — both nav sections live in the same #app-sidebar.
 
+import { applyOperationVisualMode, applySimVisualMode } from '../auth.js';
+import { syncSimulationIntoOperation } from '../preOp.js';
+
 const COLLAPSE_KEY = 'mcs_sim_sidebar_collapsed';
 const DRAWER_BREAKPOINT = 900;
 
@@ -164,8 +167,54 @@ function initDrawer() {
   });
 }
 
+// ── Crossing guard ────────────────────────────────────────────────────
+// Simulation and Operation share one sidebar now (see auth.js's
+// enterOpMode()/enterSimMode() comment), but moving between them still
+// needs a deliberate confirmation and, going into Operation, a sync of the
+// current simulation into Pre-Op (syncSimulationIntoOperation() —
+// preOp.js). A capturing listener on the shared <nav> catches every
+// nav-item click (including keyboard activation, which dispatches a real
+// click via el.click() — see installSimNavKeyboardSupport() in core.js)
+// before the item's own inline onclick runs, so a cancelled confirmation
+// can block that onclick entirely via stopImmediatePropagation().
+function sideOf(el) {
+  if (el.closest('#nav-operation-sections')) return 'operation';
+  if (el.closest('#nav-simulation-section')) return 'simulation';
+  return null;
+}
+
+function initCrossingGuard() {
+  const nav = document.getElementById('main-sidebar-nav');
+  if (!nav) return;
+  nav.addEventListener('click', (e) => {
+    const item = e.target.closest('.nav-item');
+    if (!item) return;
+    const targetSide = sideOf(item);
+    if (!targetSide) return;
+    const currentSide = document.body.classList.contains('sim-mode') ? 'simulation' : 'operation';
+    if (targetSide === currentSide) return;
+
+    const question = targetSide === 'operation'
+      ? 'Are you sure you want to move to Operations?'
+      : 'Are you sure you want to move to Simulation?';
+    if (!confirm(question)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
+
+    if (targetSide === 'operation') {
+      applyOperationVisualMode();
+      syncSimulationIntoOperation();
+    } else {
+      applySimVisualMode();
+    }
+  }, true);
+}
+
 export function installSimSidebarUX() {
   initCollapse();
   initRailTooltips();
   initDrawer();
+  initCrossingGuard();
 }
