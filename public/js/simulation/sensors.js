@@ -204,11 +204,11 @@ function renderSensorsTable() {
   tableWrap.style.overflowX = 'auto';
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;min-width:740px;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
-    <th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
-    <th class="px-3 py-2 text-left">Serial No.</th><th class="px-3 py-2 text-center">Qty</th>
-    <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th>
-    <th class="px-3 py-2 text-left">Assignment</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Sensor</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Serial No.</th><th class="px-3 py-2 text-center" style="font-size:9px;">Qty</th>
+    <th class="px-3 py-2 text-center" style="font-size:9px;">Calibrated</th><th class="px-3 py-2 text-center" style="font-size:9px;">Tested</th>
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
 
   if (active.length === 0) {
@@ -315,6 +315,8 @@ function renderSensorsTable() {
   return card;
 }
 
+const OPT_SENSOR_GRID = '32px 1fr 180px 90px 90px';
+
 function renderOptionalSensors() {
   const sensors = simState.shared.sensors || [];
   const optional = sensors.filter(s => s.status === 'optional' && !s.custom)
@@ -325,9 +327,15 @@ function renderOptionalSensors() {
   card.className = 'rcard mb-5';
   card.innerHTML = `<div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head"><span class="w-2 h-2 rounded-full" style="background:#6b7280"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Optional Sensors</span></div>`;
 
+  const head = document.createElement('div');
+  head.style.cssText = `display:grid;grid-template-columns:${OPT_SENSOR_GRID};gap:12px;align-items:center;background:#16233A;color:#9AB0C8;`;
+  head.className = 'px-5 py-2 uppercase font-semibold';
+  head.innerHTML = `<span></span><span style="font-size:9px;">Sensor</span><span style="font-size:9px;">Model</span>
+    <span style="font-size:9px;text-align:center;">Calibrated</span><span style="font-size:9px;text-align:center;">Tested</span>`;
+  card.appendChild(head);
+
   let lastCat = null;
   optional.forEach(sensor => {
-    const idx = sensors.indexOf(sensor);
     const cat = SENSOR_CATEGORIES[sensor.name] || 'Other';
     if (cat !== lastCat) {
       const catHeader = document.createElement('div');
@@ -337,21 +345,22 @@ function renderOptionalSensors() {
       lastCat = cat;
     }
     const row = document.createElement('div');
-    row.className = `flex items-center gap-3 px-5 py-2.5 border-b border-gray-700/30 ${sensor.included ? '' : 'opacity-50'}`;
+    row.style.cssText = `display:grid;grid-template-columns:${OPT_SENSOR_GRID};gap:12px;align-items:center;`;
+    row.className = `px-5 py-2.5 border-b border-gray-700/30 ${sensor.included ? '' : 'opacity-50'}`;
 
     const toggle = buildToggle(sensor.included, '#459fd9', () => { sensor.included = !sensor.included; scheduleSimSync(); renderSimContent(); });
-    const name = document.createElement('span'); name.className = 'text-sm text-gray-200 flex-1'; name.textContent = sensor.name;
+    const name = document.createElement('span'); name.className = 'text-sm text-gray-200'; name.textContent = sensor.name;
     row.append(toggle, name);
 
+    const modelWrap = document.createElement('div');
+    const calWrap = document.createElement('div'); calWrap.className = 'flex justify-center';
+    const testWrap = document.createElement('div'); testWrap.className = 'flex justify-center';
     if (sensor.included) {
-      const modelWrap = document.createElement('div'); modelWrap.style.width = '180px';
       modelWrap.appendChild(buildModelCell(sensor, (v) => { sensor.model = v; scheduleSimSync(); if (v === ' ') renderSimContent(); }));
-      const calWrap = document.createElement('div');
       calWrap.appendChild(buildToggle(sensor.calibrated, '#f39124', () => { sensor.calibrated = !sensor.calibrated; scheduleSimSync(); renderSimContent(); }));
-      const testWrap = document.createElement('div');
       testWrap.appendChild(buildToggle(sensor.tested, '#459fd9', () => { sensor.tested = !sensor.tested; scheduleSimSync(); renderSimContent(); }));
-      row.append(modelWrap, calWrap, testWrap);
     }
+    row.append(modelWrap, calWrap, testWrap);
     card.appendChild(row);
   });
   return card;
@@ -431,11 +440,11 @@ function renderFixedSensorsSection() {
   const fixed = simState.shared.rovSensors[activeNum] || [];
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
-    <th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
-    <th class="px-3 py-2 text-left">Serial No.</th>
-    <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th>
-    <th class="px-3 py-2 text-center">In scope</th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Sensor</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Serial No.</th>
+    <th class="px-3 py-2 text-center" style="font-size:9px;">Calibrated</th><th class="px-3 py-2 text-center" style="font-size:9px;">Tested</th>
+    <th class="px-3 py-2 text-center" style="font-size:9px;">In scope</th></tr></thead>`;
   const tbody = document.createElement('tbody');
   fixed.forEach((sensor, i) => {
     const inScope = !sensor.disabled;
@@ -570,9 +579,9 @@ function renderThrustersSection() {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
-    <th class="px-4 py-2 text-left">Thruster No.</th><th class="px-4 py-2 text-left">Serial</th>
-    <th class="px-4 py-2 text-left">Assignment</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Thruster No.</th><th class="px-4 py-2 text-left" style="font-size:9px;">Serial</th>
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   if (thrusters.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600 text-sm">No thrusters added</td></tr>`;
