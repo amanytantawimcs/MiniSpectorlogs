@@ -6,6 +6,7 @@ const { requireAuth, requireAdminAuth } = require('../lib/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
 const { recordLogin } = require('../lib/loginLog');
+const { isActiveInLms } = require('../lib/lmsDb');
 
 const router = express.Router();
 const passcodeLimiter = rateLimit({ windowMs: 60_000, max: 8 });
@@ -52,6 +53,10 @@ router.post('/:id/passcode', asyncRoute(async (req, res) => {
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
   if (rows[0].passcode_hash) return res.status(409).json({ success: false, error: 'Passcode already set.' });
 
+  if (!(await isActiveInLms(id))) {
+    return res.status(403).json({ success: false, error: 'This account has been deactivated.' });
+  }
+
   const { hash, salt } = hashPasscode(passcode);
   await pool.query('UPDATE users SET passcode_hash = $1, passcode_salt = $2 WHERE id = $3', [hash, salt, id]);
   recordLogin(pool, { userId: id, userName: rows[0].name, role: 'user' });
@@ -67,6 +72,9 @@ router.post('/:id/verify-passcode', passcodeLimiter, asyncRoute(async (req, res)
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
   const ok = verifyPasscode(passcode || '', rows[0].passcode_hash, rows[0].passcode_salt);
   if (!ok) return res.status(401).json({ success: false, error: 'Incorrect passcode.' });
+  if (!(await isActiveInLms(id))) {
+    return res.status(403).json({ success: false, error: 'This account has been deactivated.' });
+  }
   recordLogin(pool, { userId: id, userName: rows[0].name, role: 'user' });
   res.json({ success: true, token: createSession(id) });
 }));
