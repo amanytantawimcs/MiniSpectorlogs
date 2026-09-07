@@ -162,7 +162,7 @@ export function renderPreOpTab() {
     <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:rgba(243,145,36,0.15);">
       <div>
         <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-0.5">Packing List &amp; Equipment</p>
-        <p class="text-lg font-bold text-[#E9F0F8] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
+        <p class="text-lg font-bold text-[#D3DAE3] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
         <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')} · Pushed ${pushedDate}</p>
       </div>
       <div class="flex flex-col items-end gap-2">
@@ -203,7 +203,7 @@ export function renderPreOpTab() {
     const list = allFixed.filter(s => s.rovNum === num);
     const rows = list.map((s, i) => `<tr>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#E9F0F8]">${escapeHtml(s.name)}</span> <span class="text-[9px] text-[#6C88A6]">fixed</span></td>
+      <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#D3DAE3]">${escapeHtml(s.name)}</span> <span class="text-[9px] text-[#6C88A6]">fixed</span></td>
       <td class="px-4 py-2.5 text-xs text-[#9AB0C8]">${escapeHtml(s.model || '—')}</td>
       <td class="px-4 py-2.5 text-center text-sm font-semibold text-[#9AB0C8]">${s.qty || 1}</td>
       <td class="px-4 py-2.5 text-center">${calBadge(s.calibrated)}</td>
@@ -216,7 +216,7 @@ export function renderPreOpTab() {
 
   const sensorRows = allSensors.map((s, i) => `<tr>
     <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-    <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#E9F0F8]">${escapeHtml(s.name)}</span> <span class="text-[9px] text-[#6C88A6]">${s.origin === 'simulation' ? 'sim' : 'op'}</span></td>
+    <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#D3DAE3]">${escapeHtml(s.name)}</span> <span class="text-[9px] text-[#6C88A6]">${s.origin === 'simulation' ? 'sim' : 'op'}</span></td>
     <td class="px-4 py-2.5 text-xs text-[#9AB0C8]">${escapeHtml(s.model || '—')}</td>
     <td class="px-4 py-2.5 text-center text-sm font-semibold text-[#9AB0C8]">${s.qty || 1}</td>
     <td class="px-4 py-2.5 text-center">${calBadge(s.calibrated)}</td>
@@ -229,7 +229,7 @@ export function renderPreOpTab() {
   if (allMachines.length > 0) {
     const rows = allMachines.map((m, i) => `<tr>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#E9F0F8]">${escapeHtml(m.name)}</span> <span class="text-[9px] text-[#6C88A6]">${m.origin === 'simulation' ? 'sim' : 'op'}</span></td>
+      <td class="px-4 py-2.5"><span class="text-sm font-medium text-[#D3DAE3]">${escapeHtml(m.name)}</span> <span class="text-[9px] text-[#6C88A6]">${m.origin === 'simulation' ? 'sim' : 'op'}</span></td>
       <td class="px-4 py-2.5 text-xs text-[#9AB0C8]">${escapeHtml(m.model || '—')}</td>
       <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(m.ip || '—')}</td>
       <td class="px-4 py-2.5 text-center"><span class="text-[10px] font-bold px-2.5 py-1 rounded-full" style="background:rgba(243,145,36,0.15);color:#f39124;border:1px solid rgba(243,145,36,0.2)">${escapeHtml(m.status || 'OK')}</span></td>
@@ -241,7 +241,7 @@ export function renderPreOpTab() {
   if (allEquipment.length > 0) {
     const rows = allEquipment.map((e, i) => `<tr>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5 text-sm font-medium text-[#E9F0F8]">${escapeHtml(e.item || '—')}</td>
+      <td class="px-4 py-2.5 text-sm font-medium text-[#D3DAE3]">${escapeHtml(e.item || '—')}</td>
       <td class="px-4 py-2.5 text-center"><span class="inline-block px-2.5 py-0.5 rounded text-xs font-bold" style="background:rgba(69,159,217,0.15);color:#459fd9">${e.qty || 0}</span></td>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6]">${escapeHtml(e.comments || '—')}</td>
     </tr>`).join('');
@@ -253,7 +253,7 @@ export function renderPreOpTab() {
   if (allThrusters.length > 0) {
     const rows = allThrusters.map((t, i) => `<tr>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5 text-sm font-medium text-[#E9F0F8]">${escapeHtml(t.number || '—')}</td>
+      <td class="px-4 py-2.5 text-sm font-medium text-[#D3DAE3]">${escapeHtml(t.number || '—')}</td>
       <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(t.serial || '—')}</td>
     </tr>`).join('');
     html += sectionWrap('#f39124', 'Thrusters List', `${allThrusters.length} units`,
@@ -278,7 +278,7 @@ export function renderPreOpTab() {
     ['FMD', auto.main.fmd, auto.backup.fmd],
     ['Brush', auto.main.brush, auto.backup.brush],
   ].map(([label, main, backup]) => `<tr>
-    <td class="px-4 py-2.5 text-sm font-medium text-[#E9F0F8]">${escapeHtml(label)}</td>
+    <td class="px-4 py-2.5 text-sm font-medium text-[#D3DAE3]">${escapeHtml(label)}</td>
     <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(main || '—')}</td>
     <td class="px-4 py-2.5 text-xs font-mono text-[#9AB0C8]">${escapeHtml(backup || '—')}</td>
   </tr>`).join('');
@@ -298,7 +298,7 @@ export function renderPreOpTab() {
       let catRow = '';
       if (dev.category !== lastCat) { lastCat = dev.category; catRow = `<tr style="background:rgba(12,23,39,0.7);"><td colspan="3" class="px-4 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">${escapeHtml(dev.category)}</span></td></tr>`; }
       return catRow + `<tr>
-        <td class="px-4 py-2 text-sm text-[#E9F0F8]">${escapeHtml(dev.name)}</td>
+        <td class="px-4 py-2 text-sm text-[#D3DAE3]">${escapeHtml(dev.name)}</td>
         <td class="px-4 py-2 text-xs font-mono text-[#9AB0C8] text-center">${hasIP ? escapeHtml(dev.ip || '—') : '<span class="text-[#6C88A6]">—</span>'}</td>
         <td class="px-4 py-2 text-xs font-mono text-[#9AB0C8] text-center">${hasPort ? escapeHtml(dev.port || '—') : '<span class="text-[#6C88A6]">—</span>'}</td>
       </tr>`;
@@ -312,7 +312,7 @@ export function renderPreOpTab() {
     const sevStyle = { high: 'bg-red-500/15 text-red-400 border-red-500/20', medium: 'bg-amber-500/15 text-amber-400 border-amber-500/20', low: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' };
     const rows = allIssues.map((iss, i) => `<tr>
       <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5 text-sm font-medium text-[#E9F0F8]">${escapeHtml(iss.title || '—')}</td>
+      <td class="px-4 py-2.5 text-sm font-medium text-[#D3DAE3]">${escapeHtml(iss.title || '—')}</td>
       <td class="px-4 py-2.5 text-xs text-[#9AB0C8]">${escapeHtml(iss.description || '—')}</td>
       <td class="px-4 py-2.5 text-center"><span class="text-[10px] font-bold px-2.5 py-1 rounded-full border ${sevStyle[iss.severity] || sevStyle.medium}">${(iss.severity || 'medium').toUpperCase()}</span></td>
       <td class="px-4 py-2.5 text-center"><span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${iss.status === 'open' ? 'bg-red-500/15 text-red-400' : 'bg-green-500/15 text-green-400'}">${(iss.status || 'open').toUpperCase()}</span></td>
@@ -329,17 +329,17 @@ export function renderPreOpTab() {
         <div>
           <label class="text-xs font-bold text-[#6C88A6] block mb-2">Add Sensor</label>
           <div class="flex gap-2">
-            <input type="text" id="preop-add-sensor-name" placeholder="Sensor name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#E9F0F8] placeholder-[#6C88A6] outline-none">
-            <input type="text" id="preop-add-sensor-model" placeholder="Model" class="w-28 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#E9F0F8] placeholder-[#6C88A6] outline-none">
-            <button type="button" id="preop-add-sensor-btn" class="px-3 py-2 text-xs font-bold rounded-lg text-[#E9F0F8]" style="background:#f39124;">+ Add</button>
+            <input type="text" id="preop-add-sensor-name" placeholder="Sensor name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
+            <input type="text" id="preop-add-sensor-model" placeholder="Model" class="w-28 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
+            <button type="button" id="preop-add-sensor-btn" class="px-3 py-2 text-xs font-bold rounded-lg text-[#D3DAE3]" style="background:#f39124;">+ Add</button>
           </div>
         </div>
         <div>
           <label class="text-xs font-bold text-[#6C88A6] block mb-2">Add Machine</label>
           <div class="flex gap-2">
-            <input type="text" id="preop-add-machine-name" placeholder="Machine name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#E9F0F8] placeholder-[#6C88A6] outline-none">
-            <input type="text" id="preop-add-machine-model" placeholder="Model" class="w-28 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#E9F0F8] placeholder-[#6C88A6] outline-none">
-            <button type="button" id="preop-add-machine-btn" class="px-3 py-2 text-xs font-bold rounded-lg text-[#E9F0F8]" style="background:#f39124;">+ Add</button>
+            <input type="text" id="preop-add-machine-name" placeholder="Machine name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
+            <input type="text" id="preop-add-machine-model" placeholder="Model" class="w-28 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
+            <button type="button" id="preop-add-machine-btn" class="px-3 py-2 text-xs font-bold rounded-lg text-[#D3DAE3]" style="background:#f39124;">+ Add</button>
           </div>
         </div>
       </div>

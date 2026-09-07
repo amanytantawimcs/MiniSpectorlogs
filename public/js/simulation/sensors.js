@@ -68,7 +68,7 @@ function buildDateToggleCell(sensor, field, color, onAfterToggle) {
   const dateInput = document.createElement('input');
   dateInput.type = 'date';
   dateInput.value = sensor[dateField] || '';
-  dateInput.style.cssText = 'display:none;width:120px;margin-top:2px;background:#0C1727;border:1px solid rgba(120,166,212,0.3);border-radius:6px;color:#E9F0F8;font-size:10px;padding:2px 4px;';
+  dateInput.style.cssText = 'display:none;width:120px;margin-top:2px;background:#0C1727;border:1px solid rgba(120,166,212,0.3);border-radius:6px;color:#D3DAE3;font-size:10px;padding:2px 4px;';
   dateInput.addEventListener('click', e => e.stopPropagation());
   dateInput.addEventListener('change', () => {
     sensor[dateField] = dateInput.value;

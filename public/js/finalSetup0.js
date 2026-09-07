@@ -242,7 +242,7 @@ function injectStyles() {
 .mfs-top{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap}
 .mfs-id{flex:1;min-width:220px}
 .mfs-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6C88A6}
-.mfs-title{font-size:18px;font-weight:700;color:#E9F0F8;margin-top:2px;line-height:1.25}
+.mfs-title{font-size:18px;font-weight:700;color:#D3DAE3;margin-top:2px;line-height:1.25}
 .mfs-sub{font-size:12px;color:#6C88A6;margin-top:3px}
 .mfs-pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:6px;white-space:nowrap}
 .mfs-pill.draft{background:rgba(243,145,36,.12);color:#f39124}
@@ -266,7 +266,7 @@ function injectStyles() {
 .mfs-segs::-webkit-scrollbar{display:none}
 .mfs-seg{display:flex;align-items:center;gap:8px;padding:10px 16px;border:none;border-bottom:2px solid transparent;background:none;font-size:12px;font-weight:600;color:#6C88A6;white-space:nowrap;cursor:pointer}
 .mfs-seg:hover{color:#9AB0C8}
-.mfs-seg[aria-selected="true"]{color:#E9F0F8;border-bottom-color:#f39124}
+.mfs-seg[aria-selected="true"]{color:#D3DAE3;border-bottom-color:#f39124}
 .mfs-count{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(120,166,212,.12);color:#6C88A6;font-variant-numeric:tabular-nums}
 .mfs-seg[aria-selected="true"] .mfs-count{background:rgba(243,145,36,.15);color:#f39124}
 .mfs-count.ok{background:rgba(63,185,138,.14);color:#3fb98a}
@@ -274,11 +274,11 @@ function injectStyles() {
 .mfs-pane{padding-top:20px}
 .mfs-pane[hidden]{display:none}
 .mfs-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.mfs-search{flex:1;min-width:170px;max-width:290px;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:8px;padding:8px 12px;font-size:12px;color:#E9F0F8;outline:none}
+.mfs-search{flex:1;min-width:170px;max-width:290px;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:8px;padding:8px 12px;font-size:12px;color:#D3DAE3;outline:none}
 .mfs-search::placeholder{color:#6C88A6}
 .mfs-chips{display:flex;gap:4px;background:#0C1727;padding:3px;border-radius:8px;border:1px solid rgba(120,166,212,.16)}
 .mfs-chip{padding:5px 12px;border:none;background:none;border-radius:6px;font-size:11px;font-weight:600;color:#6C88A6;cursor:pointer}
-.mfs-chip[aria-pressed="true"]{background:rgba(120,166,212,.14);color:#E9F0F8}
+.mfs-chip[aria-pressed="true"]{background:rgba(120,166,212,.14);color:#D3DAE3}
 .mfs-spacer{flex:1}
 .mfs-card{background:#101B2C;border:1px solid rgba(120,166,212,.16);border-radius:14px;overflow:hidden}
 .mfs-card+.mfs-card{margin-top:18px}
@@ -293,14 +293,14 @@ function injectStyles() {
 .mfs-row.na{opacity:.5}
 .mfs-na{font-size:9px;font-weight:800;letter-spacing:.04em;padding:4px 6px;border-radius:6px;border:1px solid rgba(120,166,212,.2);background:none;color:#6C88A6;cursor:pointer;transition:.14s}
 .mfs-na:hover{border-color:rgba(120,166,212,.45);color:#9AB0C8}
-.mfs-na[aria-pressed="true"]{background:rgba(120,166,212,.14);border-color:rgba(120,166,212,.4);color:#E9F0F8}
+.mfs-na[aria-pressed="true"]{background:rgba(120,166,212,.14);border-color:rgba(120,166,212,.4);color:#D3DAE3}
 .mfs-tick.na{background:rgba(120,166,212,.34);height:8px}
 .mfs-gbtn{font-size:10px;font-weight:700;color:#6C88A6;background:none;border:1px solid rgba(120,166,212,.2);border-radius:6px;padding:3px 9px;cursor:pointer}
-.mfs-gbtn:hover{color:#E9F0F8;border-color:rgba(120,166,212,.45)}
+.mfs-gbtn:hover{color:#D3DAE3;border-color:rgba(120,166,212,.45)}
 .mfs-sum{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 .mfs-sum span{font-size:11px;padding:3px 9px;border-radius:6px;background:rgba(120,166,212,.09);color:#9AB0C8}
 .mfs-sum b{font-variant-numeric:tabular-nums}
-.mfs-nm{font-size:13px;font-weight:500;color:#E9F0F8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mfs-nm{font-size:13px;font-weight:500;color:#D3DAE3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mfs-row.done .mfs-nm{color:#9AB0C8}
 .mfs-md{font-size:11px;color:#6C88A6;font-family:ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mfs-qt{font-size:12px;color:#9AB0C8;text-align:center;font-variant-numeric:tabular-nums}
@@ -311,7 +311,7 @@ function injectStyles() {
 .mfs-flag{width:26px;height:26px;border-radius:6px;border:none;background:none;display:grid;place-items:center;font-size:13px;color:#6C88A6;cursor:pointer;transition:.14s}
 .mfs-flag:hover{background:rgba(226,87,76,.12);color:#e2574c}
 .mfs-flag[aria-pressed="true"]{color:#e2574c;background:rgba(226,87,76,.12)}
-.mfs-input{width:100%;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:6px;padding:5px 9px;font-size:11px;color:#E9F0F8;outline:none}
+.mfs-input{width:100%;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:6px;padding:5px 9px;font-size:11px;color:#D3DAE3;outline:none}
 .mfs-input:focus{border-color:rgba(120,166,212,.4)}
 .mfs-input::placeholder{color:rgba(108,136,166,.7)}
 .mfs-input:disabled{opacity:.5;cursor:not-allowed}
@@ -333,10 +333,10 @@ function injectStyles() {
 .mfs-banner{display:flex;gap:10px;padding:11px 14px;border-radius:10px;font-size:12px;margin-bottom:14px;line-height:1.5}
 .mfs-banner.warn{background:rgba(243,145,36,.08);border:1px solid rgba(243,145,36,.3);color:#f6c68a}
 .mfs-banner.err{background:rgba(226,87,76,.08);border:1px solid rgba(226,87,76,.3);color:#f4a89f}
-.mfs-banner b{color:#E9F0F8}
+.mfs-banner b{color:#D3DAE3}
 .mfs-signgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
 .mfs-block{padding:18px}
-.mfs-block h3{margin:0 0 4px;font-size:13px;font-weight:700;color:#E9F0F8}
+.mfs-block h3{margin:0 0 4px;font-size:13px;font-weight:700;color:#D3DAE3}
 .mfs-hint{font-size:11px;color:#6C88A6;margin:0 0 14px;line-height:1.5}
 .mfs-blockers{list-style:none;margin:0;padding:0}
 .mfs-blockers li{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(120,166,212,.16);font-size:12px;color:#9AB0C8}
@@ -347,7 +347,7 @@ function injectStyles() {
 .mfs-clear{display:flex;gap:10px;padding:14px;border-radius:10px;background:rgba(63,185,138,.07);border:1px solid rgba(63,185,138,.25);font-size:12px;color:#9fdcc3}
 .mfs-field{margin-bottom:12px}
 .mfs-field label{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6C88A6;margin-bottom:5px}
-.mfs-field input,.mfs-field textarea{width:100%;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:8px;padding:8px 11px;font-size:12px;color:#E9F0F8;outline:none;resize:vertical}
+.mfs-field input,.mfs-field textarea{width:100%;background:#0C1727;border:1px solid rgba(120,166,212,.16);border-radius:8px;padding:8px 11px;font-size:12px;color:#D3DAE3;outline:none;resize:vertical}
 .mfs-tl-item{display:flex;gap:12px}
 .mfs-tl-rail{width:12px;display:flex;flex-direction:column;align-items:center;flex:none}
 .mfs-tl-dot{width:9px;height:9px;border-radius:50%;margin-top:4px;flex:none}
@@ -401,7 +401,7 @@ export function renderFinalSetupTab() {
   if (!preOp?.rovs?.length) {
     host.innerHTML = `<div class="mfs-empty" style="padding:96px 20px">
       <p style="color:#9AB0C8;font-weight:600;font-size:14px;margin:0">Nothing to confirm yet</p>
-      <p style="margin:6px 0 0">Finish the plan in Simulation, then use <b style="color:#E9F0F8">Push to Operation</b> on the Topology screen.</p></div>`;
+      <p style="margin:6px 0 0">Finish the plan in Simulation, then use <b style="color:#D3DAE3">Push to Operation</b> on the Topology screen.</p></div>`;
     host.dataset.mfs = '';
     return;
   }
@@ -799,7 +799,7 @@ function paintNetwork() {
     }
 
     const row = el('div', 'mfs-nrow');
-    const nm = el('div', null, d.name); nm.style.cssText = 'font-size:13px;color:#E9F0F8';
+    const nm = el('div', null, d.name); nm.style.cssText = 'font-size:13px;color:#D3DAE3';
     const ipCell = el('div');
     if (d.hasIP !== false) {
       const i = el('input', 'mfs-input mfs-mono');
@@ -869,7 +869,7 @@ function paintSignoff() {
     const ul = el('ul', 'mfs-blockers');
     bl.slice(0, 10).forEach(b => {
       const li = el('li');
-      li.innerHTML = `<span class="dot" style="background:${b.critical ? '#f39124' : '#e2574c'}"></span><span class="who"><b style="color:#E9F0F8">${escapeHtml(b.label)}</b> — ${escapeHtml(b.why)}</span>`;
+      li.innerHTML = `<span class="dot" style="background:${b.critical ? '#f39124' : '#e2574c'}"></span><span class="who"><b style="color:#D3DAE3">${escapeHtml(b.label)}</b> — ${escapeHtml(b.why)}</span>`;
       const jump = el('button', 'mfs-jump', 'Open →');
       jump.type = 'button';
       jump.addEventListener('click', () => showPane(b.pane));

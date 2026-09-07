@@ -32,7 +32,7 @@ function addCrewRow(name = '', role = 'ROV Supervisor', shift = 'Day', signOn = 
   const isCustom = shift !== 'Day' && shift !== 'Night' && shift !== '';
   const color = ROLE_COLORS_MAP[role] || '#6b7280';
   const initials = name ? getInitials(name) : '?';
-  const iStyle = 'background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8;padding:0 10px;border-radius:8px;width:100%;outline:none;height:36px;font-size:0.82rem;';
+  const iStyle = 'background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3;padding:0 10px;border-radius:8px;width:100%;outline:none;height:36px;font-size:0.82rem;';
 
   const div = document.createElement('div');
   div.className = 'crew-row';

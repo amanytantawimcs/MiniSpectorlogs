@@ -48,7 +48,7 @@ function memberRowHTML(m, readOnly) {
   const displayName = m.name || `User ${m.user_id}`;
   return `<div class="team-member-row" data-user-id="${escapeHtml(m.user_id)}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.12);margin-bottom:6px;">
     <div style="flex:1;min-width:0;">
-      <div style="font-size:13px;font-weight:600;color:#E9F0F8;">${escapeHtml(displayName)}${isSelf ? ' <span style="color:#6C88A6;font-weight:500;">(you)</span>' : ''}</div>
+      <div style="font-size:13px;font-weight:600;color:#D3DAE3;">${escapeHtml(displayName)}${isSelf ? ' <span style="color:#6C88A6;font-weight:500;">(you)</span>' : ''}</div>
       <div style="font-size:11px;color:#6C88A6;">ID ${escapeHtml(m.user_id)}</div>
     </div>
     ${readOnly
@@ -131,7 +131,7 @@ export async function renderProjectTeam(containerId, projectCode) {
         resultsBox.innerHTML = `<div style="padding:10px 14px;font-size:12.5px;color:#6C88A6;">No matching users.</div>`;
       } else {
         resultsBox.innerHTML = lastSearchResults.map(u => `
-          <div class="team-search-hit" data-user-id="${escapeHtml(u.id)}" style="padding:9px 14px;font-size:13px;color:#E9F0F8;cursor:pointer;border-bottom:1px solid rgba(120,166,212,0.08);">
+          <div class="team-search-hit" data-user-id="${escapeHtml(u.id)}" style="padding:9px 14px;font-size:13px;color:#D3DAE3;cursor:pointer;border-bottom:1px solid rgba(120,166,212,0.08);">
             ${escapeHtml(u.name)} <span style="color:#6C88A6;font-size:11px;">· ID ${escapeHtml(u.id)}</span>
           </div>`).join('');
         resultsBox.querySelectorAll('.team-search-hit').forEach(hit => {

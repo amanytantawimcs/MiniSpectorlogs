@@ -17,7 +17,7 @@ export function showToast(message, type = 'info') {
   const accent = colors[type] || colors.info;
   const el = document.createElement('div');
   el.textContent = message;
-  el.style.cssText = `background:#101B2C;border:1px solid rgba(120,166,212,0.16);border-left:3px solid ${accent};color:#E9F0F8;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 18px 40px -24px rgba(0,0,0,0.9);pointer-events:auto;`;
+  el.style.cssText = `background:#101B2C;border:1px solid rgba(120,166,212,0.16);border-left:3px solid ${accent};color:#D3DAE3;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 18px 40px -24px rgba(0,0,0,0.9);pointer-events:auto;`;
   host.appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
@@ -110,7 +110,7 @@ export function renderSectionCard(dotColor, title, subtitle, body, { padded = fa
   if (collapsed && startOpen) wrap.open = true;
   const header = document.createElement(collapsed ? 'summary' : 'div');
   header.className = 'flex items-center gap-2.5 px-5 py-3 border-b rcard-head';
-  header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#E9F0F8">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>${collapsed ? '<i class="ti ti-chevron-down section-collapse-chevron" aria-hidden="true"></i>' : ''}`;
+  header.innerHTML = `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background:${dotColor};box-shadow:0 0 6px ${dotColor}80;"></span><span class="text-xs font-bold uppercase tracking-wider flex-1" style="color:#D3DAE3">${title}</span><span class="text-[10px]" style="color:#6C88A6">${subtitle}</span>${collapsed ? '<i class="ti ti-chevron-down section-collapse-chevron" aria-hidden="true"></i>' : ''}`;
   wrap.appendChild(header);
   const bodyWrap = document.createElement('div');
   bodyWrap.className = padded ? 'p-4' : '';

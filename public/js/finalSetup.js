@@ -78,7 +78,7 @@ export function renderFinalSetupTab() {
   const readOnly = isLocked || state.currentUserRole === 'reviewer';
   const inputStyleStr = readOnly
     ? 'background:rgba(12,23,39,0.4);color:#6C88A6;border:1px solid rgba(120,166,212,0.16);cursor:not-allowed'
-    : 'background:rgba(12,23,39,0.6);color:#E9F0F8;border:1px solid rgba(120,166,212,0.16)';
+    : 'background:rgba(12,23,39,0.6);color:#D3DAE3;border:1px solid rgba(120,166,212,0.16)';
 
   const confirmedSensors = fs.sensors.filter(s => s.confirmed).length;
   const totalSensors = fs.sensors.length;
@@ -108,10 +108,10 @@ export function renderFinalSetupTab() {
     headerButtonsHtml = `<div class="flex flex-col items-end gap-2">
       <span style="font-size:9px;font-weight:700;padding:3px 10px;border-radius:6px;background:rgba(243,145,36,0.15);color:#f39124;">CHANGE IN PROGRESS</span>
       <div class="flex items-center gap-2 flex-wrap justify-end" style="max-width:520px">
-        <input id="final-change-item" type="text" placeholder="Item (e.g. Tether, Thruster 3)…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:170px">
-        <input id="final-change-old-id" type="text" placeholder="Main Set ID…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
-        <input id="final-change-new-id" type="text" placeholder="Replacement ID…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
-        <input id="final-change-reason" type="text" placeholder="Reason for change…" style="background:rgba(12,23,39,0.8);color:#E9F0F8;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:180px">
+        <input id="final-change-item" type="text" placeholder="Item (e.g. Tether, Thruster 3)…" style="background:rgba(12,23,39,0.8);color:#D3DAE3;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:170px">
+        <input id="final-change-old-id" type="text" placeholder="Main Set ID…" style="background:rgba(12,23,39,0.8);color:#D3DAE3;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
+        <input id="final-change-new-id" type="text" placeholder="Replacement ID…" style="background:rgba(12,23,39,0.8);color:#D3DAE3;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:110px">
+        <input id="final-change-reason" type="text" placeholder="Reason for change…" style="background:rgba(12,23,39,0.8);color:#D3DAE3;border:1px solid rgba(243,145,36,0.4);border-radius:7px;padding:5px 10px;font-size:11px;outline:none;width:180px">
         <button type="button" id="final-commit-btn" style="padding:5px 14px;border-radius:7px;font-size:11px;font-weight:700;background:#f39124;color:#0A111C;border:none;cursor:pointer;">✓ Commit</button>
         <button type="button" id="final-cancel-btn" style="padding:5px 12px;border-radius:7px;font-size:11px;font-weight:700;background:rgba(120,166,212,0.12);color:#9AB0C8;border:1px solid rgba(120,166,212,0.3);cursor:pointer;">✗ Cancel</button>
       </div>
@@ -131,7 +131,7 @@ export function renderFinalSetupTab() {
     <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:rgba(243,145,36,0.15);">
       <div>
         <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-0.5">Final Setup Configuration</p>
-        <p class="text-lg font-bold text-[#E9F0F8] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
+        <p class="text-lg font-bold text-[#D3DAE3] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
         <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')}</p>
       </div>
       <div class="flex flex-col items-end gap-2">
@@ -176,7 +176,7 @@ export function renderFinalSetupTab() {
     const tr = document.createElement('tr');
     const tdCheck = document.createElement('td'); tdCheck.className = 'px-3 py-2.5 text-center';
     tdCheck.appendChild(checkbox(s.confirmed, readOnly, () => { s.confirmed = !s.confirmed; renderFinalSetupTab(); }));
-    const tdName = document.createElement('td'); tdName.className = 'px-3 py-2.5 text-sm font-medium text-[#E9F0F8]'; tdName.textContent = s.name;
+    const tdName = document.createElement('td'); tdName.className = 'px-3 py-2.5 text-sm font-medium text-[#D3DAE3]'; tdName.textContent = s.name;
     const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5 text-xs text-[#9AB0C8]'; tdModel.textContent = s.model || '—';
     const tdQty = document.createElement('td'); tdQty.className = 'px-3 py-2.5 text-center text-sm text-[#9AB0C8]'; tdQty.textContent = s.qty || 1;
     const tdCal = document.createElement('td'); tdCal.className = 'px-3 py-2.5 text-center'; tdCal.innerHTML = calBadge(s.calibrated);
@@ -229,7 +229,7 @@ export function renderFinalSetupTab() {
       const tr = document.createElement('tr');
       const tdCheck = document.createElement('td'); tdCheck.className = 'px-3 py-2.5 text-center';
       tdCheck.appendChild(checkbox(t.confirmed, readOnly, () => { t.confirmed = !t.confirmed; renderFinalSetupTab(); }));
-      const tdNum = document.createElement('td'); tdNum.className = 'px-3 py-2.5 text-sm text-[#E9F0F8] font-mono'; tdNum.textContent = t.number || '—';
+      const tdNum = document.createElement('td'); tdNum.className = 'px-3 py-2.5 text-sm text-[#D3DAE3] font-mono'; tdNum.textContent = t.number || '—';
       const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5 text-xs text-[#9AB0C8] font-mono'; tdSerial.textContent = t.serial || '—';
       const tdPos = document.createElement('td'); tdPos.className = 'px-3 py-2.5';
       const posInput = document.createElement('input');
@@ -286,7 +286,7 @@ export function renderFinalSetupTab() {
       </div>`;
     }).join('');
     historyCard.innerHTML = `<div class="flex items-center gap-2.5 px-5 py-3" style="background:rgba(16,27,44,0.8);border-bottom:1px solid rgba(120,166,212,0.16);">
-      <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#459fd9;"></span><span class="text-xs font-bold text-[#E9F0F8] uppercase tracking-wider flex-1">Change History</span>
+      <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#459fd9;"></span><span class="text-xs font-bold text-[#D3DAE3] uppercase tracking-wider flex-1">Change History</span>
       <span class="text-[10px] text-[#6C88A6]">${revisions.length} operational change${revisions.length !== 1 ? 's' : ''}</span>
     </div><div class="px-5 pt-4 pb-1">${rowsHtml}</div>`;
     el.appendChild(historyCard);

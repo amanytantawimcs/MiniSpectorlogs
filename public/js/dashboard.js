@@ -58,7 +58,7 @@ export function renderInfographics() {
       activeHTML += `
         <div class="flex items-center justify-between bg-blue-900/20 border border-blue-500/30 p-2 rounded">
           <span class="font-bold text-blue-400 text-xs">${escapeHtml(log.num || 'DIV')}</span>
-          <span class="text-[#E9F0F8] text-xs">${escapeHtml(log.rov || 'Dive')} In Progress</span>
+          <span class="text-[#D3DAE3] text-xs">${escapeHtml(log.rov || 'Dive')} In Progress</span>
           <span class="text-[#9AB0C8] text-[10px] animate-pulse">● Live</span>
         </div>`;
     }
@@ -68,7 +68,7 @@ export function renderInfographics() {
       activeHTML += `
         <div class="flex items-center justify-between bg-red-900/20 border border-red-500/30 p-2 rounded">
           <span class="font-bold text-red-400 text-xs">${escapeHtml(log.id || 'SB')}</span>
-          <span class="text-[#E9F0F8] text-xs">${escapeHtml(log.category || 'Standby')}</span>
+          <span class="text-[#D3DAE3] text-xs">${escapeHtml(log.category || 'Standby')}</span>
           <span class="text-[#9AB0C8] text-[10px] animate-pulse">● Live</span>
         </div>`;
     }
@@ -109,8 +109,8 @@ export function renderInfographics() {
   const maintEl = document.getElementById('op-total-maint');
   if (maintEl) {
     maintEl.innerText = totalMaintCount;
-    maintEl.classList.remove('text-[#9AB0C8]', 'text-[#E9F0F8]', 'text-red-500');
-    maintEl.classList.add(totalMaintCount > 0 ? 'text-red-500' : 'text-[#E9F0F8]');
+    maintEl.classList.remove('text-[#9AB0C8]', 'text-[#D3DAE3]', 'text-red-500');
+    maintEl.classList.add(totalMaintCount > 0 ? 'text-red-500' : 'text-[#D3DAE3]');
   }
 
   // ── A. Utilization chart (horizontal bar) ────────────────────────────
@@ -143,14 +143,14 @@ export function renderInfographics() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#D3DAE3', bodyColor: '#9AB0C8',
             borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             displayColors: false, callbacks: { label: ctx => `${ctx.raw} hrs` },
           },
         },
         scales: {
           x: { grid: { color: 'rgba(120,166,212,0.08)', drawBorder: false }, ticks: { color: '#6C88A6', font: { family: 'Inter', size: 11 } } },
-          y: { grid: { display: false, drawBorder: false }, ticks: { color: '#E9F0F8', font: { family: 'Inter', size: 12, weight: '600' } } },
+          y: { grid: { display: false, drawBorder: false }, ticks: { color: '#D3DAE3', font: { family: 'Inter', size: 12, weight: '600' } } },
         },
       },
     });
@@ -194,9 +194,9 @@ export function renderInfographics() {
         <div class="legend-row">
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="legend-dot" style="background:${color}"></span>
-            <span style="font-size:0.75rem;color:#E9F0F8;font-weight:500;">${escapeHtml(key)}</span>
+            <span style="font-size:0.75rem;color:#D3DAE3;font-weight:500;">${escapeHtml(key)}</span>
           </div>
-          <span style="font-size:0.75rem;font-weight:700;color:#E9F0F8;font-family:monospace;">${val}h</span>
+          <span style="font-size:0.75rem;font-weight:700;color:#D3DAE3;font-family:monospace;">${val}h</span>
         </div>`;
     });
   }
@@ -277,7 +277,7 @@ export function renderInfographics() {
         plugins: {
           legend: { display: true, position: 'top', labels: { color: '#9AB0C8', font: { size: 11 }, boxWidth: 12, boxHeight: 8, padding: 16 } },
           tooltip: {
-            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#D3DAE3', bodyColor: '#9AB0C8',
             borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw} hrs` },
           },
@@ -311,7 +311,7 @@ export function renderInfographics() {
         plugins: {
           legend: { display: false },
           tooltip: {
-            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#E9F0F8', bodyColor: '#9AB0C8',
+            backgroundColor: 'rgba(16,27,44,0.95)', titleColor: '#D3DAE3', bodyColor: '#9AB0C8',
             borderColor: 'rgba(120,166,212,0.16)', borderWidth: 1, padding: 12, cornerRadius: 8,
             callbacks: { label: ctx => `Depth: ${ctx.raw} m` },
           },

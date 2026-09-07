@@ -55,14 +55,14 @@
 
         .nav-item:hover {
             background: rgba(42,59,84,0.55);
-            color: #F7FAFF;
+            color: #DCE3EC;
         }
 
         /* ACTIVE STATE */
         .nav-item.active {
             background: #2A3B54;
             border-color: #45556E;
-            color: #F7FAFF;
+            color: #DCE3EC;
             font-weight: 700;
         }
         .nav-item.active::before {
@@ -104,7 +104,7 @@
             font-size: 0.78rem; flex-shrink: 0; transition: all 0.18s ease;
         }
         .nav-item.active .nav-icon { background-color: rgba(240,145,45,0.25); color: #F0912D; }
-        .nav-item:hover .nav-icon  { background-color: #14243A; color: #E9F0F8; }
+        .nav-item:hover .nav-icon  { background-color: #14243A; color: #D3DAE3; }
 
         /* --- LOGIN SCREEN STYLES --- */
         .login-bg {
@@ -127,7 +127,7 @@
 
         /* --- GENERAL STYLES --- */
         ::selection { background: #F9921C; color: #162239; }
-        input, select, textarea { background-color: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; padding: 10px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.2s; }
+        input, select, textarea { background-color: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #D3DAE3; padding: 10px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.2s; }
         input::placeholder, select::placeholder, textarea::placeholder { color: #6C88A6; }
         input:focus, select:focus, textarea:focus { border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
 
@@ -147,11 +147,11 @@
         .log-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(120,166,212,0.16); }
         .log-modal-header-left { display:flex; gap:12px; align-items:flex-start; }
         .log-modal-bar { width:4px; border-radius:4px; background:#f39124; align-self:stretch; min-height:36px; }
-        .log-modal-title { font-size:20px; font-weight:700; color:#E9F0F8; margin:0 0 2px; }
+        .log-modal-title { font-size:20px; font-weight:700; color:#D3DAE3; margin:0 0 2px; }
         .log-modal-sub { font-size:11.5px; color:#6C88A6; margin:0; }
         .log-modal-header-right { display:flex; flex-direction:column; align-items:flex-end; gap:10px; }
         .log-modal-close { background:none; border:none; color:#6C88A6; cursor:pointer; padding:2px; line-height:0; transition:color .15s ease; }
-        .log-modal-close:hover { color:#E9F0F8; }
+        .log-modal-close:hover { color:#D3DAE3; }
         .log-progress-chip { display:flex; align-items:center; gap:8px; font-family: ui-monospace, monospace; font-size:11px; color:#9AB0C8; background:#0C1727; border:1px solid rgba(120,166,212,0.16); padding:5px 10px; border-radius:20px; }
         .log-progress-track { width:60px; height:4px; border-radius:4px; background:#374151; overflow:hidden; }
         .log-progress-fill { height:100%; background:#f39124; border-radius:4px; transition:width .3s ease; }
@@ -168,7 +168,7 @@
         .log-field label { font-size:12px; font-weight:600; color:#9AB0C8; display:flex; align-items:center; gap:4px; }
         .log-field label .req { color:#f39124; }
         .log-field label .opt { font-weight:500; font-size:10px; color:#6C88A6; text-transform:uppercase; letter-spacing:.4px; }
-        .log-field input, .log-field select, .log-field textarea { width:100%; background:rgba(12,23,39,0.6); border:1px solid rgba(120,166,212,0.16); color:#E9F0F8; font-size:14px; padding:9px 11px; border-radius:8px; outline:none; transition:border-color .15s ease, box-shadow .15s ease; font-family:inherit; }
+        .log-field input, .log-field select, .log-field textarea { width:100%; background:rgba(12,23,39,0.6); border:1px solid rgba(120,166,212,0.16); color:#D3DAE3; font-size:14px; padding:9px 11px; border-radius:8px; outline:none; transition:border-color .15s ease, box-shadow .15s ease; font-family:inherit; }
         .log-field input:focus, .log-field select:focus, .log-field textarea:focus { border-color:#459fd9; box-shadow:0 0 0 3px rgba(69,159,217,0.15); }
         .log-field textarea { min-height:60px; resize:vertical; }
         .log-field.invalid input, .log-field.invalid select, .log-field.invalid textarea { border-color:#ef4444; background:rgba(239,68,68,0.06); }
@@ -186,13 +186,13 @@
         .dl-toolbar { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
         .dl-title-block { display:flex; align-items:center; gap:12px; }
         .dl-title-bar { width:4px; height:32px; background:#f39124; border-radius:4px; flex-shrink:0; }
-        .dl-title-block h3 { font-size:20px; font-weight:700; color:#E9F0F8; margin:0 0 2px; }
+        .dl-title-block h3 { font-size:20px; font-weight:700; color:#D3DAE3; margin:0 0 2px; }
         .dl-title-block p { margin:0; font-size:11.5px; color:#6C88A6; display:flex; align-items:center; gap:6px; }
         .dl-live-dot { width:6px; height:6px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981; animation:log-pulse 2s ease-in-out infinite; flex-shrink:0; }
         .dl-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
         .dl-nav-group { display:flex; align-items:center; gap:2px; background:#0C1727; border:1px solid rgba(120,166,212,0.16); border-radius:9px; padding:3px; }
         .dl-btn-nav { background:transparent; color:#9AB0C8; border:none; padding:7px 12px; border-radius:7px; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .15s ease, color .15s ease; white-space:nowrap; }
-        .dl-btn-nav:hover { background:rgba(255,255,255,0.05); color:#E9F0F8; }
+        .dl-btn-nav:hover { background:rgba(255,255,255,0.05); color:#D3DAE3; }
         .dl-toolbar-divider { width:1px; align-self:stretch; background:rgba(120,166,212,0.16); margin:0 2px; }
         .dl-btn-secondary { display:inline-flex; align-items:center; gap:7px; background:rgba(120,166,212,0.1); color:#9AB0C8; border:1px solid rgba(120,166,212,0.25); padding:9px 16px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; transition:background .15s ease; white-space:nowrap; }
         .dl-btn-secondary:hover { background:rgba(120,166,212,0.18); }
@@ -208,7 +208,7 @@
         .log-table-wrap tbody tr { border-bottom:1px solid rgba(120,166,212,0.16); transition:background .12s ease; }
         .log-table-wrap tbody tr:last-child { border-bottom:none; }
         .log-table-wrap tbody tr:hover { background:rgba(243,145,36,0.035); }
-        .log-table-wrap tbody td { padding:13px 16px; font-size:13px; vertical-align:middle; color:#E9F0F8; }
+        .log-table-wrap tbody td { padding:13px 16px; font-size:13px; vertical-align:middle; color:#D3DAE3; }
         .log-muted-dash { color:#6C88A6; }
         .log-id-link { font-family: ui-monospace, monospace; color:#f39124; font-weight:700; }
         .log-status-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap; }
@@ -262,7 +262,7 @@
         .kpi-green  .kpi-icon { background: rgba(16,185,129,0.15); }
         .kpi-red    .kpi-icon { background: rgba(239,68,68,0.15); }
         .kpi-label { font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#6C88A6; }
-        .kpi-value { font-size:2.4rem; font-weight:800; color:#E9F0F8; line-height:1.1; margin:4px 0; }
+        .kpi-value { font-size:2.4rem; font-weight:800; color:#D3DAE3; line-height:1.1; margin:4px 0; }
         .kpi-sub   { font-size:0.72rem; color:#6C88A6; margin-top:4px; }
 
         .chart-card {
@@ -318,7 +318,7 @@
         /* ── Sidebar nav shape (unified, both modes) ── */
         .nav-item-ic { font-size: 15px; color: #6C88A6; flex-shrink: 0; width: 16px; text-align: center; }
         .nav-item.active .nav-item-ic { color: #F9921C; }
-        .nav-item:hover .nav-item-ic { color: #F7FAFF; }
+        .nav-item:hover .nav-item-ic { color: #DCE3EC; }
         .nav-tag { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #AEBFD4; border: 1px solid rgba(174,191,212,0.28); border-radius: 20px; padding: 0 7px; line-height: 16px; }
         .nav-item.active .nav-tag { color: #F9921C; border-color: rgba(249,146,28,0.4); }
         .sim-nav-label { margin: 0 0 6px; padding: 10px 16px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #AABDD5; border-bottom: none; }
@@ -335,7 +335,7 @@
            separating it from nav. */
         .brand-block { flex-direction: column; align-items: center; justify-content: center; padding: 22px 18px 16px; border-bottom: 1px solid #33455F; }
         .brand-block img { height: 46px; margin-bottom: 10px; }
-        .brand-block h1 { font-size: 15px; font-weight: 500; color: #F7FAFF; text-align: center; }
+        .brand-block h1 { font-size: 15px; font-weight: 500; color: #DCE3EC; text-align: center; }
         .brand-block p { margin-top: 4px; font-size: 12px; line-height: 1.4; color: #AEBFD4; text-align: center; }
         nav { padding-top: 0; padding-bottom: 4px; }
 
@@ -354,7 +354,7 @@
             background: #459fd9; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0;
         }
         .user-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-        #display-user-id { display: block; font-size: 13px; font-weight: 700; color: #F7FAFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        #display-user-id { display: block; font-size: 13px; font-weight: 700; color: #DCE3EC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
         .user-card-role { display: block; font-size: 11px; color: #AEBFD4; margin-top: 1px; }
         .sidebar-footer button { margin-left: 6px; flex-shrink: 0; }
         .footer-icon-btn {
@@ -363,7 +363,7 @@
             background: transparent; color: #B5CDE4; transition: background 0.15s ease, color 0.15s ease;
         }
         .footer-icon-btn i { font-size: 16px; }
-        .footer-icon-btn:hover { background: rgba(181,205,228,0.1); color: #F7FAFF; }
+        .footer-icon-btn:hover { background: rgba(181,205,228,0.1); color: #DCE3EC; }
         .footer-icon-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: 1px; }
         .footer-icon-btn.active { background: rgba(249,146,28,0.16); color: #F9921C; }
 
@@ -371,7 +371,7 @@
         aside {
             background: #17253D; border-color: #33455F;
             width: 280px; margin: 0; border-radius: 0 20px 20px 0; border: none; overflow: visible;
-            border-right: 2px solid #F9921C;
+            border-right: 1px solid #F9921C;
             backdrop-filter: none; box-shadow: none;
         }
         .blur-me { background: #0D111C !important; }
@@ -400,7 +400,7 @@
         body.sim-mode .sim-crumb-label { display: inline; color: #6C88A6; font-size: 13px; font-weight: 500; }
         body.sim-mode .sim-crumb-chevron { display: inline-block; color: #6C88A6; }
         body.sim-mode .sim-hide-el { display: none; }
-        #page-title { color: #E9F0F8; }
+        #page-title { color: #D3DAE3; }
         .sim-save-status { display: none; align-items: center; gap: 6px; margin-left: 10px; font-size: 12px; color: #6C88A6; }
         .sim-save-status .dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
         .sim-save-status.show { display: inline-flex; }
@@ -415,7 +415,7 @@
             transition: color .15s ease, background-color .15s ease;
         }
         .sim-collapse-btn i { font-size: 15px; transition: transform .2s ease; flex-shrink: 0; }
-        .sim-collapse-btn:hover { color: #E9F0F8; background: rgba(120,166,212,0.06); }
+        .sim-collapse-btn:hover { color: #D3DAE3; background: rgba(120,166,212,0.06); }
         .sim-collapse-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: -2px; }
         aside.sim-collapsed .sim-collapse-btn i { transform: rotate(180deg); display: inline-block; }
         aside.sim-collapsed .sim-collapse-btn { justify-content: center; padding: 0; }
@@ -451,7 +451,7 @@
         /* Rail tooltip: a single body-level element positioned via JS (not CSS
            ::after) so it can't be clipped by nav's overflow-y:auto ancestor. */
         #sim-rail-tooltip {
-            position: fixed; z-index: 200; background: #101B2C; color: #E9F0F8;
+            position: fixed; z-index: 200; background: #101B2C; color: #D3DAE3;
             border: 1px solid rgba(120,166,212,0.24); padding: 5px 10px; border-radius: 6px;
             font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none;
             opacity: 0; visibility: hidden; transition: opacity .12s ease;
@@ -465,7 +465,7 @@
             background: transparent; color: #9AB0C8; align-items: center; justify-content: center;
             cursor: pointer; font-size: 16px; flex-shrink: 0; transition: background .15s ease, color .15s ease;
         }
-        .sim-hamburger-btn:hover { background: #14243A; color: #E9F0F8; }
+        .sim-hamburger-btn:hover { background: #14243A; color: #D3DAE3; }
         .sim-hamburger-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: 1px; }
         .sim-drawer-backdrop {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 45;
@@ -509,7 +509,7 @@
         }
         .rcard-head { border-bottom-color: rgba(120,166,212,0.16) !important; }
         .rcard-bar { width: 3px; height: 15px; border-radius: 3px; background: #F0912D; flex-shrink: 0; }
-        .rcard-title { font-size: 17px; font-weight: 600; color: #E9F0F8; }
+        .rcard-title { font-size: 17px; font-weight: 600; color: #D3DAE3; }
         .rcard-hint { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #6C88A6; }
 
         /* Collapsible rcard sections (renderSectionCard's collapsed:true option,
@@ -524,7 +524,7 @@
         details.rcard[open] > summary .section-collapse-chevron { transform: rotate(180deg); }
 
         /* Neutral reference-style button + field, used by the scope picker row. */
-        .rbtn { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #E9F0F8; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; cursor: pointer; transition: border-color .18s ease; }
+        .rbtn { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #D3DAE3; font-size: 12.5px; font-weight: 500; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; cursor: pointer; transition: border-color .18s ease; }
         .rbtn:hover { border-color: rgba(120,166,212,0.28); }
         .rbtn-lg { height: 42px; padding: 0 18px; font-size: 13.5px; }
         .rbtn-orange-outline {
@@ -544,10 +544,10 @@
             opacity: 0.55;
             cursor: not-allowed;
         }
-        .rfield { background: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
+        .rfield { background: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #D3DAE3; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
         .rfield::placeholder { color: #6C88A6; }
         .rfield:focus { outline: none; border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
-        .rfield-label { display: block; font-size: 13px; font-weight: 600; color: #9AB0C8; margin-bottom: 6px; }
+        .rfield-label { display: block; font-size: 15.5px; font-weight: 600; color: #9AB0C8; margin-bottom: 6px; }
         .rfield-label .req { color: #F0912D; margin-left: 2px; }
 
         /* ── SIMULATION: operation-scope bundle catalog ── */
@@ -560,13 +560,13 @@
         .scope-bundle-btn .row { display: flex; align-items: center; gap: 9px; }
         .scope-bundle-mark { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(120,166,212,0.28); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.18s ease; }
         .scope-bundle-btn[aria-pressed="true"] .scope-bundle-mark { background: #F0912D; border-color: #F0912D; color: #20130A; }
-        .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #E9F0F8; line-height: 1.35; margin: 0; }
+        .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #D3DAE3; line-height: 1.35; margin: 0; }
         .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(249,146,28,0.4); color: #F9921C; background: rgba(249,146,28,0.14); }
         .scope-bundle-delete { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; background: rgba(239,68,68,0.1); border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.15s ease, background 0.15s ease; }
         .scope-bundle-delete:hover { opacity: 1; background: rgba(239,68,68,0.22); }
         .scope-detail { border: 1px solid rgba(120,166,212,0.16); border-radius: 12px; background: #14243A; overflow: hidden; margin-top: 18px; }
         .scope-detail-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(120,166,212,0.16); flex-wrap: wrap; }
-        .scope-detail-head h4 { font-size: 14px; font-weight: 600; color: #E9F0F8; margin: 0; }
+        .scope-detail-head h4 { font-size: 14px; font-weight: 600; color: #D3DAE3; margin: 0; }
         .scope-detail-head .code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px; color: #6C88A6; }
         .scope-detail-acts { margin-left: auto; display: flex; gap: 8px; }
         .scope-sensor-cols { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); }
@@ -593,7 +593,7 @@
         /* ── SIMULATION: MiniSpectors unit picker ── */
         .units-seg-btn { height: 28px; padding: 0 12px; border: none; background: none; border-radius: 7px; cursor: pointer; color: #6b7280; font-size: 12px; font-weight: 600; transition: all 0.18s ease; }
         .units-seg-btn[aria-pressed="true"] { background: #1f2937; color: #f3f4f6; }
-        .units-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(190px,1fr)); gap: 12px; }
+        .units-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
         .unit-card { position: relative; padding: 6px 14px; border-radius: 12px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; transition: all 0.2s ease; color: inherit; }
         .unit-card:hover { border-color: rgba(120,166,212,0.28); transform: translateY(-2px); }
         .unit-card .unit-glyph { width: 80px; height: 80px; border-radius: 12px; background: transparent; display: flex; align-items: center; justify-content: center; margin-bottom: 0; }
@@ -615,7 +615,7 @@
         .fixedsens-role-badge { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 20px; text-transform: uppercase; }
         .fixedsens-role-badge.main { background: #f39124; color: #20130A; }
         .fixedsens-role-badge.standby { background: rgba(69,159,217,0.15); color: #459fd9; border: 1px solid rgba(69,159,217,0.4); }
-        .fixedsens-copy-btn { height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #E9F0F8; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .18s ease; }
+        .fixedsens-copy-btn { height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #D3DAE3; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .18s ease; }
         .fixedsens-copy-btn:hover { border-color: rgba(120,166,212,0.32); }
         .fixedsens-copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         .fixedsens-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
@@ -670,14 +670,14 @@
         <div class="text-center mb-7">
             <img src="assets/logo.png" alt="Logo" class="h-14 w-auto mx-auto mb-4 object-contain"
                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
-            <h1 class="text-[26px] leading-tight font-bold text-[#F7FAFF]">MiniSpector® Log System</h1>
+            <h1 class="text-[26px] leading-tight font-bold text-[#DCE3EC]">MiniSpector® Log System</h1>
             <p class="text-sm text-[#B9C7D9] mt-1">Service Development and Technical Support</p>
         </div>
 
         <!-- Member Login — primary card -->
         <div class="rounded-2xl backdrop-blur-md bg-[#22314B] shadow-xl p-7 sm:p-9" style="border:1px solid rgba(181,205,228,0.14);">
             <div class="mb-5">
-                <h2 class="text-lg font-bold text-[#F7FAFF]">Welcome back</h2>
+                <h2 class="text-lg font-bold text-[#DCE3EC]">Welcome back</h2>
                 <p class="text-sm text-[#B9C7D9] mt-1">Sign in with your Employee ID to continue</p>
             </div>
 
@@ -690,7 +690,7 @@
                         </svg>
                     </span>
                     <input type="text" id="login-id-input" placeholder="Enter your ID" autocomplete="username"
-                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#DCE3EC] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
                         style="border-color:rgba(181,205,228,0.3);"
                         onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'">
                 </div>
@@ -699,7 +699,7 @@
             <div class="mb-3">
                 <div class="flex items-center justify-between mb-1.5">
                     <label id="login-pin-label" for="login-pin-input" class="block text-sm font-medium text-[#B9C7D9]">Passcode</label>
-                    <button type="button" id="btn-reset-passcode" class="text-xs font-medium text-[#B5CDE4] hover:text-[#F7FAFF] transition-colors underline decoration-dotted">Forgot passcode?</button>
+                    <button type="button" id="btn-reset-passcode" class="text-xs font-medium text-[#B5CDE4] hover:text-[#DCE3EC] transition-colors underline decoration-dotted">Forgot passcode?</button>
                 </div>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#B5CDE4] pointer-events-none">
@@ -708,12 +708,12 @@
                         </svg>
                     </span>
                     <input type="password" id="login-pin-input" placeholder="••••••" maxlength="72" autocomplete="current-password"
-                        class="w-full h-12 pl-11 pr-11 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        class="w-full h-12 pl-11 pr-11 rounded-lg text-base text-[#DCE3EC] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
                         style="border-color:rgba(181,205,228,0.3);"
                         onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
                         onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
                     <button type="button" id="btn-toggle-passcode" aria-label="Show passcode" aria-pressed="false"
-                        class="absolute inset-y-0 right-0 flex items-center px-3 text-[#B5CDE4] hover:text-[#F7FAFF] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#B5CDE4] rounded-r-lg"
+                        class="absolute inset-y-0 right-0 flex items-center px-3 text-[#B5CDE4] hover:text-[#DCE3EC] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#B5CDE4] rounded-r-lg"
                         onclick="
                             const inp=document.getElementById('login-pin-input');
                             const showing = inp.type==='text';
@@ -743,7 +743,7 @@
                         </svg>
                     </span>
                     <input type="password" id="login-pin-confirm-input" placeholder="••••••" maxlength="72" autocomplete="new-password"
-                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#DCE3EC] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
                         style="border-color:rgba(181,205,228,0.3);"
                         onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
                         onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
@@ -783,7 +783,7 @@
                 <label for="review-code-input" class="block text-sm font-medium mb-1.5 text-[#B9C7D9]">Project code</label>
                 <input type="text" id="review-code-input" placeholder="J-XXXX"
                     autocomplete="off"
-                    class="w-full h-12 px-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors font-mono"
+                    class="w-full h-12 px-3.5 rounded-lg text-base text-[#DCE3EC] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors font-mono"
                     style="border-color:rgba(181,205,228,0.3);text-transform:uppercase;letter-spacing:0.04em;"
                     onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
                     onkeydown="if(event.key==='Enter') document.getElementById('btn-review-login').click()">
@@ -917,7 +917,7 @@
     <div class="relative z-10 text-center mb-8 px-4 -mt-14">
         <img src="assets/logo.png" alt="Logo" class="h-[58px] w-auto mx-auto mb-4 object-contain"
              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
-        <h1 class="text-[28px] leading-tight font-bold mb-1.5 text-[#F7FAFF]">Welcome, <span id="mode-user-name" class="text-[#F9921C]"></span></h1>
+        <h1 class="text-[28px] leading-tight font-bold mb-1.5 text-[#DCE3EC]">Welcome, <span id="mode-user-name" class="text-[#F9921C]"></span></h1>
         <p id="mode-subtitle" class="text-sm text-[#B9C7D9]">Start a new inspection or continue an existing project.</p>
     </div>
 
@@ -934,7 +934,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold mb-2.5 text-[#F7FAFF]">New project</h2>
+            <h2 class="text-xl font-bold mb-2.5 text-[#DCE3EC]">New project</h2>
             <p class="text-base leading-relaxed mb-6 text-[#B9C7D9]">Plan equipment and sensors, simulate your inspection, then move to live operation.</p>
             <div class="mt-auto inline-flex self-start items-center gap-2 px-5 py-3 rounded-lg text-base font-bold bg-[#F9921C] text-[#192643]">
                 <span>Create project</span>
@@ -953,7 +953,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold mb-2.5 text-[#F7FAFF]">Join or continue</h2>
+            <h2 class="text-xl font-bold mb-2.5 text-[#DCE3EC]">Join or continue</h2>
             <p class="text-base leading-relaxed mb-6 text-[#B9C7D9]">Resume a saved session or join a live project using a cloud code.</p>
             <div class="mt-auto inline-flex self-start items-center gap-2 px-5 py-3 rounded-lg text-base font-bold border-2 border-[#B5CDE4] text-[#B5CDE4]">
                 <span>Open project</span>
@@ -971,7 +971,7 @@
         <!-- Project code search -->
         <label class="block text-xs font-semibold text-[#B9C7D9] mb-2 uppercase tracking-wider">Project Code</label>
         <input id="join-code-input" type="text" placeholder="J-XXXX" autocomplete="off"
-            class="w-full px-3 py-2.5 rounded-lg text-sm text-[#F7FAFF] placeholder-[#6C88A6] outline-none transition-all font-mono"
+            class="w-full px-3 py-2.5 rounded-lg text-sm text-[#DCE3EC] placeholder-[#6C88A6] outline-none transition-all font-mono"
             style="background:rgba(0,0,0,0.3);border:1px solid rgba(181,205,228,0.25);text-transform:uppercase;letter-spacing:0.04em;"
             onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.25)'"
             onkeydown="if(event.key==='Enter') document.getElementById('btn-join-confirm').click()">
@@ -1753,7 +1753,7 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Winch / Hydraulics</p>
+                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Winch / Hydraulics</p>
                     <p class="text-xs text-[#6C88A6] mt-0.5">Inspected and confirmed functional</p>
                 </div>
                 <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
@@ -1765,7 +1765,7 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Umbilical / Cable</p>
+                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Umbilical / Cable</p>
                     <p class="text-xs text-[#6C88A6] mt-0.5">Visual inspection passed — no damage or kinks</p>
                 </div>
                 <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
@@ -1777,7 +1777,7 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">A-Frame / Crane</p>
+                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">A-Frame / Crane</p>
                     <p class="text-xs text-[#6C88A6] mt-0.5">Functional and properly secured</p>
                 </div>
                 <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
@@ -1789,7 +1789,7 @@
                     <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-[#E9F0F8] group-hover:text-white transition-colors">Tether Management / Latch</p>
+                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Tether Management / Latch</p>
                     <p class="text-xs text-[#6C88A6] mt-0.5">System checked and latch confirmed operational</p>
                 </div>
                 <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
@@ -2197,9 +2197,9 @@
                     <h4 class="text-white font-bold mb-1">1. What Data Do We Collect?</h4>
                     <p class="mb-2">We collect only the data needed to run this logging system:</p>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-[#E9F0F8]">Your User Profile:</span> We collect your professional contact info (name, work email, company) to create your account and secure your access.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">The Operational Logs:</span> The main purpose of the portal is to store the dive details, equipment status, and maintenance reports you enter. (For this data, your employer is the "Data Controller," and we are the "Data Processor.")</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Technical Usage Info:</span> We automatically collect basic data from your web browser (like your IP address) to keep the system secure and running smoothly.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Your User Profile:</span> We collect your professional contact info (name, work email, company) to create your account and secure your access.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">The Operational Logs:</span> The main purpose of the portal is to store the dive details, equipment status, and maintenance reports you enter. (For this data, your employer is the "Data Controller," and we are the "Data Processor.")</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Technical Usage Info:</span> We automatically collect basic data from your web browser (like your IP address) to keep the system secure and running smoothly.</li>
                     </ul>
                 </div>
 
@@ -2216,9 +2216,9 @@
                 <div>
                     <h4 class="text-white font-bold mb-1">3. Data Storage and Security</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-[#E9F0F8]">Secure Servers:</span> We store your data on secure servers.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Encryption:</span> We use advanced encryption to protect your data while it travels over the Internet and while it is stored in our database.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Restricted Access:</span> Access to logs is strictly limited to authorized users associated with that specific operation.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Secure Servers:</span> We store your data on secure servers.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Encryption:</span> We use advanced encryption to protect your data while it travels over the Internet and while it is stored in our database.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Restricted Access:</span> Access to logs is strictly limited to authorized users associated with that specific operation.</li>
                     </ul>
                 </div>
 
@@ -2253,8 +2253,8 @@
                 <div>
                     <h4 class="text-white font-bold mb-1">1. Using Your Account</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-[#E9F0F8]">Authorized Use:</span> This portal is for authorized MCS personnel and our Clients only.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Keep Your Password Secret:</span> You are responsible for keeping your login credentials safe. Do not share your password with anyone.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Authorized Use:</span> This portal is for authorized MCS personnel and our Clients only.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Keep Your Password Secret:</span> You are responsible for keeping your login credentials safe. Do not share your password with anyone.</li>
                     </ul>
                 </div>
 
@@ -2270,16 +2270,16 @@
                 <div>
                     <h4 class="text-white font-bold mb-1">3. Operational Data and Accuracy</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-[#E9F0F8]">Data Entry is Your Responsibility:</span> The accuracy and completeness of all logs, checklists, and fault reports depend entirely on you. MCS is not responsible for any incorrect data you enter.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Operational Decisions Are Yours:</span> This portal is a tool for documentation. All on-site decisions, such as a "Ready to Dive" call or safety assessment, are the sole responsibility of the on-site team (Pilot, Supervisor, etc.) and your company.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Data Entry is Your Responsibility:</span> The accuracy and completeness of all logs, checklists, and fault reports depend entirely on you. MCS is not responsible for any incorrect data you enter.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Operational Decisions Are Yours:</span> This portal is a tool for documentation. All on-site decisions, such as a "Ready to Dive" call or safety assessment, are the sole responsibility of the on-site team (Pilot, Supervisor, etc.) and your company.</li>
                     </ul>
                 </div>
 
                 <div>
                     <h4 class="text-white font-bold mb-1">4. Important Disclaimers and Limitations</h4>
                     <ul class="list-disc pl-5 space-y-1">
-                        <li><span class="font-semibold text-[#E9F0F8]">"As-Is" System:</span> We provide this logging system "as-is." While we work hard to keep it available and error-free, we cannot guarantee it will never have issues.</li>
-                        <li><span class="font-semibold text-[#E9F0F8]">Limitation of Liability:</span> To the maximum extent permitted by law, MCS will not be responsible for any damages or operational losses (like downtime) that may occur in connection with your use of this portal.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">"As-Is" System:</span> We provide this logging system "as-is." While we work hard to keep it available and error-free, we cannot guarantee it will never have issues.</li>
+                        <li><span class="font-semibold text-[#D3DAE3]">Limitation of Liability:</span> To the maximum extent permitted by law, MCS will not be responsible for any damages or operational losses (like downtime) that may occur in connection with your use of this portal.</li>
                     </ul>
                 </div>
 

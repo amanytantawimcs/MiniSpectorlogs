@@ -139,7 +139,7 @@ function usersRowsHtml(list) {
   return list.map(u => `
       <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
           <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(String(u.id))}</td>
-          <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(u.name || '')}</td>
+          <td class="px-4 py-3" style="color:#D3DAE3">${escapeHtml(u.name || '')}</td>
           <td class="px-4 py-3">
               ${u.is_admin ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:rgba(243,145,36,0.15);color:#f39124">ADMIN</span>` : ''}
           </td>
@@ -169,7 +169,7 @@ async function renderAdminUsersTab() {
   el.innerHTML = `
     <div class="max-w-3xl">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold" style="color:#E9F0F8">User Accounts</h2>
+            <h2 class="text-base font-bold" style="color:#D3DAE3">User Accounts</h2>
         </div>
         <div class="mb-4">
             <input id="admin-users-search" type="text" placeholder="Search by ID or name..." autocomplete="off"
@@ -253,7 +253,7 @@ function activityRowsHtml(list) {
   if (list.length === 0) return `<tr><td colspan="3" class="text-center py-6 text-sm" style="color:#6C88A6">No logins found.</td></tr>`;
   return list.map(l => `
       <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
-          <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(l.user_name || l.user_id || 'Unknown')}</td>
+          <td class="px-4 py-3" style="color:#D3DAE3">${escapeHtml(l.user_name || l.user_id || 'Unknown')}</td>
           <td class="px-4 py-3">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="${l.role === 'admin' ? 'background:rgba(243,145,36,0.15);color:#f39124' : 'background:rgba(69,159,217,0.15);color:#459fd9'}">${l.role === 'admin' ? 'ADMIN' : 'USER'}</span>
           </td>
@@ -279,7 +279,7 @@ async function renderAdminActivityTab() {
   el.innerHTML = `
     <div class="max-w-2xl">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold" style="color:#E9F0F8">Login Activity</h2>
+            <h2 class="text-base font-bold" style="color:#D3DAE3">Login Activity</h2>
             <span class="text-xs" style="color:#6C88A6">Most recent ${cachedActivity.length}</span>
         </div>
         <div class="mb-4">
@@ -306,7 +306,7 @@ function projectsRowsHtml(list) {
   return list.map(p => `
       <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
           <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(p.project_code)}</td>
-          <td class="px-4 py-3" style="color:#E9F0F8">${escapeHtml(p.project_name || '—')}</td>
+          <td class="px-4 py-3" style="color:#D3DAE3">${escapeHtml(p.project_name || '—')}</td>
           <td class="px-4 py-3 whitespace-nowrap">
               <span class="text-[10px] font-bold px-2 py-1 rounded" style="${p.mode === 'simulation' ? 'background:rgba(234,179,8,0.15);color:#facc15;' : 'background:rgba(69,159,217,0.15);color:#459fd9;'}">${p.mode === 'simulation' ? 'SIMULATION' : 'OPERATION'}</span>
               ${p.is_sim_locked ? '<span class="text-[10px] font-bold px-2 py-1 rounded ml-1" style="background:rgba(34,197,94,0.15);color:#22c55e;">PUSHED</span>' : ''}
@@ -364,7 +364,7 @@ async function renderAdminProjectsTab() {
   el.innerHTML = `
     <div class="max-w-4xl">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold" style="color:#E9F0F8">All Projects</h2>
+            <h2 class="text-base font-bold" style="color:#D3DAE3">All Projects</h2>
             <span class="text-xs" style="color:#6C88A6">${cachedAdminProjects.length} total</span>
         </div>
         <div class="mb-4">

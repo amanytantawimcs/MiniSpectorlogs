@@ -27,7 +27,7 @@ export function addSensorRow(tbodyId, data = {}) {
   const isOk = data.status === 'OK';
   const dis = readOnly ? 'disabled' : '';
   tr.innerHTML = `
-    <td class="p-2 pl-4"><input type="text" class="row-name w-full font-bold outline-none transition-all" style="background:transparent;border:none;border-bottom:1px solid transparent;color:#E9F0F8" value="${(data.name || '').replace(/"/g, '&quot;')}" placeholder="Item Name..." ${dis}></td>
+    <td class="p-2 pl-4"><input type="text" class="row-name w-full font-bold outline-none transition-all" style="background:transparent;border:none;border-bottom:1px solid transparent;color:#D3DAE3" value="${(data.name || '').replace(/"/g, '&quot;')}" placeholder="Item Name..." ${dis}></td>
     <td class="p-2">
       <label class="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" class="row-status sr-only peer" ${isOk ? 'checked' : ''} ${dis}>
@@ -35,9 +35,9 @@ export function addSensorRow(tbodyId, data = {}) {
         <span class="row-status-label ml-3 text-sm font-bold w-12" style="color:${isOk ? '#22c55e' : '#f87171'}">${isOk ? 'OK' : 'Fault'}</span>
       </label>
     </td>
-    <td class="p-2"><input type="text" class="row-model w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.model || '').replace(/"/g, '&quot;')}" placeholder="Model..." ${dis}></td>
-    <td class="p-2"><input type="date" class="row-cal w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${data.cal || ''}" ${dis}></td>
-    <td class="p-2"><input type="text" class="row-notes w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8" value="${(data.notes || '').replace(/"/g, '&quot;')}" placeholder="Notes..." ${dis}></td>
+    <td class="p-2"><input type="text" class="row-model w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3" value="${(data.model || '').replace(/"/g, '&quot;')}" placeholder="Model..." ${dis}></td>
+    <td class="p-2"><input type="date" class="row-cal w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3" value="${data.cal || ''}" ${dis}></td>
+    <td class="p-2"><input type="text" class="row-notes w-full rounded-lg px-2 py-1 text-xs outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3" value="${(data.notes || '').replace(/"/g, '&quot;')}" placeholder="Notes..." ${dis}></td>
     <td class="p-2 text-center">${readOnly ? '' : '<button type="button" class="remove-row-btn font-bold text-lg" style="color:#f87171" title="Remove Row">&times;</button>'}</td>
   `;
   tr.querySelector('.row-status').addEventListener('change', (e) => {

@@ -168,13 +168,13 @@ export function renderChecklistsTab() {
               <input type="checkbox" id="${ckId}" data-item-id="${item.id}" ${st.checked ? 'checked' : ''} ${readOnly ? 'disabled' : ''} class="cl-check-input w-4 h-4 rounded cursor-pointer accent-[#f39124]">
           </div>
           <div class="flex-1 min-w-0">
-              <label for="${ckId}" class="block text-sm leading-relaxed cursor-pointer select-none" style="${st.checked ? 'text-decoration:line-through;color:#6C88A6' : 'color:#E9F0F8'}">
+              <label for="${ckId}" class="block text-sm leading-relaxed cursor-pointer select-none" style="${st.checked ? 'text-decoration:line-through;color:#6C88A6' : 'color:#D3DAE3'}">
                   <span class="text-xs mr-1" style="color:#6C88A6">${idx + 1}.</span>${escapeHtml(item.label)}
               </label>
               ${item.reading ? `<div class="mt-2 flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-semibold text-[#f39124]">${escapeHtml(item.readingLabel)}:</span>
                   <input type="text" value="${escapeHtml(st.reading || '')}" placeholder="${escapeHtml(item.readingHint || 'Enter reading...')}" ${readOnly ? 'disabled' : ''}
-                         data-item-id="${item.id}" class="cl-reading-input rounded-lg px-2.5 py-1 text-sm w-40 focus:outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#E9F0F8">
+                         data-item-id="${item.id}" class="cl-reading-input rounded-lg px-2.5 py-1 text-sm w-40 focus:outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3">
               </div>` : ''}
           </div>
           <div class="flex-shrink-0 min-w-[140px]">
@@ -198,13 +198,13 @@ export function renderChecklistsTab() {
   container.innerHTML = `
   <div class="flex items-center justify-between mb-4">
       <div>
-          <h3 class="text-lg font-bold" style="color:#E9F0F8">${escapeHtml(cl.title)} Checklist</h3>
+          <h3 class="text-lg font-bold" style="color:#D3DAE3">${escapeHtml(cl.title)} Checklist</h3>
           <p class="text-xs mt-0.5" style="color:#6C88A6">${isPerDive ? 'Completed per dive — select dive number below' : 'Completed once per job/session'}</p>
       </div>
       <div class="flex items-center gap-4">
           ${readOnly ? '' : `<button id="cl-reset-btn" type="button" class="px-3 py-1.5 text-xs rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors" style="border:1px solid rgba(120,166,212,0.16);color:#9AB0C8">Reset</button>`}
           <div class="text-right">
-              <div class="text-sm font-bold" style="color:${allDone ? '#22c55e' : '#E9F0F8'}">${totalDone} / ${totalItems}</div>
+              <div class="text-sm font-bold" style="color:${allDone ? '#22c55e' : '#D3DAE3'}">${totalDone} / ${totalItems}</div>
               <div class="text-xs" style="color:#6C88A6">${pct}% complete</div>
           </div>
       </div>

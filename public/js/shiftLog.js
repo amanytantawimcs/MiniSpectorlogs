@@ -57,7 +57,7 @@ export function openShiftModal(index = -1) {
       return `<label style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer;">
         <input type="checkbox" value="${escapeHtml(c.name)}" ${selectedCrew.includes(c.name) ? 'checked' : ''} style="width:15px;height:15px;accent-color:#459fd9;flex-shrink:0;">
         <div style="width:28px;height:28px;border-radius:50%;background:${color}22;color:${color};border:1px solid ${color}44;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.68rem;flex-shrink:0;">${getInitials(c.name)}</div>
-        <span style="font-size:0.82rem;color:#E9F0F8;font-weight:500;flex:1;">${escapeHtml(c.name)}</span>
+        <span style="font-size:0.82rem;color:#D3DAE3;font-weight:500;flex:1;">${escapeHtml(c.name)}</span>
         <span style="font-size:0.68rem;color:${color};font-weight:600;">${escapeHtml(c.role)}</span>
       </label>`;
     }).join('');
@@ -122,9 +122,9 @@ export function renderShiftLog() {
 
   container.innerHTML = `
     <div style="display:flex;gap:20px;margin-bottom:14px;padding:10px 14px;background:rgba(16,27,44,0.5);border-radius:10px;border:1px solid rgba(120,166,212,0.16);">
-      <span style="font-size:0.75rem;color:#6C88A6;">Total Shifts: <strong style="color:#E9F0F8;">${shifts.length}</strong></span>
-      <span style="font-size:0.75rem;color:#6C88A6;">Total Days Logged: <strong style="color:#E9F0F8;">${totalDays}</strong></span>
-      <span style="font-size:0.75rem;color:#6C88A6;">Period: <strong style="color:#E9F0F8;">${shifts[0]?.startDate || '—'} → ${shifts[shifts.length - 1]?.endDate || '—'}</strong></span>
+      <span style="font-size:0.75rem;color:#6C88A6;">Total Shifts: <strong style="color:#D3DAE3;">${shifts.length}</strong></span>
+      <span style="font-size:0.75rem;color:#6C88A6;">Total Days Logged: <strong style="color:#D3DAE3;">${totalDays}</strong></span>
+      <span style="font-size:0.75rem;color:#6C88A6;">Period: <strong style="color:#D3DAE3;">${shifts[0]?.startDate || '—'} → ${shifts[shifts.length - 1]?.endDate || '—'}</strong></span>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;" id="shift-rows"></div>`;
 
@@ -137,11 +137,11 @@ export function renderShiftLog() {
     row.innerHTML = `
       <div style="text-align:center;background:rgba(69,159,217,0.12);border:1px solid rgba(69,159,217,0.2);border-radius:10px;padding:8px 4px;">
         <div style="font-size:0.65rem;color:#459fd9;font-weight:700;text-transform:uppercase;">Shift</div>
-        <div style="font-size:1.4rem;font-weight:800;color:#E9F0F8;line-height:1.1;">${escapeHtml(String(sh.shiftNo))}</div>
+        <div style="font-size:1.4rem;font-weight:800;color:#D3DAE3;line-height:1.1;">${escapeHtml(String(sh.shiftNo))}</div>
         ${dayCount !== null ? `<div style="font-size:0.6rem;color:#6C88A6;margin-top:2px;">${dayCount}d</div>` : ''}
       </div>
       <div>
-        <div style="font-weight:600;color:#E9F0F8;font-size:0.875rem;margin-bottom:4px;">${escapeHtml(sh.startDate || '—')} → ${escapeHtml(sh.endDate || '—')}</div>
+        <div style="font-weight:600;color:#D3DAE3;font-size:0.875rem;margin-bottom:4px;">${escapeHtml(sh.startDate || '—')} → ${escapeHtml(sh.endDate || '—')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
           ${sh.weather ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(120,166,212,0.12);color:#9AB0C8;">${WEATHER_ICON[sh.weather] || '🌡️'} ${escapeHtml(sh.weather)}</span>` : ''}
           ${sh.visibility ? `<span style="font-size:0.68rem;padding:2px 8px;border-radius:20px;background:rgba(120,166,212,0.12);color:#9AB0C8;">👁 ${escapeHtml(sh.visibility)}</span>` : ''}
