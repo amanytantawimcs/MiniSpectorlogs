@@ -383,7 +383,9 @@
         }
         #main-content-area {
             margin: 0; border-radius: 0; border: none; padding: 0;
-            background: #0A111C;
+            background-color: #101B2C;
+            background-image: radial-gradient(rgba(120,166,212,0.07) 1px, transparent 1px);
+            background-size: 26px 26px;
         }
         /* #tab-simulation manages its own padding internally (sim-scroll-area /
            sim-content-area); every other tab needs it restored now that the
@@ -492,17 +494,15 @@
             .sim-drawer-backdrop.show { display: block; }
         }
 
-        /* ── Dot-grid canvas background behind the sim wizard + workspace ── */
-        #sim-scroll-area, #sim-content-area {
-            background-image: radial-gradient(rgba(120,166,212,0.07) 1px, transparent 1px);
-            background-size: 26px 26px;
-        }
+        /* Dot-grid canvas background behind the sim wizard + workspace now comes
+           from #main-content-area itself (same pattern, applied app-wide) —
+           a second identical layer here would just double up on top of it. */
 
         /* ── Unified flat card shape ("rcard"), used by Mission Info/MiniSpectors,
            every dynamically built Simulation workspace card, and (as of the
            Operation reskin) Operation-mode cards too. ── */
         .rcard {
-            background: #101B2C; border: 1px solid rgba(120,166,212,0.16);
+            background: #17253D; border: 1px solid rgba(120,166,212,0.16);
             border-radius: 16px; overflow: hidden;
             box-shadow: 0 18px 40px -24px rgba(0,0,0,0.9);
         }
@@ -1119,8 +1119,8 @@
 
     <div id="nav-simulation-section" class="hidden">
         <div id="nav-prep-group" role="group" aria-label="Preparation">
-        <div onclick="goToPreparationTab('mission')" class="nav-item" id="sim-nav-mission" data-tooltip="Mission info">
-            <span>Mission info</span>
+        <div onclick="goToPreparationTab('mission')" class="nav-item" id="sim-nav-mission" data-tooltip="Mission information">
+            <span>Mission information</span>
         </div>
         <div onclick="goToPreparationTab('units')" class="nav-item" id="sim-nav-units" data-tooltip="MiniSpectors — 0 selected">
             <span>MiniSpectors</span>
@@ -1941,7 +1941,7 @@
             <div id="sim-setup-mission">
 
                 <div class="mb-6">
-                    <h3 class="text-2xl font-bold text-white tracking-tight">Mission Info</h3>
+                    <h3 class="text-2xl font-bold text-white tracking-tight">Mission Information</h3>
                     <p class="text-[#9AB0C8] mt-1 text-sm">Name the project, set the asset and window, and pick the operation scope.</p>
                 </div>
 
