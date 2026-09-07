@@ -1952,20 +1952,20 @@
                         <span class="rcard-bar"></span>
                         <span class="rcard-title">Project details</span>
                     </div>
-                    <div class="p-5 grid grid-cols-2 gap-4">
+                    <div class="p-5 grid grid-cols-3 gap-4">
                         <div>
                             <label class="rfield-label">Project Name</label>
                             <input id="sim-project-name" type="text" placeholder="e.g. ADNOC"
                                 class="w-full rfield placeholder-[#6C88A6]"/>
                         </div>
                         <div>
-                            <label class="rfield-label">Project Code<span class="req">*</span></label>
+                            <label class="rfield-label">Project Code</label>
                             <input id="sim-project-code" type="text" placeholder="e.g. J-xxxx"
                                 class="w-full rfield placeholder-[#6C88A6] font-mono"/>
                         </div>
                         <input type="hidden" id="sim-project-weather" value=""/>
                         <input type="hidden" id="sim-project-asset" value=""/>
-                        <div class="col-span-2">
+                        <div>
                             <div class="flex items-center justify-between mb-1">
                                 <label class="rfield-label" style="margin-bottom:0;">Description</label>
                                 <span id="sim-desc-count" class="text-[10px] font-mono text-[#6C88A6]">0 / 280</span>
@@ -1973,7 +1973,9 @@
                             <textarea id="sim-project-desc" rows="2" maxlength="280" placeholder="Optional mission description..."
                                 class="w-full rfield placeholder-[#6C88A6] resize-none" style="height:auto;padding-top:10px;padding-bottom:10px;"></textarea>
                         </div>
-                        <div class="col-span-2" style="border-top:1px solid rgba(120,166,212,0.12);margin-top:4px;padding-top:16px;">
+                        <!-- Project Team hidden for now (per request) — team-container-sim and
+                             its render/data logic are untouched, just not shown/called here. -->
+                        <div class="col-span-3 hidden" style="border-top:1px solid rgba(120,166,212,0.12);margin-top:4px;padding-top:16px;">
                             <label class="rfield-label">Project Team</label>
                             <div id="team-container-sim"></div>
                         </div>
