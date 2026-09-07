@@ -591,31 +591,28 @@ function restoreStep1FieldsFromState() {
 }
 
 // isReviewing: whether Mission Info/MiniSpectors is being viewed as a review
-// of an already-started simulation (vs. the pre-start wizard) — shows the
-// "Back to Workspace" bar and hides "Start Simulation" (which doesn't apply
-// to a project that already exists). All fields (Project Code, Operation
-// Scope, MiniSpectors, Project Name, Description) stay fully editable at any
-// time — there is no read-only lock here anymore.
-function applyPreparationReadOnlyLock(isReviewing) {
-  document.getElementById('sim-review-banner')?.classList.toggle('hidden', !isReviewing);
+// of an already-started simulation (vs. the pre-start wizard) — "Start
+// Simulation" doesn't apply to a project that already exists, so it hides it
+// (getting back to the workspace is via the sidebar's Equipment setup/
+// Topology items — see goToWorkspaceSubTab's returnToWorkspace() call).
+// All fields (Project Code, Operation Scope, MiniSpectors, Project Name,
+// Description) stay fully editable at any time — there is no read-only lock.
+function updateBeginSimButtonVisibility(isReviewing) {
   document.getElementById('btn-begin-sim')?.classList.toggle('hidden', isReviewing);
 }
 
-// Sidebar entry point for Mission Info / MiniSpectors. Only shows the
-// "Back to Workspace" bar when actually coming back from the workspace —
-// switching between the Mission Info and MiniSpectors sub-tabs while already
-// reviewing leaves that state alone (step2 stays hidden either way, so
-// wasInWorkspace is false on those clicks). Coming from the workspace
-// implies the simulation is already started (see isSimulationStarted's own
-// comment for why: step2 is only ever shown after beginSimulation() succeeds
-// or an existing project is loaded, both of which set it) — so pre-start
-// wizard navigation, which never touches step2, is never affected by this.
+// Sidebar entry point for Mission Info / MiniSpectors. Coming from the
+// workspace implies the simulation is already started (see
+// isSimulationStarted's own comment for why: step2 is only ever shown after
+// beginSimulation() succeeds or an existing project is loaded, both of which
+// set it) — so pre-start wizard navigation, which never touches step2, is
+// never affected by this.
 function goToPreparationTab(tab) {
   const step2 = document.getElementById('sim-step-2');
   const wasInWorkspace = step2 && !step2.classList.contains('hidden');
   if (wasInWorkspace) {
     restoreStep1FieldsFromState();
-    applyPreparationReadOnlyLock(true);
+    updateBeginSimButtonVisibility(true);
     step2.classList.add('hidden');
     document.getElementById('sim-step-1').classList.remove('hidden');
   }
@@ -644,7 +641,7 @@ export function initSimROVGrid() {
 
   document.getElementById('sim-step-1').classList.remove('hidden');
   document.getElementById('sim-step-2').classList.add('hidden');
-  applyPreparationReadOnlyLock(false);
+  updateBeginSimButtonVisibility(false);
 
   ['sim-project-name', 'sim-project-code', 'sim-project-desc', 'sim-project-asset', 'sim-project-weather'].forEach(id => {
     const el = document.getElementById(id);
@@ -680,9 +677,9 @@ export function installSimSetup() {
 
   document.getElementById('sim-project-code')?.addEventListener('input', updateWorkspaceNavAvailability);
 
-  // Project Name/Description stay editable during a Mission Info review (see
-  // applyPreparationReadOnlyLock) — write straight into simState.projectData
-  // and autosave, same pattern as every other simulation field (sensors.js).
+  // Project Name/Description stay editable during a Mission Info review —
+  // write straight into simState.projectData and autosave, same pattern as
+  // every other simulation field (sensors.js).
   document.getElementById('sim-project-name')?.addEventListener('input', (e) => {
     simState.projectData.name = e.target.value;
     scheduleSimSync();

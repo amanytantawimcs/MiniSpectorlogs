@@ -72,7 +72,7 @@ async function renderHistoryCard(projectCode, projectName) {
         Export
       </button>
     </div>
-    <div id="project-history-list" class="p-2">
+    <div id="project-history-list" class="p-2" style="max-height:340px;overflow-y:auto;">
       <div class="p-6 text-center text-sm" style="color:#6C88A6">Loading history…</div>
     </div>`;
 
