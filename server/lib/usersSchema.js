@@ -11,4 +11,20 @@ async function ensureUsersAdminColumn(pool) {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT false`);
 }
 
-module.exports = { ensureUsersAdminColumn };
+// Same idempotent pattern, for the LMS/SkillStream identity fields added
+// alongside the passcode-unification work — see db/schema.sql's comment on
+// the users table for what these columns are and aren't (one-time backfill,
+// not live-synced).
+async function ensureUsersLmsColumns(pool) {
+  await pool.query(`
+    ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS email TEXT,
+      ADD COLUMN IF NOT EXISTS department TEXT,
+      ADD COLUMN IF NOT EXISTS title TEXT,
+      ADD COLUMN IF NOT EXISTS manager_name TEXT,
+      ADD COLUMN IF NOT EXISTS join_date DATE,
+      ADD COLUMN IF NOT EXISTS lms_role TEXT
+  `);
+}
+
+module.exports = { ensureUsersAdminColumn, ensureUsersLmsColumns };

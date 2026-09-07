@@ -307,8 +307,8 @@ export function installAuth() {
           return;
         }
       } else {
-        if (!/^\d{4,}$/.test(pin)) {
-          errEl.innerText = 'Choose a passcode of at least 4 digits.';
+        if (pin.length < 4) {
+          errEl.innerText = 'Choose a passcode of at least 4 characters.';
           errEl.classList.remove('hidden');
           return;
         }

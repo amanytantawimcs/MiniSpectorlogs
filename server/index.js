@@ -2,7 +2,7 @@ const path = require('path');
 const express = require('express');
 const pool = require('./db');
 const { ensureLoginLogTable } = require('./lib/loginLog');
-const { ensureUsersAdminColumn } = require('./lib/usersSchema');
+const { ensureUsersAdminColumn, ensureUsersLmsColumns } = require('./lib/usersSchema');
 const { ensureIssueReportsTable } = require('./lib/issueReportsSchema');
 const { ensureDiveLogsColumns } = require('./lib/diveLogsSchema');
 const { ensureProjectDataLogColumn } = require('./lib/projectDataLogSchema');
@@ -59,6 +59,7 @@ const PORT = process.env.PORT || 8080;
 Promise.all([
   ensureLoginLogTable(pool).catch((e) => console.error('[startup] could not ensure login_log table:', e.message)),
   ensureUsersAdminColumn(pool).catch((e) => console.error('[startup] could not ensure users.is_admin column:', e.message)),
+  ensureUsersLmsColumns(pool).catch((e) => console.error('[startup] could not ensure users LMS columns:', e.message)),
   ensureIssueReportsTable(pool).catch((e) => console.error('[startup] could not ensure issue_reports table:', e.message)),
   ensureDiveLogsColumns(pool).catch((e) => console.error('[startup] could not ensure dive_logs columns:', e.message)),
   ensureProjectDataLogColumn(pool).catch((e) => console.error('[startup] could not ensure projects.project_data_log column:', e.message)),

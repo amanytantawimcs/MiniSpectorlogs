@@ -14,8 +14,11 @@ function verifyPasscode(passcode, hash, salt) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// No fixed upper digit-count from the product side (4, 5, 6, 7... all valid) —
-// 32 is just a sane hard ceiling so someone can't submit a multi-KB string as a "passcode".
-const PASSCODE_FORMAT = /^\d{4,32}$/;
+// Was digits-only; opened up to any characters so a credential set in
+// MiniSpector can also serve as a SkillStream password (and vice versa —
+// see server/lib/lmsDb.js) instead of the two apps requiring different
+// formats. 72 mirrors bcrypt's effective input cap (it silently ignores
+// bytes beyond that), which matters once this value gets mirrored there.
+const PASSCODE_FORMAT = /^.{4,72}$/;
 
 module.exports = { hashPasscode, verifyPasscode, PASSCODE_FORMAT };

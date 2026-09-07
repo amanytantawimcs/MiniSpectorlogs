@@ -10,6 +10,7 @@
     "test": "node --test test/**/*.test.js"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "docx": "^9.7.1",
     "docxtemplater": "^3.69.3",
     "express": "^4.19.2",

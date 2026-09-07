@@ -6,7 +6,7 @@ const { requireAuth, requireAdminAuth } = require('../lib/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
 const { recordLogin } = require('../lib/loginLog');
-const { isActiveInLms } = require('../lib/lmsDb');
+const { isActiveInLms, hasRealLmsPassword, verifyLmsPassword, mirrorToLmsIfUnclaimed, getLmsUser } = require('../lib/lmsDb');
 
 const router = express.Router();
 const passcodeLimiter = rateLimit({ windowMs: 60_000, max: 8 });
@@ -37,40 +37,62 @@ router.get('/me', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 router.get('/:id', asyncRoute(async (req, res) => {
-  const { rows } = await pool.query('SELECT id, name, role, passcode_hash, is_admin FROM users WHERE id = $1', [req.params.id.trim()]);
+  const id = req.params.id.trim();
+  const { rows } = await pool.query('SELECT id, name, role, passcode_hash, is_admin FROM users WHERE id = $1', [id]);
   if (!rows[0]) return res.status(404).json({ success: false, message: 'User not found' });
-  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode: !!rows[0].passcode_hash, isAdmin: rows[0].is_admin });
+  // hasPasscode also covers "already has a real SkillStream password" — that
+  // puts the login screen into verify mode (not set-a-new-one mode) even
+  // though this user has never set a MiniSpector-local passcode.
+  const hasPasscode = !!rows[0].passcode_hash || hasRealLmsPassword(await getLmsUser(id));
+  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode, isAdmin: rows[0].is_admin });
 }));
 
-// First-time passcode set. Rejected if a passcode already exists for this user.
+// First-time credential set. Rejected if a passcode already exists locally
+// OR the user already has a real (non-default) SkillStream password — in
+// that case they should be verifying with it, not creating a second,
+// separate one. See server/lib/lmsDb.js for the unification model.
 router.post('/:id/passcode', asyncRoute(async (req, res) => {
   const id = req.params.id.trim();
   const { passcode } = req.body || {};
   if (!PASSCODE_FORMAT.test(passcode || '')) {
-    return res.status(400).json({ success: false, error: 'Passcode must be 4-6 digits.' });
+    return res.status(400).json({ success: false, error: 'Passcode must be at least 4 characters.' });
   }
   const { rows } = await pool.query('SELECT name, passcode_hash FROM users WHERE id = $1', [id]);
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
-  if (rows[0].passcode_hash) return res.status(409).json({ success: false, error: 'Passcode already set.' });
-
-  if (!(await isActiveInLms(id))) {
+  const lmsUser = await getLmsUser(id);
+  if (rows[0].passcode_hash || hasRealLmsPassword(lmsUser)) {
+    return res.status(409).json({ success: false, error: 'Passcode already set.' });
+  }
+  if (lmsUser && lmsUser.is_active === false) {
     return res.status(403).json({ success: false, error: 'This account has been deactivated.' });
   }
 
   const { hash, salt } = hashPasscode(passcode);
   await pool.query('UPDATE users SET passcode_hash = $1, passcode_salt = $2 WHERE id = $3', [hash, salt, id]);
+  await mirrorToLmsIfUnclaimed(id, passcode); // propagate into SkillStream if it's still on its unclaimed default password
   recordLogin(pool, { userId: id, userName: rows[0].name, role: 'user' });
   res.json({ success: true, token: createSession(id) });
 }));
 
-// Rate-limited: a 4-digit passcode is only 10,000 combinations — without a
-// limit here, brute-forcing one is a script running for under a minute.
+// Rate-limited: without a limit here, brute-forcing a short credential is a
+// script running for under a minute.
 router.post('/:id/verify-passcode', passcodeLimiter, asyncRoute(async (req, res) => {
   const id = req.params.id.trim();
   const { passcode } = req.body || {};
   const { rows } = await pool.query('SELECT name, passcode_hash, passcode_salt FROM users WHERE id = $1', [id]);
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
-  const ok = verifyPasscode(passcode || '', rows[0].passcode_hash, rows[0].passcode_salt);
+
+  let ok;
+  if (rows[0].passcode_hash) {
+    ok = verifyPasscode(passcode || '', rows[0].passcode_hash, rows[0].passcode_salt);
+    // This passcode is confirmed real (just verified) — if SkillStream is
+    // still sitting on its unclaimed default for this person, push it there.
+    if (ok) await mirrorToLmsIfUnclaimed(id, passcode);
+  } else {
+    // No local passcode set at all — this user's real credential lives in
+    // SkillStream (e.g. a passcode-reset conflict resolved in its favor).
+    ok = await verifyLmsPassword(id, passcode || '');
+  }
   if (!ok) return res.status(401).json({ success: false, error: 'Incorrect passcode.' });
   if (!(await isActiveInLms(id))) {
     return res.status(403).json({ success: false, error: 'This account has been deactivated.' });

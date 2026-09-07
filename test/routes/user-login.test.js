@@ -60,7 +60,7 @@ test('POST /api/users/:id/verify-passcode returns 404 for an unknown user', asyn
   assert.equal(res.status, 404);
 });
 
-test('POST /api/users/:id/passcode (first-time set) rejects a non-numeric or too-short passcode without touching the DB', async () => {
+test('POST /api/users/:id/passcode (first-time set) rejects a too-short passcode without touching the DB', async () => {
   const res = await fetch(`${baseUrl}/api/users/105/passcode`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

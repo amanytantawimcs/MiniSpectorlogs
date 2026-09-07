@@ -24,15 +24,15 @@ test('verifyPasscode rejects when hash/salt are missing (no passcode set yet)', 
   assert.equal(verifyPasscode('1234', undefined, undefined), false);
 });
 
-test('PASSCODE_FORMAT accepts 4-32 digit numeric strings', () => {
+test('PASSCODE_FORMAT accepts 4-72 character strings, numeric or not', () => {
   assert.equal(PASSCODE_FORMAT.test('1234'), true);
   assert.equal(PASSCODE_FORMAT.test('123456'), true);
-  assert.equal(PASSCODE_FORMAT.test('1'.repeat(32)), true);
+  assert.equal(PASSCODE_FORMAT.test('1'.repeat(72)), true);
+  assert.equal(PASSCODE_FORMAT.test('Correct-Horse-9'), true, 'a SkillStream-style password should also be valid');
 });
 
-test('PASSCODE_FORMAT rejects too-short, too-long, or non-numeric input', () => {
-  assert.equal(PASSCODE_FORMAT.test('123'), false, 'below 4 digits');
-  assert.equal(PASSCODE_FORMAT.test('1'.repeat(33)), false, 'above 32 digits');
-  assert.equal(PASSCODE_FORMAT.test('12ab'), false, 'non-numeric');
+test('PASSCODE_FORMAT rejects too-short or too-long input', () => {
+  assert.equal(PASSCODE_FORMAT.test('123'), false, 'below 4 characters');
+  assert.equal(PASSCODE_FORMAT.test('1'.repeat(73)), false, 'above 72 characters');
   assert.equal(PASSCODE_FORMAT.test(''), false, 'empty string');
 });

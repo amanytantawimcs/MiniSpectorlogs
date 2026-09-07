@@ -20,12 +20,22 @@ $$ LANGUAGE plpgsql;
 -- ============================================================
 
 CREATE TABLE users (
-  id             TEXT PRIMARY KEY,              -- app's numeric-string IDs, e.g. '101'
+  id             TEXT PRIMARY KEY,              -- app's numeric-string IDs, e.g. '101' — same value as the LMS app's users.employee_id for shared employees
   name           TEXT NOT NULL,
   role           TEXT NOT NULL DEFAULT 'engineer' CHECK (role IN ('engineer', 'manager')),
-  passcode_hash  TEXT,                          -- scrypt hash; NULL means no passcode set yet (first login sets one)
+  passcode_hash  TEXT,                          -- scrypt hash; NULL means no local passcode set — may still be able to log in via a real SkillStream (LMS) password, see server/lib/lmsDb.js
   passcode_salt  TEXT,
   is_admin       BOOLEAN NOT NULL DEFAULT false, -- grants Admin panel access only (see requireAdminAuth) — separate from the two hardcoded PRIVILEGED_USER_IDS, which also get All Projects + simulation approvals
+  -- Below: informational copy of LMS/SkillStream identity fields, one-time
+  -- backfilled for employees who have an LMS account (server/lib/usersSchema.js
+  -- ensureUsersLmsColumns + scripts/backfill-lms-user-fields.js). Not kept
+  -- live-synced after that — edit directly here if they drift.
+  email          TEXT,
+  department     TEXT,
+  title          TEXT,
+  manager_name   TEXT,
+  join_date      DATE,
+  lms_role       TEXT,                          -- SkillStream's own role (Team Member/Manager/Admin/...) — distinct from this table's own engineer/manager `role` above
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
