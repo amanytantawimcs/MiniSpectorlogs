@@ -87,15 +87,6 @@
         .nav-lock-icon { display: none; margin-left: auto; color: #90A4BD; font-size: 13px; flex-shrink: 0; }
         .nav-item.nav-item-disabled .nav-lock-icon { display: inline-flex; }
 
-        /* Applied to the Scope catalog and MiniSpectors grid when viewing
-           Mission Info / MiniSpectors from within an already-started
-           simulation — those two plus Project Code are locked after start;
-           only Project Name and Description stay editable on review. */
-        .sim-locked {
-            pointer-events: none;
-            opacity: 0.55;
-            filter: grayscale(0.4);
-        }
 
         .nav-icon {
             display: flex; align-items: center; justify-content: center;
@@ -1924,14 +1915,10 @@
 
             <!-- Shown only when viewing Mission Info / MiniSpectors from within an
                  already-started simulation (see goToPreparationTab() in setup.js).
-                 Project Code and MiniSpectors are always locked read-only here; the
-                 Operation Scope unlocks for project team members (operators) — see
-                 applyPreparationReadOnlyLock(), which also swaps this banner's text.
-                 Project Name and Description always stay editable and autosave normally. -->
-            <div id="sim-review-banner" class="hidden rcard mb-5" style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-                <div class="text-sm" style="color:#9AB0C8;" id="sim-review-banner-text">
-                    <strong style="color:#f39124;">Reviewing an active simulation</strong> — Project Code, Scope, and MiniSpectors are locked. You can still edit the Project Name and Description.
-                </div>
+                 All fields here (Project Code, Operation Scope, MiniSpectors, Project
+                 Name, Description) stay fully editable at any time — this bar is just
+                 a way back into the workspace, not a read-only notice. -->
+            <div id="sim-review-banner" class="hidden rcard mb-5" style="padding:14px 20px;display:flex;align-items:center;justify-content:flex-end;gap:16px;flex-wrap:wrap;">
                 <button type="button" onclick="returnToWorkspace()" class="rbtn-orange-outline flex items-center gap-2" style="flex-shrink:0;">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     Back to Workspace

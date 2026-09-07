@@ -315,6 +315,56 @@ function buildJobSimulationDeliverablesWorkbook(data) {
   return wb;
 }
 
+const PH_NAVY_FILL = 'FF17253D';   // app sidebar navy — table header row
+const PH_ORANGE = 'FFF39124';      // app accent orange — title text
+
+// Project Management's "Project history" feed as a styled .xlsx. `data.log`
+// is already the person/section/what/when rows as shown on screen (computed
+// client-side by projectManagement.js's historyRowData — see that file's
+// comment on why it's the single source of truth), so this just lays them
+// into a table; no reformatting/relabeling happens here.
+function buildProjectHistoryWorkbook(data) {
+  const wb = new ExcelJS.Workbook();
+  const sheet = wb.addWorksheet('Project History');
+  sheet.getColumn(1).width = 3;
+  sheet.getColumn(2).width = 22;
+  sheet.getColumn(3).width = 20;
+  sheet.getColumn(4).width = 20;
+  sheet.getColumn(5).width = 55;
+
+  let r = 1;
+  sheet.mergeCells(r, 2, r, 5);
+  sheet.getCell(r, 2).value = 'PROJECT HISTORY';
+  sheet.getCell(r, 2).font = { bold: true, size: 14, color: { argb: PH_ORANGE } };
+  try {
+    const logoPath = path.join(__dirname, '..', '..', 'public', 'assets', 'logo.png');
+    const imageId = wb.addImage({ buffer: fs.readFileSync(logoPath), extension: 'png' });
+    sheet.addImage(imageId, { tl: { col: 4.2, row: 0.1 }, ext: { width: 90, height: 60 } });
+  } catch { /* logo optional — export still works without it */ }
+  r += 1;
+  sheet.getCell(r, 2).value = [data.projectName, data.projectCode].filter(Boolean).join(' — ') || 'Project';
+  sheet.getCell(r, 2).font = { italic: true, color: { argb: 'FF666666' } };
+  r += 2;
+
+  ['Date & Time', 'Person', 'Section', 'Update'].forEach((label, i) => {
+    const cell = sheet.getCell(r, 2 + i);
+    cell.value = label;
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PH_NAVY_FILL } };
+  });
+  r++;
+
+  (data.log || []).forEach(entry => {
+    sheet.getCell(r, 2).value = entry.when || '';
+    sheet.getCell(r, 3).value = entry.person || '';
+    sheet.getCell(r, 4).value = entry.section || '';
+    sheet.getCell(r, 5).value = entry.what || '';
+    r++;
+  });
+
+  return wb;
+}
+
 // Teal section header spanning `span` columns starting at `fromCol` (used
 // for the side-by-side Hardware/Deliverables block, where each side's
 // header only spans its own half of the sheet instead of the full width).
@@ -548,6 +598,24 @@ router.post('/job-simulation-deliverables-excel', async (req, res) => {
     res.send(buffer);
   } catch (e) {
     console.error('[export/job-simulation-deliverables-excel]', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+router.post('/project-history-excel', async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) return res.status(400).json({ success: false, error: 'Missing data' });
+    const wb = buildProjectHistoryWorkbook(data);
+    const buffer = await wb.xlsx.writeBuffer();
+    const key = data.projectCode || 'project';
+    res.set({
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': `attachment; filename="ProjectHistory-${key}.xlsx"`,
+    });
+    res.send(buffer);
+  } catch (e) {
+    console.error('[export/project-history-excel]', e);
     res.status(500).json({ success: false, error: e.message });
   }
 });

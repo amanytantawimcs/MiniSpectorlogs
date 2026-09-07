@@ -591,38 +591,21 @@ function restoreStep1FieldsFromState() {
 }
 
 // isReviewing: whether Mission Info/MiniSpectors is being viewed as a review
-// of an already-started simulation (vs. the pre-start wizard) — controls the
-// review banner and hides "Start Simulation" (which doesn't apply to a
-// project that already exists; "Back to Workspace" is the way back in).
-// canEditScope: whether the Operation Scope card is actually editable within
-// that review — project team members (operators) can still adjust the scope
-// after the fact, since beginSimulation()'s merge/reset logic already
-// handles a scope change safely; anyone else stays locked. Project Code and
-// the MiniSpectors grid stay locked for everyone while reviewing regardless
-// — those are identity/roster changes, not what was asked for here. Project
-// Name and Description are always left interactive (their input listeners —
-// see installSimSetup() below — write straight into simState.projectData
-// and autosave normally).
-function applyPreparationReadOnlyLock(isReviewing, canEditScope = !isReviewing) {
+// of an already-started simulation (vs. the pre-start wizard) — shows the
+// "Back to Workspace" bar and hides "Start Simulation" (which doesn't apply
+// to a project that already exists). All fields (Project Code, Operation
+// Scope, MiniSpectors, Project Name, Description) stay fully editable at any
+// time — there is no read-only lock here anymore.
+function applyPreparationReadOnlyLock(isReviewing) {
   document.getElementById('sim-review-banner')?.classList.toggle('hidden', !isReviewing);
-  const bannerText = document.getElementById('sim-review-banner-text');
-  if (bannerText) {
-    bannerText.innerHTML = canEditScope
-      ? '<strong style="color:#f39124;">Reviewing an active simulation</strong> — as a team member on this project, the Operation Scope is still editable here. Project Code and MiniSpectors stay locked.'
-      : '<strong style="color:#f39124;">Reviewing an active simulation</strong> — Project Code, Scope, and MiniSpectors are locked. You can still edit the Project Name and Description.';
-  }
-  const codeEl = document.getElementById('sim-project-code');
-  if (codeEl) codeEl.disabled = isReviewing;
-  document.getElementById('scope-card')?.classList.toggle('sim-locked', !canEditScope);
-  document.querySelector('#sim-setup-units .rcard')?.classList.toggle('sim-locked', isReviewing);
   document.getElementById('btn-begin-sim')?.classList.toggle('hidden', isReviewing);
 }
 
-// Sidebar entry point for Mission Info / MiniSpectors. Only locks fields and
-// shows the review banner when actually coming back from the workspace —
+// Sidebar entry point for Mission Info / MiniSpectors. Only shows the
+// "Back to Workspace" bar when actually coming back from the workspace —
 // switching between the Mission Info and MiniSpectors sub-tabs while already
-// reviewing leaves the existing lock state alone (step2 stays hidden either
-// way, so wasInWorkspace is false on those clicks). Coming from the workspace
+// reviewing leaves that state alone (step2 stays hidden either way, so
+// wasInWorkspace is false on those clicks). Coming from the workspace
 // implies the simulation is already started (see isSimulationStarted's own
 // comment for why: step2 is only ever shown after beginSimulation() succeeds
 // or an existing project is loaded, both of which set it) — so pre-start
@@ -632,11 +615,7 @@ function goToPreparationTab(tab) {
   const wasInWorkspace = step2 && !step2.classList.contains('hidden');
   if (wasInWorkspace) {
     restoreStep1FieldsFromState();
-    // Project team members (operators) can still edit the Operation Scope
-    // when reviewing; reviewer.js's other checks (state.currentUserRole)
-    // already block writes everywhere else, so this mirrors the same rule.
-    const canEditScope = state.currentUserRole !== 'reviewer' && state.currentUserProjectRole === 'operator';
-    applyPreparationReadOnlyLock(true, canEditScope);
+    applyPreparationReadOnlyLock(true);
     step2.classList.add('hidden');
     document.getElementById('sim-step-1').classList.remove('hidden');
   }

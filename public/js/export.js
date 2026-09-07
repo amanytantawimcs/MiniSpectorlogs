@@ -9,7 +9,7 @@ import { showToast } from './ui.js';
 import { collectAllData } from './projectData.js';
 import { collectSimState } from './simulation/core.js';
 
-function downloadBlob(blob, filename) {
+export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -179,6 +179,28 @@ export async function exportJobSimulationDeliverables() {
     if (!res.ok) throw new Error(`Server returned ${res.status}`);
     const blob = await res.blob();
     downloadBlob(blob, `JobSimulationDeliverables-${data.projectCode || 'SIM'}.xlsx`);
+  } catch (e) {
+    showToast('Export failed: ' + e.message, 'error');
+  }
+}
+
+// Exports the Project Management "Project history" feed (sync_log rows,
+// already loaded client-side by projectManagement.js — including whatever
+// person/section filter is currently applied, so the file matches what's
+// on screen) as a styled .xlsx. Goes through a server route rather than the
+// client-side SheetJS library for the same reason exportJobSimulationDeliverables
+// does: that library's free build can't write cell colors.
+export async function exportProjectHistory(projectCode, projectName, log) {
+  showToast('Generating project history…', 'info');
+  try {
+    const res = await fetch('/api/export/project-history-excel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: { projectCode, projectName, log } }),
+    });
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const blob = await res.blob();
+    downloadBlob(blob, `ProjectHistory-${projectCode || 'project'}.xlsx`);
   } catch (e) {
     showToast('Export failed: ' + e.message, 'error');
   }
