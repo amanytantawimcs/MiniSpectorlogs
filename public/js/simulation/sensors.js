@@ -503,64 +503,6 @@ function renderFixedSensorsSection() {
   return card;
 }
 
-function kpi(value, label, color) {
-  const div = document.createElement('div');
-  div.style.cssText = `flex:1;min-width:0;background:${color}14;border:1px solid ${color}33;border-radius:10px;padding:10px 14px;`;
-  div.innerHTML = `<div style="font-size:22px;font-weight:800;color:${color};line-height:1;">${value}</div>
-    <div style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-top:3px">${label}</div>`;
-  return div;
-}
-
-// Readiness rollup — formerly its own "System Readiness" tab (with an
-// approval gate and the Push to Operation button); the approval cycle and
-// dedicated tab are gone, and Push to Operation now lives in the top header
-// bar (visible on the Topology tab, see switchSimSubTab() in core.js)
-// instead of here — this card is just the stats now.
-function renderReadinessCard() {
-  const sensors = simState.shared.sensors || [];
-  const scopeActive = sensors.filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
-  const scopeActiveItems = scopeActive.flatMap(sensorReadinessItems);
-  const fixedAll = Object.values(simState.shared.rovSensors || {}).flat().filter(s => !s.disabled);
-  const active = [...scopeActiveItems, ...fixedAll];
-  const total = active.length;
-
-  const card = document.createElement('div');
-  card.className = 'rcard mb-5';
-
-  const calibrated = active.filter(s => s.calibrated).length;
-  const tested = active.filter(s => s.tested).length;
-  const noModel = active.filter(s => !s.model || s.model.trim() === '').length;
-  const ready = active.filter(s => s.calibrated && s.tested && s.model && s.model.trim() !== '').length;
-  const percent = total > 0 ? Math.round((ready / total) * 100) : 0;
-  const barColor = percent === 100 ? '#22c55e' : percent >= 60 ? '#f39124' : '#ef4444';
-
-  const header = document.createElement('div');
-  header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head';
-  header.innerHTML = `<span class="text-xs font-bold text-white uppercase tracking-widest">Overall Readiness</span>
-    <span style="font-size:22px;font-weight:800;color:${barColor};">${percent}%</span>`;
-  card.appendChild(header);
-
-  const barWrap = document.createElement('div');
-  barWrap.className = 'px-6 pt-4 pb-1';
-  barWrap.innerHTML = `<div style="height:7px;background:rgba(55,65,81,0.6);border-radius:9999px;overflow:hidden;">
-      <div style="width:${percent}%;height:100%;background:${barColor};border-radius:9999px;"></div>
-    </div>
-    <div style="font-size:11px;color:#6b7280;margin-top:5px;">${total === 0 ? 'No active sensors yet' : percent === 100 ? 'All sensors fully configured and ready' : `${ready} of ${total} sensors fully configured`}</div>`;
-  card.appendChild(barWrap);
-
-  const kpiRow = document.createElement('div');
-  kpiRow.style.cssText = 'display:flex;gap:10px;padding:12px 24px 16px;flex-wrap:wrap;';
-  kpiRow.append(
-    kpi(ready, 'Ready', '#f39124'),
-    kpi(calibrated, 'Calibrated', '#f39124'),
-    kpi(tested, 'Tested', '#459fd9'),
-    kpi(noModel, 'No Model', noModel === 0 ? '#f39124' : '#f87171'),
-    kpi(total, 'Total Active', '#9ca3af'),
-  );
-  card.appendChild(kpiRow);
-
-  return card;
-}
 
 function renderThrustersSection() {
   const thrusters = simState.shared.thrusters || [];
@@ -639,7 +581,6 @@ export function renderSensorsContent(area) {
   const optional = renderOptionalSensors();
   if (optional) wrap.appendChild(optional);
   wrap.appendChild(renderThrustersSection());
-  wrap.appendChild(renderReadinessCard());
 
   area.appendChild(wrap);
 }
