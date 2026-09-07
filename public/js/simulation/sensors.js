@@ -119,14 +119,14 @@ function buildModelCell(sensor, onChange) {
   if (hardware.length === 0 || (sensor.model && !hardware.includes(sensor.model))) {
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-blue-500 outline-none placeholder-gray-600 transition-colors';
+    input.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-blue-500 outline-none placeholder-gray-600 transition-colors';
     input.placeholder = hardware.length ? 'Custom model / S/N...' : 'Model / S/N...';
     input.value = sensor.model || '';
     input.addEventListener('input', () => onChange(input.value));
     return input;
   }
   const select = document.createElement('select');
-  select.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#459fd9] outline-none transition-colors';
+  select.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#459fd9] outline-none transition-colors';
   select.innerHTML = `<option value=""${sensor.model ? '' : ' selected'}>Select model...</option>` +
     hardware.map(h => `<option value="${escapeHtml(h)}"${h === sensor.model ? ' selected' : ''}>${escapeHtml(h)}</option>`).join('') +
     `<option value="__custom__">Custom...</option>`;
@@ -163,7 +163,7 @@ function renderFleetSection() {
     serialInput.type = 'text';
     serialInput.placeholder = 'Serial No.';
     serialInput.value = simState.rovSerials.get(num) || '';
-    serialInput.className = 'bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono focus:border-[#459fd9] outline-none placeholder-gray-600 shrink-0';
+    serialInput.className = 'bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono focus:border-[#459fd9] outline-none placeholder-gray-600 shrink-0';
     serialInput.style.cssText += 'width:150px;color:#459fd9';
     serialInput.addEventListener('input', () => { simState.rovSerials.set(num, serialInput.value); scheduleSimSync(); });
 
@@ -171,7 +171,7 @@ function renderFleetSection() {
     descInput.type = 'text';
     descInput.placeholder = 'Description (optional)...';
     descInput.value = simState.rovDescriptions.get(num) || '';
-    descInput.className = 'flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:border-orange-400 outline-none placeholder-gray-600';
+    descInput.className = 'flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:border-orange-400 outline-none placeholder-gray-600';
     descInput.addEventListener('input', () => { simState.rovDescriptions.set(num, descInput.value); scheduleSimSync(); });
 
     const roleBadge = document.createElement('span');
@@ -467,7 +467,7 @@ function renderFixedSensorsSection() {
     const modelInput = document.createElement('input');
     modelInput.type = 'text'; modelInput.value = sensor.model || ''; modelInput.placeholder = 'Model...';
     modelInput.disabled = !inScope;
-    modelInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600 disabled:cursor-not-allowed';
+    modelInput.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     modelInput.addEventListener('input', () => { sensor.model = modelInput.value; scheduleSimSync(); });
     tdModel.appendChild(modelInput);
 
@@ -475,7 +475,7 @@ function renderFixedSensorsSection() {
     const serialInput = document.createElement('input');
     serialInput.type = 'text'; serialInput.value = sensor.serial || ''; serialInput.placeholder = 'S/N...';
     serialInput.disabled = !inScope;
-    serialInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600 disabled:cursor-not-allowed';
+    serialInput.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     serialInput.style.color = '#459fd9';
     serialInput.addEventListener('input', () => { sensor.serial = serialInput.value; scheduleSimSync(); });
     tdSerial.appendChild(serialInput);

@@ -55,7 +55,7 @@ function card(title, key) {
 
   const titleGroup = document.createElement('div');
   titleGroup.className = 'flex items-center gap-3 cursor-pointer select-none';
-  titleGroup.innerHTML = `<span class="collapse-chevron text-gray-400 flex items-center">${chevronSvg(collapsedState[key])}</span>` +
+  titleGroup.innerHTML = `<span class="collapse-chevron flex items-center" style="color:#f39124;">${chevronSvg(collapsedState[key])}</span>` +
     `<span class="text-xs font-bold text-white uppercase tracking-widest">${title}</span>`;
   header.appendChild(titleGroup);
 

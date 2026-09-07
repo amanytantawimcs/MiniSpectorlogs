@@ -544,7 +544,7 @@
             opacity: 0.55;
             cursor: not-allowed;
         }
-        .rfield { background: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #D3DAE3; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
+        .rfield { background: rgba(17,24,39,0.5); border: 1px solid rgba(120,166,212,0.16); color: #D3DAE3; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
         .rfield::placeholder { color: #6C88A6; font-size: 12px; }
         .rfield:focus { outline: none; border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
         .rfield-label { display: block; font-size: 15.5px; font-weight: 600; color: #9AB0C8; margin-bottom: 6px; }
@@ -2077,17 +2077,13 @@
         <div style="flex:1;overflow-y:auto;" class="p-6">
             <div style="position:sticky;top:0;height:0;overflow:visible;z-index:6;">
               <div style="position:absolute;top:0;right:0;display:flex;gap:2px;">
-                <button onclick="saveSimulationJSON()" title="Save as JSON"
-                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-blue-400 hover:bg-blue-500/10 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                </button>
-                <button onclick="exportSimulationExcel()" title="Export as Excel"
+                <button onclick="exportSimulationExcel()" title="Export Packing List (Excel)"
                     class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
-                <button onclick="exportSimulationWord()" title="Export as Word"
-                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <button onclick="exportJobSimulationDeliverables()" title="Export Job Simulation &amp; Deliverables (Excel)"
+                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m0 12a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m0 0v12a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
                 </button>
               </div>
             </div>
