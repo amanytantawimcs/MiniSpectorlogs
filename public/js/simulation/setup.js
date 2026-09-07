@@ -699,12 +699,28 @@ export function installSimSetup() {
     simState.projectData.location = e.target.value;
     scheduleSimSync();
   });
+  // Project Code isn't required just to enter Equipment setup/Topology
+  // anymore (see beginSimulation()'s comment), so someone can legitimately
+  // type/change it *after* the workspace has already started — at which
+  // point beginSimulation() (the only other place that reads this field)
+  // never runs again for this session (isSimulationStarted() routes
+  // goToWorkspaceSubTab() to returnToWorkspace() instead). Without this
+  // listener the typed code just sits in the DOM and never reaches
+  // simState.projectData.code, so nothing saves and canSyncToOperation()
+  // keeps rejecting the crossing into Operation.
+  document.getElementById('sim-project-code')?.addEventListener('input', (e) => {
+    simState.projectData.code = e.target.value.trim();
+    scheduleSimSync();
+  });
   document.getElementById('sim-gen-code')?.addEventListener('click', () => {
     const alphabet = 'ABCDEFGHJKLMNPRSTVWXZ';
     let s = '';
     for (let i = 0; i < 3; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
     const codeEl = document.getElementById('sim-project-code');
-    if (codeEl) codeEl.value = `${s}-${Math.floor(Math.random() * 900) + 100}-26`;
+    if (codeEl) {
+      codeEl.value = `${s}-${Math.floor(Math.random() * 900) + 100}-26`;
+      codeEl.dispatchEvent(new Event('input'));
+    }
   });
 
   document.getElementById('units-clear-btn')?.addEventListener('click', () => clearUnits(false));
