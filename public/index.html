@@ -649,7 +649,7 @@
 </div>
 <div id="login-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#192643]">
 
-    <div class="relative z-10 w-full max-w-[416px] px-4">
+    <div class="relative z-10 w-full max-w-[480px] px-4">
         <!-- Logo + Title -->
         <div class="text-center mb-7">
             <img src="assets/logo.png" alt="Logo" class="h-14 w-auto mx-auto mb-4 object-contain"
@@ -659,8 +659,8 @@
         </div>
 
         <!-- Member Login — primary card -->
-        <div class="rounded-2xl backdrop-blur-md bg-[#22314B] shadow-xl p-6 sm:p-[30px]" style="border:1px solid rgba(181,205,228,0.14);">
-            <div class="flex items-center gap-2.5 mb-1.5">
+        <div class="rounded-2xl backdrop-blur-md bg-[#22314B] shadow-xl p-7 sm:p-9" style="border:1px solid rgba(181,205,228,0.14);">
+            <div class="flex items-center gap-2.5 mb-5">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(181,205,228,0.12);">
                     <svg class="w-4.5 h-4.5 text-[#B5CDE4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
@@ -668,21 +668,35 @@
                 </div>
                 <h2 class="text-base font-bold text-[#F7FAFF]">Member sign in</h2>
             </div>
-            <p class="text-sm text-[#B9C7D9] mb-5 ml-[46px]">Access your logs, simulations, and exports.</p>
 
             <div class="mb-4">
                 <label for="login-id-input" class="block text-sm font-medium mb-1.5 text-[#B9C7D9]">User ID</label>
-                <input type="text" id="login-id-input" placeholder="Enter your ID" autocomplete="username"
-                    class="w-full h-12 px-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
-                    style="border-color:rgba(181,205,228,0.3);"
-                    onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#B5CDE4] pointer-events-none">
+                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </span>
+                    <input type="text" id="login-id-input" placeholder="Enter your ID" autocomplete="username"
+                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        style="border-color:rgba(181,205,228,0.3);"
+                        onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'">
+                </div>
             </div>
 
-            <div class="mb-1.5">
-                <label id="login-pin-label" for="login-pin-input" class="block text-sm font-medium mb-1.5 text-[#B9C7D9]">Passcode</label>
+            <div class="mb-3">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label id="login-pin-label" for="login-pin-input" class="block text-sm font-medium text-[#B9C7D9]">Passcode</label>
+                    <button type="button" id="btn-reset-passcode" class="text-xs font-medium text-[#B5CDE4] hover:text-[#F7FAFF] transition-colors underline decoration-dotted">Forgot passcode?</button>
+                </div>
                 <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#B5CDE4] pointer-events-none">
+                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </span>
                     <input type="password" id="login-pin-input" placeholder="••••••" maxlength="72" autocomplete="current-password"
-                        class="w-full h-12 pl-3.5 pr-11 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        class="w-full h-12 pl-11 pr-11 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
                         style="border-color:rgba(181,205,228,0.3);"
                         onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
                         onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
@@ -707,18 +721,21 @@
                     </button>
                 </div>
             </div>
-            <div class="flex items-center justify-between flex-wrap gap-x-3 gap-y-1 mb-3">
-                <span class="text-xs text-[#B9C7D9]">Minimum 4 characters</span>
-                <button type="button" id="btn-reset-passcode" class="text-xs font-medium text-[#B5CDE4] hover:text-[#F7FAFF] transition-colors underline decoration-dotted">Forgot passcode?</button>
-            </div>
 
             <div id="login-pin-confirm-wrap" class="mb-4 hidden">
                 <label for="login-pin-confirm-input" class="block text-sm font-medium mb-1.5 text-[#B9C7D9]">Confirm passcode</label>
-                <input type="password" id="login-pin-confirm-input" placeholder="••••••" maxlength="72" autocomplete="new-password"
-                    class="w-full h-12 px-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
-                    style="border-color:rgba(181,205,228,0.3);"
-                    onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
-                    onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-[#B5CDE4] pointer-events-none">
+                        <svg class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </span>
+                    <input type="password" id="login-pin-confirm-input" placeholder="••••••" maxlength="72" autocomplete="new-password"
+                        class="w-full h-12 pl-11 pr-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors"
+                        style="border-color:rgba(181,205,228,0.3);"
+                        onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.3)'"
+                        onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click()">
+                </div>
             </div>
 
             <p id="login-pin-hint" class="text-xs mb-3 hidden text-[#B9C7D9]">First time signing in — set a passcode you'll use from now on.</p>
@@ -885,7 +902,7 @@
 <div id="mode-screen" class="fixed inset-0 z-45 flex flex-col items-center justify-center bg-[#192643] hidden">
 
     <!-- Header -->
-    <div class="relative z-10 text-center mb-8 px-4">
+    <div class="relative z-10 text-center mb-8 px-4 -mt-6">
         <img src="assets/logo.png" alt="Logo" class="h-12 w-auto mx-auto mb-4 object-contain"
              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
         <h1 class="text-[28px] leading-tight font-bold mb-1.5 text-[#F7FAFF]">Welcome, <span id="mode-user-name" class="text-[#F9921C]"></span></h1>
