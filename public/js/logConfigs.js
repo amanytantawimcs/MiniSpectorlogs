@@ -66,9 +66,11 @@ export const LOG_CONFIGS = {
       { key: 'duration', label: 'Duration', type: 'duration', durationGroup: ['date', 'startTime', 'endDate', 'endTime'] },
       { key: 'category', label: 'Category', type: 'select', options: ['Mechanical Fault', 'Vessel Operations', 'Weather', 'Crew Change', 'Maintenance', 'Client Request'] },
       { key: 'desc', label: 'Description', type: 'textarea' },
+      // Optional — topside standby isn't always tied to a specific dive.
+      { key: 'diveNo', label: 'Dive #', type: 'select', dynamicOptionsFrom: 'diveLogs', dynamicOptionsKey: 'num' },
     ],
     sections: [
-      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'by'] }] },
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'by'] }, { fields: ['diveNo'] }] },
       { title: 'Schedule', icon: 'clock', rows: [{ fields: ['date', 'startTime', 'endDate', 'endTime'] }], durationField: 'duration' },
       { title: 'Details', icon: 'gauge', rows: [{ fields: ['category'] }, { fields: ['desc'] }] },
     ],
@@ -78,6 +80,7 @@ export const LOG_CONFIGS = {
       { key: '_time', label: 'Time Range' },
       { key: 'duration', label: 'Duration' },
       { key: 'category', label: 'Category' },
+      { key: 'diveNo', label: 'Dive #', accent: 'log-id-link', fallback: '—' },
     ],
   },
 
@@ -95,9 +98,11 @@ export const LOG_CONFIGS = {
       { key: 'details', label: 'Details', type: 'textarea' },
       { key: 'parts', label: 'Parts Used', type: 'text' },
       { key: 'remarks', label: 'Remarks', type: 'text' },
+      // Optional — most maintenance isn't tied to a specific dive.
+      { key: 'diveNo', label: 'Dive #', type: 'select', dynamicOptionsFrom: 'diveLogs', dynamicOptionsKey: 'num' },
     ],
     sections: [
-      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'date'] }] },
+      { title: 'Identification', icon: 'id', rows: [{ fields: ['id', 'date'] }, { fields: ['diveNo'] }] },
       { title: 'Task', icon: 'wrench', rows: [{ fields: ['task', 'by'] }] },
       { title: 'Details', icon: 'gauge', rows: [{ fields: ['details'] }, { fields: ['parts', 'remarks'] }] },
     ],
@@ -106,6 +111,7 @@ export const LOG_CONFIGS = {
       { key: 'date', label: 'Date' },
       { key: 'task', label: 'Task' },
       { key: 'by', label: 'By' },
+      { key: 'diveNo', label: 'Dive #', accent: 'log-id-link', fallback: '—' },
     ],
   },
 

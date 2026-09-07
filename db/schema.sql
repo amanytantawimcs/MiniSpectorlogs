@@ -167,7 +167,8 @@ CREATE TABLE maintenance_logs (
   task       TEXT,
   details    TEXT,
   parts      TEXT,
-  remarks    TEXT
+  remarks    TEXT,
+  dive_no    TEXT   -- optional link to dive_logs.num — not a real FK, same free-text pattern as issue_reports.dive_no
 );
 CREATE INDEX idx_maintenance_logs_project ON maintenance_logs(project_id);
 
@@ -194,7 +195,8 @@ CREATE TABLE standby_logs (
   end_time     TEXT,
   duration     TEXT,
   category     TEXT,
-  description  TEXT
+  description  TEXT,
+  dive_no      TEXT   -- optional link to dive_logs.num — not a real FK, same free-text pattern as issue_reports.dive_no
 );
 CREATE INDEX idx_standby_logs_project ON standby_logs(project_id);
 

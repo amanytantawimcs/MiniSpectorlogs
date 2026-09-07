@@ -11,6 +11,53 @@ import { renderInfographics } from './dashboard.js';
 let modalSection = null;
 let modalIndex = -1;
 
+// ── Operation Logs shell: Dive Log/Standby/Maintenance/Issues share one
+// sidebar item (#tab-oplogs) with a sub-tab bar and a shared date-range/ROV
+// filter. Remembers the last-open sub-tab (like Simulation's
+// switchSimSubTab/simState.activeSubTab) rather than always resetting to
+// Dive Log on re-entry.
+const OPLOGS_TABS = ['divelog', 'standby', 'maint', 'issues'];
+let oplogsActiveTab = 'divelog';
+const opLogsFilter = { dateFrom: '', dateTo: '', rov: '' };
+
+function switchOpLogsSubTab(tab) {
+  oplogsActiveTab = tab;
+  OPLOGS_TABS.forEach(t => {
+    document.getElementById(`oplogs-panel-${t}`)?.classList.toggle('hidden', t !== tab);
+    document.getElementById(`oplogs-subtab-${t}`)?.classList.toggle('active', t === tab);
+  });
+  renderGrids();
+}
+
+function enterOperationLogs() {
+  switchOpLogsSubTab(oplogsActiveTab);
+}
+
+// Only filters a section by a given field if that section's config actually
+// has that field — Issue Report has no `date`, and only Dive Log has `rov`,
+// so those simply aren't narrowed by that control (see logConfigs.js).
+function passesOpLogsFilter(log, cfg) {
+  const hasDate = cfg.fields.some(f => f.key === 'date');
+  const hasRov = cfg.fields.some(f => f.key === 'rov');
+  if (hasDate && opLogsFilter.dateFrom && log.date && log.date < opLogsFilter.dateFrom) return false;
+  if (hasDate && opLogsFilter.dateTo && log.date && log.date > opLogsFilter.dateTo) return false;
+  if (hasRov && opLogsFilter.rov && log.rov !== opLogsFilter.rov) return false;
+  return true;
+}
+
+// Repopulates the shared ROV filter dropdown from whatever ROV values exist
+// in Dive Log right now — the only one of the four sections with a real
+// `rov` field. Keeps the current selection even if it briefly has no
+// matching entries (same reasoning as fieldRow()'s dynamicOptionsFrom).
+function populateOpLogsRovOptions() {
+  const select = document.getElementById('oplogs-filter-rov');
+  if (!select) return;
+  const current = select.value;
+  const options = [...new Set((state.currentReportData.diveLogs || []).map(l => l.rov).filter(Boolean))].sort();
+  select.innerHTML = '<option value="">All ROVs</option>' + options.map(o => `<option value="${escapeHtml(o)}"${o === current ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('');
+  if (current && options.includes(current)) select.value = current;
+}
+
 function pad(n) { return n < 10 ? '0' + n : String(n); }
 
 function nextAutoId(config, section, existingId) {
@@ -332,11 +379,15 @@ function renderLogTable(section) {
   const config = LOG_CONFIGS[section];
   const container = document.getElementById(config.containerId);
   if (!container) return;
-  const logs = state.currentReportData[section] || [];
+  const allLogs = state.currentReportData[section] || [];
+  // Keep each visible row's original index (into allLogs) for edit/delete —
+  // openModal()/removeLog() index into the real unfiltered array, so the
+  // filter can't just narrow the array itself without losing that mapping.
+  const visible = allLogs.map((log, i) => ({ log, i })).filter(({ log }) => passesOpLogsFilter(log, config));
 
-  updateLogSummary(section, logs);
+  updateLogSummary(section, visible.map(v => v.log));
 
-  if (logs.length === 0) { container.innerHTML = emptyState(config.emptyMessage); return; }
+  if (visible.length === 0) { container.innerHTML = emptyState(allLogs.length ? 'No entries match the current filter.' : config.emptyMessage); return; }
 
   container.innerHTML = `
     <div class="log-table-wrap">
@@ -345,7 +396,7 @@ function renderLogTable(section) {
           <tr>${config.columns.map(c => `<th>${escapeHtml(c.label)}</th>`).join('')}<th class="actions-col">Actions</th></tr>
         </thead>
         <tbody>
-          ${logs.map((log, i) => `
+          ${visible.map(({ log, i }) => `
           <tr>
             ${config.columns.map(c => `<td>${formatColumn(section, c, log)}</td>`).join('')}
             <td>
@@ -392,7 +443,25 @@ function updateLogSummary(section, logs) {
 }
 
 export function renderGrids() {
+  populateOpLogsRovOptions();
   Object.keys(LOG_CONFIGS).forEach(renderLogTable);
+}
+
+function installOpLogsFilterBar() {
+  const from = document.getElementById('oplogs-filter-from');
+  const to = document.getElementById('oplogs-filter-to');
+  const rov = document.getElementById('oplogs-filter-rov');
+  const clear = document.getElementById('oplogs-filter-clear');
+  from?.addEventListener('change', (e) => { opLogsFilter.dateFrom = e.target.value; renderGrids(); });
+  to?.addEventListener('change', (e) => { opLogsFilter.dateTo = e.target.value; renderGrids(); });
+  rov?.addEventListener('change', (e) => { opLogsFilter.rov = e.target.value; renderGrids(); });
+  clear?.addEventListener('click', () => {
+    opLogsFilter.dateFrom = ''; opLogsFilter.dateTo = ''; opLogsFilter.rov = '';
+    if (from) from.value = '';
+    if (to) to.value = '';
+    if (rov) rov.value = '';
+    renderGrids();
+  });
 }
 
 export function installLogs() {
@@ -403,6 +472,9 @@ export function installLogs() {
   window.closeStandbySelector = closeStandbySelector;
   window.triggerQuickStandby = triggerQuickStandby;
   window.triggerQuickDive = triggerQuickDive;
+  window.switchOpLogsSubTab = switchOpLogsSubTab;
+  window.enterOperationLogs = enterOperationLogs;
   window.__renderLogs = () => { renderGrids(); renderShiftLog(); };
   document.getElementById('modal-save-btn')?.addEventListener('click', saveModal);
+  installOpLogsFilterBar();
 }

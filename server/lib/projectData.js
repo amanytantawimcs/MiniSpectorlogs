@@ -143,9 +143,9 @@ async function upsertOperationProject(client, { project_code, project_name, crea
   await client.query('DELETE FROM maintenance_logs WHERE project_id = $1', [projectId]);
   for (const l of d.maintenanceLogs || []) {
     await client.query(
-      `INSERT INTO maintenance_logs (project_id, entry_ref, date, performed_by, task, details, parts, remarks)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [projectId, l.id || '', l.date || '', l.by || '', l.task || '', l.details || '', l.parts || '', l.remarks || '']
+      `INSERT INTO maintenance_logs (project_id, entry_ref, date, performed_by, task, details, parts, remarks, dive_no)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [projectId, l.id || '', l.date || '', l.by || '', l.task || '', l.details || '', l.parts || '', l.remarks || '', l.diveNo || '']
     );
   }
 
@@ -161,9 +161,9 @@ async function upsertOperationProject(client, { project_code, project_name, crea
   await client.query('DELETE FROM standby_logs WHERE project_id = $1', [projectId]);
   for (const l of d.standbyLogs || []) {
     await client.query(
-      `INSERT INTO standby_logs (project_id, entry_ref, date, end_date, performed_by, start_time, end_time, duration, category, description)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-      [projectId, l.id || '', l.date || '', l.endDate || '', l.by || '', l.startTime || '', l.endTime || '', l.duration || '', l.category || '', l.desc || '']
+      `INSERT INTO standby_logs (project_id, entry_ref, date, end_date, performed_by, start_time, end_time, duration, category, description, dive_no)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [projectId, l.id || '', l.date || '', l.endDate || '', l.by || '', l.startTime || '', l.endTime || '', l.duration || '', l.category || '', l.desc || '', l.diveNo || '']
     );
   }
 
@@ -278,7 +278,7 @@ async function buildOperationData(project) {
   }));
   const standbyLogs = standby.rows.map(l => ({
     id: l.entry_ref, date: l.date, endDate: l.end_date, by: l.performed_by, startTime: l.start_time, endTime: l.end_time,
-    duration: l.duration, category: l.category, desc: l.description,
+    duration: l.duration, category: l.category, desc: l.description, diveNo: l.dive_no,
   }));
 
   let diveMinutes = 0; diveLogs.forEach(l => diveMinutes += parseDur(l.duration));
@@ -318,7 +318,7 @@ async function buildOperationData(project) {
     remarks: project.remarks || '',
 
     diveLogs,
-    maintenanceLogs: maint.rows.map(l => ({ id: l.entry_ref, date: l.date, by: l.performed_by, task: l.task, details: l.details, parts: l.parts, remarks: l.remarks })),
+    maintenanceLogs: maint.rows.map(l => ({ id: l.entry_ref, date: l.date, by: l.performed_by, task: l.task, details: l.details, parts: l.parts, remarks: l.remarks, diveNo: l.dive_no })),
     hseReports: hse.rows.map(l => ({ id: l.entry_ref, type: l.type, desc: l.description, action: l.action, root: l.root_cause, prev: l.prevention })),
     standbyLogs,
     faultLogs: faults.rows.map(l => ({ status: l.status, tech: l.tech, desc: l.description, action: l.action, parts: l.parts, remaining: l.remaining, photos: l.photos || [] })),
