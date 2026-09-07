@@ -9,6 +9,7 @@ export const state = {
   currentUserProjectRole: 'operator', // 'operator' | 'viewer'
   currentMode: null,             // 'operation' | 'simulation'
   currentProjectCode: null,
+  currentProjectName: null,
   currentDeviceRole: null,       // 'vessel' | 'office'
   isDirty: false,
 

@@ -452,21 +452,6 @@ export function showSimSetupTab(tab) {
   if (tab === 'mission') renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
-// Sensors and equipment / Topology open the Step 2 workspace, which needs a
-// project code (beginSimulation() requires one). Dims those two sidebar
-// entries and swaps the cursor to not-allowed while there's no code yet, so
-// the requirement is visible before the click instead of only after it via
-// the toast. Once already inside the workspace (including a joined existing
-// project, which skips Step 1/beginSimulation entirely) they're always live.
-function updateWorkspaceNavAvailability() {
-  const step2 = document.getElementById('sim-step-2');
-  const inWorkspace = step2 && !step2.classList.contains('hidden');
-  const hasCode = inWorkspace || !!document.getElementById('sim-project-code')?.value.trim();
-  ['sim-nav-sensors', 'sim-nav-topology'].forEach(id => {
-    document.getElementById(id)?.classList.toggle('nav-item-disabled', !hasCode);
-  });
-}
-
 // The exclusive entry point for the "New Project" wizard — Join/Continue
 // loads an existing project via loadSimulationState() instead and never
 // reaches this function, so a passing check here is a reliable "this code
@@ -475,11 +460,14 @@ function updateWorkspaceNavAvailability() {
 // the actual save in saveSimulation() is what makes the guarantee airtight
 // against someone else grabbing the same code in between.
 async function beginSimulation() {
+  // Project Code is intentionally NOT required here — Equipment setup and
+  // Topology are open for configuring scope/sensors/topology before a code
+  // is picked. Nothing persists to the database until a code exists though
+  // (saveSimulation()/scheduleSimSync() both no-op without one), and
+  // canSyncToOperation() (preOp.js) enforces code + scope before the first
+  // crossing into Operation, so a code is still required by the time it
+  // actually matters.
   const code = document.getElementById('sim-project-code')?.value.trim();
-  if (!code) {
-    showToast('Project code is required.', 'warn');
-    return;
-  }
   if (!scopeWorking || !scopeWorking.req.length) {
     showToast('Please select an operation scope first.', 'warn');
     return;
@@ -489,10 +477,12 @@ async function beginSimulation() {
     return;
   }
 
-  const existing = await api.pullProject(code);
-  if (existing.success) {
-    showToast(`Project code "${code}" already exists. Choose a different code, or use Join Project from the mode screen to open it.`, 'error');
-    return;
+  if (code) {
+    const existing = await api.pullProject(code);
+    if (existing.success) {
+      showToast(`Project code "${code}" already exists. Choose a different code, or use Join Project from the mode screen to open it.`, 'error');
+      return;
+    }
   }
   markNewSimProject();
 
@@ -502,6 +492,8 @@ async function beginSimulation() {
     description: document.getElementById('sim-project-desc')?.value.trim() || '',
     asset: document.getElementById('sim-project-asset')?.value || '',
     weatherWindow: document.getElementById('sim-project-weather')?.value || '',
+    vessel: document.getElementById('sim-project-vessel')?.value.trim() || '',
+    location: document.getElementById('sim-project-location')?.value.trim() || '',
   };
 
   const scopeBundle = {
@@ -536,11 +528,11 @@ async function beginSimulation() {
   // Same reasoning as the operation-mode save path (projectDetails.js) — a
   // brand-new simulation project needs to be remembered too, not just ones
   // joined via project code, or refreshing right after starting one would
-  // lose it (see tryRestoreSession() in auth.js).
-  rememberLastProjectCode(code);
+  // lose it (see tryRestoreSession() in auth.js). Nothing to remember yet if
+  // no code was entered — there's no project row to restore.
+  if (code) rememberLastProjectCode(code);
 
   renderWorkspaceShell();
-  updateWorkspaceNavAvailability();
 }
 
 // Sidebar entry point for the Sensors & Equipment / Topology / System
@@ -576,11 +568,15 @@ function restoreStep1FieldsFromState() {
   const descEl = document.getElementById('sim-project-desc');
   const assetEl = document.getElementById('sim-project-asset');
   const weatherEl = document.getElementById('sim-project-weather');
+  const vesselEl = document.getElementById('sim-project-vessel');
+  const locationEl = document.getElementById('sim-project-location');
   if (nameEl) nameEl.value = simState.projectData.name;
   if (codeEl) codeEl.value = simState.projectData.code;
   if (descEl) descEl.value = simState.projectData.description;
   if (assetEl) assetEl.value = simState.projectData.asset || '';
   if (weatherEl) weatherEl.value = simState.projectData.weatherWindow || '';
+  if (vesselEl) vesselEl.value = simState.projectData.vessel || '';
+  if (locationEl) locationEl.value = simState.projectData.location || '';
   updateDescCount();
   syncScopeWorkingFromState();
   renderScopeCatalog();
@@ -618,7 +614,6 @@ function goToPreparationTab(tab) {
   const pageTitleEl = document.getElementById('page-title');
   if (pageTitleEl) pageTitleEl.innerText = tab === 'mission' ? 'Mission information' : 'MiniSpectors';
   setCurrentSimSection(tab === 'mission' ? 'Mission information' : 'MiniSpectors');
-  updateWorkspaceNavAvailability();
 }
 
 // Returns to the workspace from a Mission Info/MiniSpectors review without
@@ -630,7 +625,6 @@ function returnToWorkspace() {
   document.getElementById('sim-step-2').classList.remove('hidden');
   saveSimulation({ silent: true });
   renderWorkspaceShell();
-  updateWorkspaceNavAvailability();
 }
 
 export function initSimROVGrid() {
@@ -640,7 +634,7 @@ export function initSimROVGrid() {
   document.getElementById('sim-step-2').classList.add('hidden');
   updateBeginSimButtonVisibility(false);
 
-  ['sim-project-name', 'sim-project-code', 'sim-project-desc', 'sim-project-asset', 'sim-project-weather'].forEach(id => {
+  ['sim-project-name', 'sim-project-code', 'sim-project-desc', 'sim-project-asset', 'sim-project-weather', 'sim-project-vessel', 'sim-project-location'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -656,7 +650,6 @@ export function initSimROVGrid() {
   renderUnitGrid();
   updateBeginBtn();
   updateUnitsBadge();
-  updateWorkspaceNavAvailability();
 }
 
 export function installSimSetup() {
@@ -671,8 +664,6 @@ export function installSimSetup() {
   scopeFamEl = document.getElementById('scope-fam-filter');
   scopeSearchEl?.addEventListener('input', renderScopeCatalog);
   scopeFamEl?.addEventListener('change', renderScopeCatalog);
-
-  document.getElementById('sim-project-code')?.addEventListener('input', updateWorkspaceNavAvailability);
 
   // Project Name/Description stay editable during a Mission Info review —
   // write straight into simState.projectData and autosave, same pattern as
@@ -699,6 +690,14 @@ export function installSimSetup() {
     simState.projectData.description = e.target.value;
     scheduleSimSync();
     updateDescCount();
+  });
+  document.getElementById('sim-project-vessel')?.addEventListener('input', (e) => {
+    simState.projectData.vessel = e.target.value;
+    scheduleSimSync();
+  });
+  document.getElementById('sim-project-location')?.addEventListener('input', (e) => {
+    simState.projectData.location = e.target.value;
+    scheduleSimSync();
   });
   document.getElementById('sim-gen-code')?.addEventListener('click', () => {
     const alphabet = 'ABCDEFGHJKLMNPRSTVWXZ';

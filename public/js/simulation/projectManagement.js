@@ -10,6 +10,7 @@
 
 import { api } from '../api.js';
 import { escapeHtml } from '../ui.js';
+import { state } from '../state.js';
 import { simState } from './state.js';
 import { renderProjectTeam } from '../projectTeam.js';
 import { exportProjectHistory } from '../export.js';
@@ -138,8 +139,14 @@ export async function renderProjectManagementContent(area) {
   teamContainer.className = 'mb-5';
   wrap.appendChild(teamContainer);
 
-  const projectCode = simState.projectData.code;
-  wrap.appendChild(await renderHistoryCard(projectCode, simState.projectData.name));
+  // state.currentProjectCode/currentProjectName are the reliable source
+  // regardless of which side this was opened from (Simulation workspace
+  // header or Operation's Project Details) — simState.projectData.code/.name
+  // stay blank for a legacy operation-only project that's never had a
+  // simulation (see auth.js's enterOpMode() comment on why).
+  const projectCode = state.currentProjectCode || simState.projectData.code;
+  const projectName = state.currentProjectName || simState.projectData.name || '';
+  wrap.appendChild(await renderHistoryCard(projectCode, projectName));
 
   area.appendChild(wrap);
   renderProjectTeam('team-container-sim', projectCode);

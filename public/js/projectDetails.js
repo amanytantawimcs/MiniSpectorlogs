@@ -2,7 +2,7 @@ import { state } from './state.js';
 import { showToast } from './ui.js';
 import { api, getSessionToken, rememberLastProjectCode } from './api.js';
 import { noteSavedUpdatedAt } from './staleCheck.js';
-import { collectAllData, populateUI } from './projectData.js';
+import { collectAllData } from './projectData.js';
 import { renderProjectTeam, flushPendingTeam } from './projectTeam.js';
 
 export const ROLE_COLORS_MAP = {
@@ -102,21 +102,6 @@ function showSyncIndicator(syncState) {
   label.textContent = s.label;
 }
 
-// Project Name/Code/Scope identify the project and are only ever meant to
-// be set once — Location and Vessel are the fields that actually change
-// during day-to-day operation (moving between sites/vessels), so those stay
-// editable. Locked once state.currentProjectCode is set: that only happens
-// after a first successful save, a Join, a Load Project, or a sim→operation
-// push — never speculatively — so it reliably means "this project already
-// exists," matching the same signal saveProject() already uses for isFirstSave.
-export function applyProjectIdentityLock() {
-  const locked = !!state.currentProjectCode;
-  ['projectName', 'projectCode', 'scope'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = locked;
-  });
-}
-
 // Tracks the last project_code we've already warned about via the 20s
 // autosave, so a user who doesn't immediately fix a code collision isn't
 // shown the same toast every 20 seconds — one warning per distinct code.
@@ -155,7 +140,6 @@ export async function saveProject({ silent } = {}) {
     if (isFirstSave) {
       await flushPendingTeam(projectCode);
       renderProjectTeam('team-container-op', projectCode);
-      applyProjectIdentityLock();
       // Remember this brand-new project as "last active" too — otherwise only
       // Join sets this, and refreshing right after creating a project would
       // lose the session-restore's ability to rejoin it (see tryRestoreSession()
@@ -189,7 +173,7 @@ export function startProjectAutoSave() {
   if (state.autoSaveTimer) clearInterval(state.autoSaveTimer);
   state.autoSaveTimer = setInterval(() => {
     if (state.currentMode !== 'operation' || state.currentUserRole === 'reviewer') return;
-    if (!document.getElementById('projectCode')?.value) return;
+    if (!state.currentProjectCode) return;
     saveProject({ silent: true });
   }, 20 * 1000);
 }
@@ -219,33 +203,4 @@ export function flushSaveOnUnload() {
 export function installProjectDetails() {
   window.addCrewRow = addCrewRow;
   window.__addCrewRow = addCrewRow; // used by projectData.js populateUI()
-
-  document.getElementById('btn-save-pc')?.addEventListener('click', () => saveProject());
-
-  // Proactive warning for the "New Project → skip to Operation" flow: as
-  // soon as they leave the field, check whether this code is already taken
-  // before they've done any work on it. This is advisory only — the actual
-  // guarantee that no one can create a duplicate is the createOnly check on
-  // save (see saveProject() above), which still applies even if this check
-  // is raced by someone else grabbing the code in between.
-  document.getElementById('projectCode')?.addEventListener('blur', async (e) => {
-    if (state.currentProjectCode) return; // already an established project — not a "new project" collision risk
-    const code = e.target.value.trim();
-    if (!code) return;
-    const existing = await api.pullProject(code);
-    if (existing.success) {
-      showToast(`Project code "${code}" already exists. Choose a different code, or use Join Project to open it.`, 'error');
-    }
-  });
-
-  document.getElementById('btn-load-pc')?.addEventListener('click', async () => {
-    const code = prompt('Enter the project code to load:');
-    if (!code) return;
-    const result = await api.pullProject(code.trim().toUpperCase());
-    if (!result.success) { showToast('Project not found.', 'error'); return; }
-    state.currentProjectCode = result.project.project_code;
-    populateUI(result.project.data);
-    applyProjectIdentityLock();
-    showToast('Project loaded.', 'success');
-  });
 }

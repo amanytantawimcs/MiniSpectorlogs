@@ -7,7 +7,7 @@
 import { escapeHtml, showToast, renderSectionCard, calBadge, tstBadge, rdyBadge } from './ui.js';
 import { api } from './api.js';
 import { state } from './state.js';
-import { saveProject, applyProjectIdentityLock } from './projectDetails.js';
+import { saveProject } from './projectDetails.js';
 import { addSensorRow, showSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
 import { PREOP_CHECKLIST } from './simulation/config.js';
@@ -42,8 +42,28 @@ const thC = 'px-4 py-2.5 text-center text-[10px] font-bold uppercase tracking-wi
 // the crossing guard (sidebarUX.js) owns that, and the click that triggered
 // this is about to navigate to whatever the user actually clicked, not
 // necessarily Pre-Op.
+// Project Code and Operation Scope aren't required just to work in Equipment
+// setup/Topology (see beginSimulation()'s comment in simulation/setup.js),
+// but a real project identity is required by the time anything actually
+// crosses into Operation — that's the first point data would otherwise get
+// synced/saved under an empty or ambiguous project. Called synchronously by
+// sidebarUX.js's crossing guard, before the confirm() prompt, so a doomed
+// crossing never even asks "are you sure?".
+export function canSyncToOperation() {
+  if (!simState.projectData.code) {
+    showToast('Enter a Project Code before moving to Operations.', 'warn');
+    return false;
+  }
+  if (!simState.selectedScope) {
+    showToast('Select an Operation Scope before moving to Operations.', 'warn');
+    return false;
+  }
+  return true;
+}
+
 export async function syncSimulationIntoOperation() {
   if (state.currentUserRole === 'reviewer') return;
+  if (!canSyncToOperation()) return;
   const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
   const machines = simState.shared.sysarch?.machines || [];
   const existing = state.preOpData;
@@ -71,12 +91,8 @@ export async function syncSimulationIntoOperation() {
     locked: existing?.locked || false,
   };
 
-  const pName = document.getElementById('projectName');
-  const pCode = document.getElementById('projectCode');
-  if (pName) pName.value = state.preOpData.projectName || '';
-  if (pCode) pCode.value = state.preOpData.projectCode || '';
   if (state.preOpData.projectCode) state.currentProjectCode = state.preOpData.projectCode;
-  applyProjectIdentityLock();
+  state.currentProjectName = state.preOpData.projectName || '';
 
   renderProjectSimInfo();
 

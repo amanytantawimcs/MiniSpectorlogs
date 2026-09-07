@@ -5,7 +5,7 @@ import {
 import { state, getDeviceId } from './state.js';
 import { showToast, setUserCardName, setUserCardRole } from './ui.js';
 import { enterDashboard, showTab } from './navigation.js';
-import { startProjectAutoSave, applyProjectIdentityLock } from './projectDetails.js';
+import { startProjectAutoSave } from './projectDetails.js';
 import { initSimROVGrid } from './simulation/setup.js';
 import { startSimAutoSave, loadSimulationState } from './simulation/core.js';
 import { simState } from './simulation/state.js';
@@ -68,17 +68,29 @@ export function applySimVisualMode() {
 function enterOpMode(userName, project) {
   applyOperationVisualMode();
   state.currentUserName = userName;
+  state.currentProjectName = project?.data?.projectName || '';
   document.getElementById('mode-screen').classList.add('hidden');
   document.getElementById('nav-simulation-section').classList.remove('hidden');
   document.getElementById('btn-mode-switch')?.classList.remove('hidden');
   document.getElementById('main-sidebar-nav')?.setAttribute('aria-label', 'Main navigation');
   setUserCardRole(state.currentUserProjectRole);
   if (state.currentProjectCode) clearPendingTeam(); // joining an existing project — drop any stale staged picks
-  applyProjectIdentityLock();
   enterDashboard();
 
-  if (project?.data?.simulationData) loadSimulationState(project.data.simulationData, true, false);
-  else initSimROVGrid();
+  if (project?.data?.simulationData) {
+    loadSimulationState(project.data.simulationData, true, false);
+  } else {
+    initSimROVGrid();
+    // Vessel/Location live on simState.projectData now (Mission Info), even
+    // for a project that's never had a simulation — seed them from the
+    // existing project row so already-entered values aren't lost from view.
+    // Deliberately NOT seeding .code/.name here too: that would make Mission
+    // Info's autosave (scheduleSimSync) start firing for a plain operation
+    // project, and upsertSimulationProject() would flip projects.mode to
+    // 'simulation' on the first edit since this project was never sim-locked.
+    simState.projectData.vessel = project?.data?.Vessel || '';
+    simState.projectData.location = project?.data?.dailySummary?.location || '';
+  }
 
   startStaleCheck();
   renderProjectTeam('team-container-op', state.currentProjectCode);

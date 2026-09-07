@@ -20,7 +20,7 @@ function getCrewRoster() {
 }
 
 function updateOperationalId() {
-  const pCode = document.getElementById('projectCode')?.value.trim();
+  const pCode = state.currentProjectCode;
   const dateVal = document.getElementById('startDate')?.value;
   const opIdInput = document.getElementById('operationalIdAuto');
   if (!opIdInput) return;

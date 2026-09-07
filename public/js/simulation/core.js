@@ -94,6 +94,8 @@ export function collectSimState() {
     projectScope: simState.projectData.description,
     projectAsset: simState.projectData.asset,
     projectWeatherWindow: simState.projectData.weatherWindow,
+    projectVessel: simState.projectData.vessel,
+    projectLocation: simState.projectData.location,
     scopeId: simState.selectedScope,
     scopeName: scopeName(simState.selectedScope),
     rovs: [...simState.selectedROVs.entries()].map(([num, role]) => ({
@@ -135,6 +137,7 @@ export function loadSimulationState(data, isSimLocked, renderShell = true) {
   simState.projectData = {
     name: data.projectName || '', code: data.projectCode || '', description: data.projectScope || '',
     asset: data.projectAsset || '', weatherWindow: data.projectWeatherWindow || '',
+    vessel: data.projectVessel || '', location: data.projectLocation || '',
   };
   simState.selectedScope = data.scopeId || null;
   simState.approval = { status: data.approvalStatus || 'draft', history: data.approvalHistory || [] };

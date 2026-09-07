@@ -3,7 +3,7 @@
 // Simulation mode — both nav sections live in the same #app-sidebar.
 
 import { applyOperationVisualMode, applySimVisualMode } from '../auth.js';
-import { syncSimulationIntoOperation } from '../preOp.js';
+import { syncSimulationIntoOperation, canSyncToOperation } from '../preOp.js';
 
 const COLLAPSE_KEY = 'mcs_sim_sidebar_collapsed';
 const DRAWER_BREAKPOINT = 900;
@@ -193,6 +193,15 @@ function initCrossingGuard() {
     if (!targetSide) return;
     const currentSide = document.body.classList.contains('sim-mode') ? 'simulation' : 'operation';
     if (targetSide === currentSide) return;
+
+    // Checked before the confirm() prompt — no point asking "are you sure?"
+    // for a crossing that's just going to fail canSyncToOperation()'s own
+    // check a moment later.
+    if (targetSide === 'operation' && !canSyncToOperation()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
 
     const question = targetSide === 'operation'
       ? 'Are you sure you want to move to Operations?'

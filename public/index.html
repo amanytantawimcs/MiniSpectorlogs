@@ -71,22 +71,6 @@
         }
         .nav-item:focus-visible { outline: 2px solid #F9921C; outline-offset: -2px; }
 
-        /* Sidebar entries that need a project code before they can be opened
-           (Sensors & equipment / Topology) — muted with a "not-allowed" cursor
-           and a lock icon (.nav-lock-icon below) instead of being removed
-           entirely, so the requirement stays visible/discoverable rather than
-           the item just disappearing. */
-        .nav-item.nav-item-disabled {
-            color: #96A7BF;
-            cursor: not-allowed;
-        }
-        .nav-item.nav-item-disabled:hover {
-            background: transparent;
-            color: #96A7BF;
-        }
-        .nav-lock-icon { display: none; margin-left: auto; color: #90A4BD; font-size: 13px; flex-shrink: 0; }
-        .nav-item.nav-item-disabled .nav-lock-icon { display: inline-flex; }
-
 
         .nav-icon {
             display: flex; align-items: center; justify-content: center;
@@ -559,12 +543,6 @@
         .rbtn-orange-outline:disabled { opacity: 0.35; cursor: not-allowed; }
         .rbtn-orange-outline:disabled:hover { background: transparent; border-color: rgba(243,145,36,0.55); }
 
-        /* Project Name/Code/Scope lock once the project already exists —
-           see applyProjectIdentityLock() in projectDetails.js. */
-        #projectName:disabled, #projectCode:disabled, #scope:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-        }
         .rfield { background: rgba(17,24,39,0.5); border: 1px solid rgba(120,166,212,0.16); color: #D3DAE3; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
         .rfield::placeholder { color: #6C88A6; font-size: 12px; }
         .rfield:focus { outline: none; border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
@@ -1067,11 +1045,9 @@
         <div role="group" aria-label="Simulation">
         <div onclick="goToWorkspaceSubTab('sensors', 'sim-nav-sensors')" class="nav-item" id="sim-nav-sensors" data-tooltip="Equipment setup — 0/0 ready">
             <span>Equipment setup</span>
-            <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
         <div onclick="goToWorkspaceSubTab('sysarch', 'sim-nav-topology')" class="nav-item" id="sim-nav-topology" data-tooltip="Topology">
             <span>Topology</span>
-            <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
         </div>
     </div>
@@ -1092,7 +1068,6 @@
 
     <div onclick="setChecklistType('postOp'); showTab('checklists', this); renderChecklistsTab();" class="nav-item" id="nav-cl-postop">Post-Op Checklist</div>
 
-    <div onclick="showTab('lars', this)" class="nav-item">LARS Status</div>
     <div onclick="showTab('checklists', this); enterChecklistGroup('shutdownDemob');" class="nav-item" id="nav-cl-shutdowndemob">Shutdown &amp; Demobilization</div>
 
     <div id="nav-dash" onclick="showTab('infographics', this); renderInfographics();" class="hidden nav-item">
@@ -1374,47 +1349,17 @@
     <input type="hidden" id="temperature">
     <input type="hidden" id="operationalIdAuto">
 
-    <!-- Project Identity card -->
-    <div class="chart-card mb-5">
-        <div class="chart-card-header">
-            <span class="chart-title">
-                <span class="chart-dot" style="background:#f39124"></span>
-                Project Identity
-            </span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Name</label>
-                <input type="text" id="projectName" placeholder="e.g. ADNOC" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 text-base rounded-lg px-3 text-white w-full">
-            </div>
-            <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Code</label>
-                <input type="text" id="projectCode" placeholder="e.g. J-xxxx" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white font-mono w-full">
-            </div>
-            <div class="col-span-2">
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Scope / Operation Type</label>
-                <input type="text" id="scope" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
-            </div>
-            <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Vessel</label>
-                <input type="text" id="Vessel" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
-            </div>
-            <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Location</label>
-                <input type="text" id="location" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
-            </div>
-        </div>
-
-        <div id="project-rov-roster" class="hidden">
-            <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2">ROV Roster</p>
-            <div id="project-rov-tags" class="flex flex-wrap gap-2"></div>
-        </div>
-
-        <div style="border-top:1px solid rgba(120,166,212,0.12);margin-top:18px;padding-top:16px;">
-            <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-3">Project Team</p>
-            <div id="team-container-op"></div>
-        </div>
+    <!-- Project Identity (Name/Code/Scope/Vessel/Location) moved to Mission
+         Info's own Project details card — Project Code/Name identify the
+         same shared project row regardless of which side you're on, and
+         Vessel/Location are edited there now too. Team/ROV roster access is
+         this icon instead, opening the same modal Simulation's workspace
+         header already uses (projectManagement.js). -->
+    <div class="flex justify-end mb-5">
+        <button onclick="openProjectManagement()" title="Project management"
+            class="w-9 h-9 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all border border-[rgba(120,166,212,0.16)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
+        </button>
     </div>
 
     <!-- Project Data Log — matches the client's ROV Technical Logbook Project
@@ -1612,167 +1557,6 @@
 </div>
       <div id="tab-auxtools" class="tab-content hidden max-w-full w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Auxiliary Tool Status</h3></div><div class="bg-[#101B2C] rounded-xl overflow-hidden border border-[rgba(120,166,212,0.16)]"><table class="w-full"><thead><tr><th class="w-1/3">Tool / Equipment</th><th class="w-1/4">Status</th><th>Notes / Condition</th></tr></thead><tbody id="auxToolBody" class="text-sm"></tbody></table></div></div>
      <div id="tab-software" class="tab-content hidden max-w-6xl w-full"><div class="flex items-center mb-4"><h3 class="text-xl font-bold text-white"> Software System Status</h3></div><div class="bg-[#101B2C] p-6 rounded-xl border border-[rgba(120,166,212,0.16)]"><h3 class="text-white-400 font-bold mb-4 border-b border-[rgba(120,166,212,0.16)] pb-2">Ready to Dive</h3><div class="space-y-4"><label class="flex items-center"><input type="checkbox" id="soft_pilot" class="mr-3 w-5 h-5"> Minispector Pilot Software: Running & Communicating</label><label class="flex items-center"><input type="checkbox" id="soft_hmi" class="mr-3 w-5 h-5"> On-deck Station (HMI): Displaying telemetry correctly</label><label class="flex items-center"><input type="checkbox" id="soft_logging" class="mr-3 w-5 h-5"> Logging System: Recording video & data stream</label></div></div></div>
-<div id="tab-lars" class="tab-content hidden max-w-5xl w-full">
-
-    <!-- Page Header -->
-    <div class="flex items-center justify-between mb-7">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(243,145,36,0.12);border:1px solid rgba(243,145,36,0.25);">
-                <svg class="w-5 h-5" fill="none" stroke="#f39124" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/><circle cx="8" cy="6" r="1.5" fill="#f39124" stroke="none"/><circle cx="16" cy="14" r="1.5" fill="#f39124" stroke="none"/></svg>
-            </div>
-            <div>
-                <h3 class="text-xl font-bold text-white tracking-tight">LARS Configuration &amp; Status</h3>
-                <p class="text-[#6C88A6] text-xs mt-0.5">Launch &amp; Recovery System — deployment configuration and pre-dive checklist</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuration Cards -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-
-        <!-- Davit System -->
-        <div class="rounded-2xl overflow-hidden" style="background:rgba(17,24,39,0.7);border:1px solid rgba(55,65,81,0.8);">
-            <div class="px-5 py-3.5 flex items-center gap-3" style="background:rgba(243,145,36,0.08);border-bottom:1px solid rgba(243,145,36,0.15);">
-                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#f39124;box-shadow:0 0 6px rgba(243,145,36,0.6);"></span>
-                <span class="text-xs font-bold text-white uppercase tracking-widest">Davit System</span>
-            </div>
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Winch Operation</label>
-                    <select id="lars_davit_winch" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
-                        <option value="" disabled selected>Select operation...</option>
-                        <option value="Electric">Electric</option>
-                        <option value="Manual">Manual</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Secure Method</label>
-                    <select id="lars_davit_secure" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
-                        <option value="" disabled selected>Select method...</option>
-                        <option value="Welded">Welded</option>
-                        <option value="Counterweight">Counterweight</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
-                    <select id="lars_davit_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#f39124'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
-                        <option value="" disabled selected>Select type...</option>
-                        <option value="Cage">Cage</option>
-                        <option value="Latch">Latch</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Diving LARS -->
-        <div class="rounded-2xl overflow-hidden" style="background:rgba(17,24,39,0.7);border:1px solid rgba(55,65,81,0.8);">
-            <div class="px-5 py-3.5 flex items-center gap-3" style="background:rgba(69,159,217,0.08);border-bottom:1px solid rgba(69,159,217,0.15);">
-                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#459fd9;box-shadow:0 0 6px rgba(69,159,217,0.6);"></span>
-                <span class="text-xs font-bold text-white uppercase tracking-widest">Diving LARS</span>
-            </div>
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
-                    <select id="lars_diving_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#459fd9'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
-                        <option value="" disabled selected>Select type...</option>
-                        <option value="Cage">Cage</option>
-                        <option value="Latch">Latch</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Clump Weight</label>
-                    <label class="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all group" style="background:rgba(31,41,55,0.6);border:1px solid rgba(55,65,81,0.7);" onmouseover="this.style.borderColor='rgba(69,159,217,0.4)'" onmouseout="this.style.borderColor='rgba(55,65,81,0.7)'">
-                        <input type="checkbox" id="lars_diving_clump" class="peer sr-only">
-                        <div class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all" style="background:rgba(55,65,81,0.8);border:2px solid #4b5563;" id="lars_diving_clump_box">
-                            <svg class="w-3 h-3 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                        </div>
-                        <span class="text-sm text-[#9AB0C8] group-hover:text-white transition-colors select-none">Clump Weight Installed</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Vessel Crane -->
-        <div class="rounded-2xl overflow-hidden" style="background:rgba(17,24,39,0.7);border:1px solid rgba(55,65,81,0.8);">
-            <div class="px-5 py-3.5 flex items-center gap-3" style="background:rgba(52,211,153,0.07);border-bottom:1px solid rgba(52,211,153,0.14);">
-                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background:#34d399;box-shadow:0 0 6px rgba(52,211,153,0.5);"></span>
-                <span class="text-xs font-bold text-white uppercase tracking-widest">Vessel Crane</span>
-            </div>
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="text-[10px] text-[#6C88A6] font-bold uppercase tracking-wider mb-1.5 block">Deployment Type</label>
-                    <select id="lars_crane_type" class="w-full text-sm rounded-xl px-3 py-2.5 outline-none transition-all" style="background:rgba(31,41,55,0.8);border:1px solid rgba(55,65,81,0.8);color:#f9fafb;" onfocus="this.style.borderColor='#34d399'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'">
-                        <option value="" disabled selected>Select type...</option>
-                        <option value="Cage">Cage</option>
-                        <option value="Latch">Latch</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Operational Status Checklist -->
-    <div class="rounded-2xl overflow-hidden" style="background:rgba(17,24,39,0.7);border:1px solid rgba(55,65,81,0.8);">
-        <div class="px-6 py-4 flex items-center gap-3" style="background:rgba(31,41,55,0.6);border-bottom:1px solid rgba(55,65,81,0.6);">
-            <span class="w-2 h-2 rounded-full" style="background:#f39124;box-shadow:0 0 6px rgba(243,145,36,0.5);"></span>
-            <span class="text-xs font-bold text-white uppercase tracking-widest">Operational Status Checklist</span>
-            <span class="text-[10px] text-[#6C88A6] ml-1">— verify before diving operations</span>
-        </div>
-        <div class="divide-y" style="border-color:rgba(55,65,81,0.5);">
-
-            <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" id="lars_winch" class="peer sr-only">
-                <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all peer-checked:shadow-[0_0_10px_rgba(243,145,36,0.4)]" style="background:rgba(31,41,55,0.9);border:2px solid #374151;" onchange="this.style.background=this.previousElementSibling.checked?'#f39124':'rgba(31,41,55,0.9)'">
-                    <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Winch / Hydraulics</p>
-                    <p class="text-xs text-[#6C88A6] mt-0.5">Inspected and confirmed functional</p>
-                </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
-            </label>
-
-            <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" id="lars_umbilical" class="peer sr-only">
-                <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all peer-checked:shadow-[0_0_10px_rgba(243,145,36,0.4)]" style="background:rgba(31,41,55,0.9);border:2px solid #374151;">
-                    <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Umbilical / Cable</p>
-                    <p class="text-xs text-[#6C88A6] mt-0.5">Visual inspection passed — no damage or kinks</p>
-                </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
-            </label>
-
-            <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" id="lars_crane" class="peer sr-only">
-                <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all peer-checked:shadow-[0_0_10px_rgba(243,145,36,0.4)]" style="background:rgba(31,41,55,0.9);border:2px solid #374151;">
-                    <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">A-Frame / Crane</p>
-                    <p class="text-xs text-[#6C88A6] mt-0.5">Functional and properly secured</p>
-                </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
-            </label>
-
-            <label class="flex items-center gap-4 px-6 py-4 cursor-pointer transition-all group" style="background:transparent;" onmouseover="this.style.background='rgba(243,145,36,0.04)'" onmouseout="this.style.background='transparent'">
-                <input type="checkbox" id="lars_tether" class="peer sr-only">
-                <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-all peer-checked:shadow-[0_0_10px_rgba(243,145,36,0.4)]" style="background:rgba(31,41,55,0.9);border:2px solid #374151;">
-                    <svg class="w-3.5 h-3.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium text-[#D3DAE3] group-hover:text-white transition-colors">Tether Management / Latch</p>
-                    <p class="text-xs text-[#6C88A6] mt-0.5">System checked and latch confirmed operational</p>
-                </div>
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full transition-all peer-checked:bg-green-500/15 peer-checked:text-green-400 bg-[#16233A] text-[#6C88A6]">VERIFIED</span>
-            </label>
-
-        </div>
-    </div>
-
-</div>
 <div id="tab-oplogs" class="tab-content hidden max-w-full w-full">
     <div class="subtab-bar">
         <button type="button" id="oplogs-subtab-divelog" class="subtab-btn active" onclick="switchOpLogsSubTab('divelog')">Dive Log</button>
@@ -1962,6 +1746,16 @@
                             </div>
                             <textarea id="sim-project-desc" rows="1" maxlength="280" placeholder="Optional mission description..."
                                 class="w-full rfield placeholder-[#6C88A6] resize-y" style="height:42px;min-height:42px;padding-top:10px;padding-bottom:10px;"></textarea>
+                        </div>
+                        <div>
+                            <label class="rfield-label">Vessel</label>
+                            <input id="sim-project-vessel" type="text" placeholder="e.g. MV Example"
+                                class="w-full rfield placeholder-[#6C88A6]"/>
+                        </div>
+                        <div>
+                            <label class="rfield-label">Location</label>
+                            <input id="sim-project-location" type="text" placeholder="e.g. Field / Block name"
+                                class="w-full rfield placeholder-[#6C88A6]"/>
                         </div>
                     </div>
                 </div>

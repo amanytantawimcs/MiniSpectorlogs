@@ -4,6 +4,7 @@
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
 import { restoreSensorTables } from './sensorTable.js';
+import { simState } from './simulation/state.js';
 
 const getCheck = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
 const getValue = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
@@ -68,17 +69,23 @@ export function collectAllData() {
 
   return {
     Minispectornumber: getValue('Minispectornumber'),
-    projectName: getValue('projectName'),
-    projectCode: getValue('projectCode'),
-    Vessel: getValue('Vessel'),
+    // Project Name/Code/Vessel/Location no longer have their own Operation-side
+    // inputs (the "Project Identity" card was removed — see Mission Info's
+    // Project details card instead). Name/Code are read from state, which
+    // every entry path (Join, sim→operation sync, a direct save) already
+    // keeps current; Vessel/Location live on simState.projectData, shared
+    // with Mission Info's own fields.
+    projectName: state.currentProjectName || '',
+    projectCode: state.currentProjectCode || '',
+    Vessel: simState.projectData.vessel || '',
     operationalIdAuto: getValue('operationalIdAuto'),
 
     shiftLogs: state.currentReportData.shiftLogs || [],
 
     dailySummary: {
-      startDate: getValue('startDate'), endDate: getValue('endDate'), location: getValue('location'),
+      startDate: getValue('startDate'), endDate: getValue('endDate'), location: simState.projectData.location || '',
       weather: getValue('weather'), visibility: getValue('visibility'), temperature: getValue('temperature'),
-      shiftno: getValue('shiftno'), scope: getValue('scope'),
+      shiftno: getValue('shiftno'),
     },
 
     supervisorName: supervisorEntry ? supervisorEntry.name : '',
@@ -158,11 +165,6 @@ export function populateUI(data) {
 
   setVal('operationalIdAuto', data.operationalIdAuto);
   setVal('Minispectornumber', data.Minispectornumber);
-  setVal('projectName', data.projectName);
-  setVal('projectCode', data.projectCode);
-  setVal('Vessel', data.Vessel);
-  setVal('scope', data.dailySummary?.scope);
-  setVal('location', data.dailySummary?.location);
   setVal('startDate', data.dailySummary?.startDate);
   setVal('endDate', data.dailySummary?.endDate);
   setVal('weather', data.dailySummary?.weather);

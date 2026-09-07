@@ -74,7 +74,7 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        mode = 'operation',
        vessel = EXCLUDED.vessel,
        location = EXCLUDED.location,
-       scope = EXCLUDED.scope,
+       scope = COALESCE(NULLIF(EXCLUDED.scope, ''), projects.scope),
        operational_id_auto = EXCLUDED.operational_id_auto,
        minispector_number = EXCLUDED.minispector_number,
        supervisor_name = EXCLUDED.supervisor_name,
@@ -95,6 +95,12 @@ async function upsertOperationProject(client, { project_code, project_name, crea
        project_data_log = EXCLUDED.project_data_log`}
      RETURNING id, updated_at`,
     [
+      // Operation no longer collects/sends a scope value at all (the
+      // "Project Identity" card's free-text Scope field is gone — Mission
+      // Info's own scope catalog is the real source now, saved via
+      // upsertSimulationProject instead). This always resolves to '', which
+      // is exactly what the COALESCE/NULLIF above is for: an empty incoming
+      // value here means "leave the existing scope alone," not "clear it."
       project_code, project_name || '', created_by || '',
       d.Vessel || '', d.dailySummary?.location || '', d.dailySummary?.scope || d.scope || '',
       d.operationalIdAuto || '', d.Minispectornumber || '', d.supervisorName || '',
@@ -207,14 +213,16 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
   // referenced unqualified below are the pre-existing row's current values,
   // not the row being inserted (that's what EXCLUDED is for).
   const { rows } = await client.query(
-    `INSERT INTO projects (project_code, project_name, mode, created_by, scope)
-     VALUES ($1,$2,'simulation',$3,$4)
+    `INSERT INTO projects (project_code, project_name, mode, created_by, scope, vessel, location)
+     VALUES ($1,$2,'simulation',$3,$4,$5,$6)
      ON CONFLICT (project_code) DO ${createOnly ? 'NOTHING' : `UPDATE SET
        project_name = EXCLUDED.project_name,
        mode = CASE WHEN projects.is_sim_locked THEN projects.mode ELSE 'simulation' END,
-       scope = EXCLUDED.scope`}
+       scope = EXCLUDED.scope,
+       vessel = EXCLUDED.vessel,
+       location = EXCLUDED.location`}
      RETURNING id, updated_at`,
-    [project_code, project_name || '', created_by || '', d.projectScope || '']
+    [project_code, project_name || '', created_by || '', d.projectScope || '', d.projectVessel || '', d.projectLocation || '']
   );
   if (rows.length === 0) return { conflict: true }; // createOnly + project_code already existed
   const projectId = rows[0].id;
@@ -341,7 +349,8 @@ async function buildSimulationData(project) {
   if (!sim) {
     return {
       type: 'simulation', reportDate: '', projectName: project.project_name || '', projectCode: project.project_code || '',
-      projectScope: project.scope || '', scopeId: null, scopeName: '', rovs: [], sensors: [], rovSensors: {},
+      projectScope: project.scope || '', projectVessel: project.vessel || '', projectLocation: project.location || '',
+      scopeId: null, scopeName: '', rovs: [], sensors: [], rovSensors: {},
       sysarch: {}, issues: [], thrusters: [], approvalStatus: 'draft', approvalHistory: [],
     };
   }
@@ -352,6 +361,8 @@ async function buildSimulationData(project) {
     projectName: project.project_name || '',
     projectCode: project.project_code || '',
     projectScope: project.scope || '',
+    projectVessel: project.vessel || '',
+    projectLocation: project.location || '',
     scopeId: sim.scope_id,
     scopeName: sim.scope_name || '',
     rovs: rovRows.rows.map(r => ({ rovNumber: r.rov_number, role: r.role, serial: r.serial || '', description: r.description || '' })),

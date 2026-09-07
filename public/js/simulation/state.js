@@ -10,7 +10,7 @@ export const simState = {
   activeROV: null,         // display-only focus, not persisted
   activeSubTab: 'sensors', // 'sensors' | 'sysarch'
   selectedScope: null,     // base scope id, "baseId+addon1+addon2" composite, or a "CUS-xx" custom bundle id
-  projectData: { name: '', code: '', description: '', asset: '', weatherWindow: '' },
+  projectData: { name: '', code: '', description: '', asset: '', weatherWindow: '', vessel: '', location: '' },
   approval: { status: 'draft', history: [] },
   shared: {
     sensors: [],
@@ -29,7 +29,7 @@ export function resetSimState() {
   simState.activeROV = null;
   simState.activeSubTab = 'sensors';
   simState.selectedScope = null;
-  simState.projectData = { name: '', code: '', description: '', asset: '', weatherWindow: '' };
+  simState.projectData = { name: '', code: '', description: '', asset: '', weatherWindow: '', vessel: '', location: '' };
   simState.approval = { status: 'draft', history: [] };
   simState.shared = {
     sensors: [], rovSensors: {},
