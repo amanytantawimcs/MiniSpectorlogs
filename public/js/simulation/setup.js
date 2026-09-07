@@ -641,7 +641,8 @@ function goToPreparationTab(tab) {
   }
   window.showTab('simulation', document.getElementById(tab === 'mission' ? 'sim-nav-mission' : 'sim-nav-units'));
   showSimSetupTab(tab);
-  document.getElementById('page-title').innerText = tab === 'mission' ? 'Mission Info' : 'MiniSpectors';
+  const pageTitleEl = document.getElementById('page-title');
+  if (pageTitleEl) pageTitleEl.innerText = tab === 'mission' ? 'Mission info' : 'MiniSpectors';
   updateWorkspaceNavAvailability();
 }
 
