@@ -109,14 +109,14 @@ function renderMachines(sa) {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Machine</th><th class="px-3 py-2 text-left">IP</th><th class="px-3 py-2 text-left">Software</th>
-    <th class="px-3 py-2 text-left">Version</th><th class="px-3 py-2 text-center">Status</th><th class="px-3 py-2 text-left">Comments</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Machine</th><th class="px-3 py-2 text-left" style="font-size:9px;">IP</th><th class="px-3 py-2 text-left" style="font-size:9px;">Software</th>
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Version</th><th class="px-3 py-2 text-center" style="font-size:9px;">Status</th><th class="px-3 py-2 text-left" style="font-size:9px;">Comments</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   if (sa.machines.length === 0) tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600 text-sm">No machines added yet</td></tr>`;
   sa.machines.forEach((m, i) => {
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
     const tdName = document.createElement('td'); tdName.className = 'px-3 py-2';
     const nameInput = textCell(m.name, 'Machine name...', v => m.name = v);
     nameInput.setAttribute('list', 'sim-machine-names');
@@ -156,17 +156,17 @@ function renderEquipment(sa) {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Category</th><th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-left">Serial</th>
-    <th class="px-3 py-2 text-center">Qty</th><th class="px-3 py-2 text-left">Batch</th><th class="px-3 py-2 text-left">Assignment</th>
-    <th class="px-3 py-2 text-left">Comments</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Category</th><th class="px-3 py-2 text-left" style="font-size:9px;">Item</th><th class="px-3 py-2 text-left" style="font-size:9px;">Serial</th>
+    <th class="px-3 py-2 text-center" style="font-size:9px;">Qty</th><th class="px-3 py-2 text-left" style="font-size:9px;">Batch</th><th class="px-3 py-2 text-left" style="font-size:9px;">Assignment</th>
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Comments</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   if (sa.equipment.length === 0) tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600 text-sm">No equipment added yet</td></tr>`;
   const rovOpts = ['Shared', ...[...simState.selectedROVs.keys()].sort((a, b) => a - b).map(n => `MS-${n}`)];
 
   sa.equipment.forEach((eq, i) => {
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
 
     const tdCat = document.createElement('td'); tdCat.className = 'px-3 py-2';
     const catSelect = document.createElement('select');
@@ -216,13 +216,13 @@ function renderSetEquipment(sa) {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-left">Main Set ID</th><th class="px-3 py-2 text-left">Backup Set ID</th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Item</th><th class="px-3 py-2 text-left" style="font-size:9px;">Main Set ID</th><th class="px-3 py-2 text-left" style="font-size:9px;">Backup Set ID</th></tr></thead>`;
   const tbody = document.createElement('tbody');
 
   SET_EQUIPMENT_ITEMS.forEach(({ key, label }) => {
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
     const tdLabel = document.createElement('td'); tdLabel.className = 'px-3 py-2 text-xs text-gray-200'; tdLabel.textContent = label;
     const tdMain = document.createElement('td'); tdMain.className = 'px-3 py-2';
     tdMain.appendChild(textCell(sa.setEquipment.main[key], 'ID...', (v) => { sa.setEquipment.main[key] = v; }, true));
@@ -243,9 +243,9 @@ function renderSimStatus(sa) {
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Machine</th><th class="px-3 py-2 text-left">Scenario</th><th class="px-3 py-2 text-left">Expected</th>
-    <th class="px-3 py-2 text-center">% Complete</th><th class="px-3 py-2 text-center">Status</th><th class="px-3 py-2 text-left">Comments</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Machine</th><th class="px-3 py-2 text-left" style="font-size:9px;">Scenario</th><th class="px-3 py-2 text-left" style="font-size:9px;">Expected</th>
+    <th class="px-3 py-2 text-center" style="font-size:9px;">% Complete</th><th class="px-3 py-2 text-center" style="font-size:9px;">Status</th><th class="px-3 py-2 text-left" style="font-size:9px;">Comments</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   if (sa.simStatus.length === 0) tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-600 text-sm">No test scenarios logged yet</td></tr>`;
   const statusStyles = { Passed: 'background:rgba(243,145,36,0.15);color:#f39124;', Warning: 'background:rgba(234,179,8,0.15);color:#facc15;', Failed: 'background:rgba(239,68,68,0.15);color:#f87171;' };
@@ -253,7 +253,7 @@ function renderSimStatus(sa) {
 
   sa.simStatus.forEach((s, i) => {
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
     const tdMachine = document.createElement('td'); tdMachine.className = 'px-3 py-2'; tdMachine.appendChild(textCell(s.machine, 'Machine', v => s.machine = v));
     const tdScenario = document.createElement('td'); tdScenario.className = 'px-3 py-2'; tdScenario.appendChild(textCell(s.scenario, 'Scenario', v => s.scenario = v));
     const tdExpected = document.createElement('td'); tdExpected.className = 'px-3 py-2'; tdExpected.appendChild(textCell(s.expected, 'Expected result', v => s.expected = v));
@@ -344,8 +344,8 @@ function renderSystemIPs(sa) {
   const { el, header, body } = card('System IPs', 'systemIPs');
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:rgba(5,8,18,0.9);color:#4b6070;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left">Category</th><th class="px-3 py-2 text-left">Name</th><th class="px-3 py-2 text-left">IP</th><th class="px-3 py-2 text-left">Port</th><th></th></tr></thead>`;
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
+    <th class="px-3 py-2 text-left" style="font-size:9px;">Category</th><th class="px-3 py-2 text-left" style="font-size:9px;">Name</th><th class="px-3 py-2 text-left" style="font-size:9px;">IP</th><th class="px-3 py-2 text-left" style="font-size:9px;">Port</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   let lastCat = null;
   sa.systemIPs.forEach((ip, i) => {
@@ -356,7 +356,7 @@ function renderSystemIPs(sa) {
       lastCat = ip.category;
     }
     const tr = document.createElement('tr');
-    tr.style.borderBottom = '1px solid rgba(55,65,81,0.3)';
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
     const tdName = document.createElement('td'); tdName.className = 'px-3 py-2'; tdName.appendChild(textCell(ip.name, 'Device name', v => ip.name = v));
     const tdCat = document.createElement('td'); tdCat.style.display = 'none';
     const tdIp = document.createElement('td'); tdIp.className = 'px-3 py-2';
