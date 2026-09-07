@@ -849,52 +849,53 @@
 <!-- ============================================================ -->
 <!-- MODE SELECTION SCREEN                                       -->
 <!-- ============================================================ -->
-<div id="mode-screen" class="fixed inset-0 z-45 flex flex-col items-center justify-center bg-[#0C1727] hidden">
-    <div class="login-bg fixed inset-0 z-0"></div>
+<div id="mode-screen" class="fixed inset-0 z-45 flex flex-col items-center justify-center bg-[#192643] hidden">
 
     <!-- Header -->
-    <div class="relative z-10 text-center mb-10">
+    <div class="relative z-10 text-center mb-8 px-4">
         <img src="assets/logo.png" alt="Logo" class="h-12 w-auto mx-auto mb-4 object-contain"
              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzAwQTdFMSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtc2l6ZT0iNDAiPk08L3RleHQ+PC9zdmc+'">
-        <h1 class="text-2xl font-bold text-white mb-1">Welcome, <span id="mode-user-name" class="text-[#f39124]"></span></h1>
-        <p id="mode-subtitle" class="text-[#9AB0C8] text-sm">What would you like to do today?</p>
+        <h1 class="text-[28px] leading-tight font-bold mb-1.5 text-[#F7FAFF]">Welcome, <span id="mode-user-name" class="text-[#F9921C]"></span></h1>
+        <p id="mode-subtitle" class="text-sm text-[#B9C7D9]">Start a new inspection or continue an existing project.</p>
     </div>
 
     <!-- ── STEP 1: Two path cards ─────────────────────────────── -->
-    <div id="mode-step1" class="relative z-10 flex flex-col items-center gap-6">
-      <div class="flex gap-6">
+    <div id="mode-step1" class="relative z-10 flex flex-col items-center gap-6 w-full px-4">
+      <div class="flex flex-col sm:flex-row gap-6 w-full items-stretch" style="max-width:680px;">
 
-        <!-- New Project -->
-        <button id="btn-mode-new"
-            class="group w-72 p-8 rounded-2xl border-2 border-[rgba(120,166,212,0.16)] bg-white/5 hover:border-[#f39124] hover:bg-orange-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1">
-            <div class="w-14 h-14 rounded-xl bg-orange-500/15 flex items-center justify-center mb-5 group-hover:bg-orange-500/25 transition-all">
-                <svg class="w-7 h-7 text-[#f39124]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <!-- New project -->
+        <button id="btn-mode-new" type="button"
+            class="group flex-1 flex flex-col text-left rounded-2xl border bg-[#22314B] border-[rgba(181,205,228,0.14)] hover:bg-[#28395A] hover:border-[#F9921C] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[#F9921C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#192643]"
+            style="padding:28px;">
+            <div class="w-12 h-12 rounded-xl bg-[rgba(249,146,28,0.15)] flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-[#F9921C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold text-white mb-2 group-hover:text-[#f39124] transition-colors">New Project</h2>
-            <p class="text-sm text-[#9AB0C8] leading-relaxed">Start a new ROV inspection — plan equipment and sensors, then move to live execution.</p>
-            <div class="mt-6 flex items-center gap-2 text-[#f39124] text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Get started</span>
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <h2 class="text-lg font-bold mb-2 text-[#F7FAFF]">New project</h2>
+            <p class="text-sm leading-relaxed mb-5 text-[#B9C7D9]">Plan equipment and sensors, simulate your inspection, then move to live operation.</p>
+            <div class="mt-auto inline-flex self-start items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-[#F9921C] text-[#192643]">
+                <span>Create project</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
         </button>
 
-        <!-- Join / Continue -->
-        <button id="btn-mode-join-btn"
-            class="group w-72 p-8 rounded-2xl border-2 border-[rgba(120,166,212,0.16)] bg-white/5 hover:border-green-500 hover:bg-green-500/10 backdrop-blur-md transition-all duration-200 text-left shadow-xl hover:shadow-green-500/20 hover:-translate-y-1">
-            <div class="w-14 h-14 rounded-xl bg-green-500/15 flex items-center justify-center mb-5 group-hover:bg-green-500/25 transition-all">
-                <svg class="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <!-- Join or continue -->
+        <button id="btn-mode-join-btn" type="button"
+            class="group flex-1 flex flex-col text-left rounded-2xl border bg-[#22314B] border-[rgba(181,205,228,0.14)] hover:bg-[#28395A] hover:border-[#B5CDE4] transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[#B5CDE4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#192643]"
+            style="padding:28px;">
+            <div class="w-12 h-12 rounded-xl bg-[rgba(181,205,228,0.15)] flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-[#B5CDE4]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
                 </svg>
             </div>
-            <h2 class="text-xl font-bold text-white mb-2 group-hover:text-green-300 transition-colors">Join / Continue</h2>
-            <p class="text-sm text-[#9AB0C8] leading-relaxed">Resume a saved local session or connect to a live project by cloud code.</p>
-            <div class="mt-6 flex items-center gap-2 text-green-400 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Continue</span>
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <h2 class="text-lg font-bold mb-2 text-[#F7FAFF]">Join or continue</h2>
+            <p class="text-sm leading-relaxed mb-5 text-[#B9C7D9]">Resume a saved session or join a live project using a cloud code.</p>
+            <div class="mt-auto inline-flex self-start items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold border-2 border-[#B5CDE4] text-[#B5CDE4]">
+                <span>Open project</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
                 </svg>
             </div>
@@ -903,37 +904,44 @@
 
       <!-- New Project now goes straight into Simulation (the recommended path); this stays as a quiet escape hatch -->
       <button type="button" id="btn-skip-to-op"
-          class="text-[#6C88A6] hover:text-[#459fd9] text-xs transition-colors underline decoration-dotted">
-          Skip simulation — start Operation directly
+          class="mt-1 flex flex-col items-center text-center rounded-lg px-5 py-3 text-[#B9C7D9] hover:text-[#F7FAFF] hover:bg-[rgba(181,205,228,0.06)] transition-colors">
+          <span class="text-sm font-semibold underline decoration-dotted">Start operation directly</span>
+          <span class="text-xs mt-0.5 text-[#6C88A6]">Skip planning and simulation</span>
       </button>
     </div>
 
     <!-- ── STEP 2B: Join / Continue ───────────────────────────── -->
-    <div id="mode-step2-join" class="hidden relative z-10 w-full max-w-md">
+    <div id="mode-step2-join" class="hidden relative z-10 w-full max-w-md px-4">
 
         <!-- Project code search -->
-        <label class="block text-xs font-semibold text-[#9AB0C8] mb-2 uppercase tracking-wider">Project Code</label>
+        <label class="block text-xs font-semibold text-[#B9C7D9] mb-2 uppercase tracking-wider">Project Code</label>
         <input id="join-code-input" type="text" placeholder="PRJ-MCS-2024-XXXX" autocomplete="off"
-            class="w-full px-3 py-2.5 rounded-lg text-sm text-white placeholder-[#6C88A6] outline-none transition-all font-mono"
-            style="background:rgba(0,0,0,0.3);border:1px solid rgba(55,65,81,0.8);text-transform:uppercase;letter-spacing:0.04em;"
-            onfocus="this.style.borderColor='#4ade80'" onblur="this.style.borderColor='rgba(55,65,81,0.8)'"
+            class="w-full px-3 py-2.5 rounded-lg text-sm text-[#F7FAFF] placeholder-[#6C88A6] outline-none transition-all font-mono"
+            style="background:rgba(0,0,0,0.3);border:1px solid rgba(181,205,228,0.25);text-transform:uppercase;letter-spacing:0.04em;"
+            onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.25)'"
             onkeydown="if(event.key==='Enter') document.getElementById('btn-join-confirm').click()">
 
         <p id="join-status" class="hidden text-xs mt-2"></p>
         <p id="join-error" class="hidden text-red-400 text-xs mt-2"></p>
 
         <button id="btn-join-confirm"
-            class="mt-3 w-full py-2.5 rounded-lg bg-green-700 hover:bg-green-600 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+            class="mt-3 w-full py-2.5 rounded-lg bg-[#B5CDE4] hover:brightness-95 text-[#192643] font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
             Join Project
         </button>
 
-        <button id="btn-back-join" class="mt-5 text-[#6C88A6] hover:text-[#9AB0C8] text-sm transition-colors w-full text-center">← Back</button>
+        <button id="btn-back-join" class="mt-5 text-[#6C88A6] hover:text-[#B9C7D9] text-sm transition-colors w-full text-center">← Back</button>
     </div>
 
-    <p class="absolute bottom-6 left-4 right-4 text-center text-[#6C88A6] text-xs tracking-wider">© 2026 MCS Group . Digital Transformation Product Internal use Only | <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Security &amp; Privacy Policy</button> | <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-[#9AB0C8] transition-colors">Terms of Service</button></p>
+    <p class="absolute bottom-6 left-4 right-4 text-center text-[#6C88A6] text-xs tracking-wider flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+        <span>© 2026 MCS Group · Internal use only</span>
+        <span>·</span>
+        <button type="button" onclick="openPrivacyPolicy()" class="underline decoration-dotted hover:text-[#B9C7D9] transition-colors">Security &amp; Privacy Policy</button>
+        <span>·</span>
+        <button type="button" onclick="openTermsOfService()" class="underline decoration-dotted hover:text-[#B9C7D9] transition-colors">Terms of Service</button>
+    </p>
 </div>
 
 <div id="session-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0C1727] hidden">
