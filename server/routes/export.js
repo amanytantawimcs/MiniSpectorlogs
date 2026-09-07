@@ -159,117 +159,174 @@ function buildOperationDocChildren(data, section) {
   return children;
 }
 
-// Colors lifted directly from the client's own "JOB SIMULATION &
-// DELIVERABLES" packing-list template (section header teal, table-header
-// dark teal w/ white text, field-label gray) — see server/lib/... no, this
-// isn't templated from a bundled file; it's rebuilt from scratch with
-// ExcelJS because the client-side SheetJS build this app otherwise uses for
-// Excel exports (public/js/export.js) is the free Community Edition, which
-// cannot write cell styles at all (verified: a fill written with it reads
-// back as no fill). ExcelJS runs server-side and writes fills/fonts/borders
-// correctly, same reason Word exports already go through a server route
-// instead of a client-side library.
+// Colors AND grid layout lifted directly from the client's own "JOB
+// SIMULATION & DELIVERABLES" packing-list template (section header teal,
+// table-header dark teal w/ white text, field-label gray; Hardware &
+// Consumables running side-by-side with Deliverables/Notes, same as the
+// original — not stacked sequentially). Rebuilt from scratch with ExcelJS
+// (not filling the actual template file) because the client-side SheetJS
+// build this app otherwise uses for Excel exports (public/js/export.js) is
+// the free Community Edition, which cannot write cell styles at all
+// (verified: a fill written with it reads back as no fill). ExcelJS runs
+// server-side and writes fills/fonts/borders/images correctly, same reason
+// Word exports already go through a server route instead of a client-side
+// library. Can't reproduce the original's native Excel Table banding
+// (alternating row colors, filter buttons) — that's a different styling
+// mechanism this approach doesn't touch either.
 const JSD_SECTION_FILL = 'FFCCEBE8';
 const JSD_HEADER_FILL = 'FF274C47';
 const JSD_LABEL_FILL = 'FFF2F2F2';
+const JSD_LEFT_COLS = 5;   // B:F
+const JSD_TOTAL_COLS = 8;  // B:H
 
 function buildJobSimulationDeliverablesWorkbook(data) {
   const wb = new ExcelJS.Workbook();
   const sheet = wb.addWorksheet('Job Simulation & Deliverables');
-  sheet.columns = [
-    { width: 10 }, { width: 26 }, { width: 20 }, { width: 22 }, { width: 20 }, { width: 16 }, { width: 32 },
-  ];
-  const COLS = 7;
-  let r = 1;
+  sheet.getColumn(1).width = 3;
+  sheet.getColumn(2).width = 8;
+  sheet.getColumn(3).width = 22;
+  sheet.getColumn(4).width = 20;
+  sheet.getColumn(5).width = 20;
+  sheet.getColumn(6).width = 16;
+  sheet.getColumn(7).width = 26;
+  sheet.getColumn(8).width = 30;
 
-  const merge = (row, cols = COLS) => { if (cols > 1) sheet.mergeCells(row, 1, row, cols); };
-  const titleRow = () => {
-    const cell = sheet.getCell(r, 1);
-    cell.value = 'JOB SIMULATION & DELIVERABLES';
-    cell.font = { bold: true, size: 14 };
-    merge(r);
-    r++;
+  const fillCell = (row, col, rgb, bold, textColor) => {
+    const cell = sheet.getCell(row, col);
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rgb } };
+    if (bold) cell.font = { bold: true, color: textColor ? { argb: textColor } : undefined };
+    return cell;
   };
-  const blank = () => { r++; };
-  const section = (label) => {
-    const cell = sheet.getCell(r, 1);
-    cell.value = label;
-    cell.font = { bold: true };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_SECTION_FILL } };
-    merge(r);
-    r++;
+  const mergeSpan = (row, fromCol, toCol) => { if (toCol > fromCol) sheet.mergeCells(row, fromCol, row, toCol); };
+  // A full-width teal section header spanning B:H (col 2-8).
+  const sectionFull = (row, label) => {
+    mergeSpan(row, 2, JSD_TOTAL_COLS);
+    fillCell(row, 2, JSD_SECTION_FILL, true).value = label;
+    for (let c = 3; c <= JSD_TOTAL_COLS; c++) fillCell(row, c, JSD_SECTION_FILL, false);
   };
-  const field = (label, value) => {
-    const labelCell = sheet.getCell(r, 1);
-    labelCell.value = label;
-    labelCell.font = { bold: true };
-    labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_LABEL_FILL } };
-    sheet.getCell(r, 2).value = value ?? '';
-    r++;
+  // A dark-teal table header row spanning the given column range.
+  const tableHeaderRow = (row, fromCol, labels) => {
+    labels.forEach((label, i) => { fillCell(row, fromCol + i, JSD_HEADER_FILL, true, 'FFFFFFFF').value = label; });
   };
-  const tableHeader = (labels) => {
-    labels.forEach((label, i) => {
-      const cell = sheet.getCell(r, i + 1);
-      cell.value = label;
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_HEADER_FILL } };
-    });
-    r++;
-  };
-  const dataRow = (values) => {
-    values.forEach((v, i) => { sheet.getCell(r, i + 1).value = v; });
-    r++;
+  const dataRowAt = (row, fromCol, values) => { values.forEach((v, i) => { sheet.getCell(row, fromCol + i).value = v; }); };
+  // A gray label cell (col G) + plain value cell (col H) — the right-side
+  // "field" pattern used throughout (Date:, Project Manager:, Delivered To:, etc).
+  const rightField = (row, label, value) => {
+    fillCell(row, 7, JSD_LABEL_FILL, true).value = label;
+    sheet.getCell(row, 8).value = value ?? '';
   };
 
   const del = data.sysarch?.deliverables || {};
+  let r = 1;
 
-  titleRow();
-  blank();
-  section('PROJECT DETAILS');
-  field('Project Name:', data.projectName);
-  field('Job Code:', data.projectCode);
-  field('Project Scope:', data.scopeName || data.projectScope);
-  field('Date:', data.reportDate);
-  field('Project Manager:', '');
-  field('Job Supervisor:', '');
-  field('Job Team:', '');
-  field('Prepared By [IT Representative]:', data.preparedBy);
-  field('Delivered To:', del.deliveredTo);
-  field('Technical Support Approval:', '');
-  blank();
+  // --- Title + logo ---
+  mergeSpan(r, 2, JSD_TOTAL_COLS);
+  sheet.getCell(r, 2).value = 'JOB SIMULATION & DELIVERABLES';
+  sheet.getCell(r, 2).font = { bold: true, size: 14 };
+  try {
+    const logoPath = path.join(__dirname, '..', '..', 'public', 'assets', 'logo.png');
+    const imageId = wb.addImage({ buffer: fs.readFileSync(logoPath), extension: 'png' });
+    sheet.addImage(imageId, { tl: { col: 6.2, row: 0.1 }, ext: { width: 90, height: 60 } });
+  } catch { /* logo optional — export still works without it */ }
+  r += 2;
 
-  section('MACHINES');
-  tableHeader(['Item #', 'Machine Name', 'IP Address', 'Installed Software', 'Software Version', 'Activated', 'Comments']);
-  (data.sysarch?.machines || []).forEach((m, i) => dataRow([i + 1, m.name || '', m.ip || '', m.software || '', m.version || '', m.activated || '', m.comments || '']));
-  blank();
+  // --- Header block: General/Project Details (left) beside Date/Project
+  // Manager/etc (right), one row per field, same row pairing as the
+  // original template (Project Name <-> Project Manager, Job Code <-> Job
+  // Supervisor, Project Scope <-> Job Team, then right-only for the rest). ---
+  fillCell(r, 2, JSD_SECTION_FILL, true).value = 'General:';
+  fillCell(r, 3, JSD_SECTION_FILL, false);
+  fillCell(r, 4, JSD_SECTION_FILL, true).value = 'PROJECT DETAILS';
+  fillCell(r, 5, JSD_SECTION_FILL, false);
+  fillCell(r, 6, JSD_SECTION_FILL, false);
+  fillCell(r, 7, JSD_SECTION_FILL, true).value = 'DATE:';
+  fillCell(r, 8, JSD_SECTION_FILL, false).value = data.reportDate || '';
+  r++;
 
-  section('HARDWARE & CONSUMABLES');
-  tableHeader(['Item #', 'Item', 'Quantity', 'Comments']);
-  (data.sysarch?.equipment || []).forEach((e, i) => dataRow([i + 1, e.item || '', e.qty || 0, e.comments || '']));
-  blank();
+  const leftLabeled = (row, label, value) => {
+    fillCell(row, 4, JSD_LABEL_FILL, true).value = label;
+    fillCell(row, 5, JSD_LABEL_FILL, false).value = value ?? '';
+  };
+  leftLabeled(r, 'PROJECT NAME:', data.projectName); rightField(r, 'Project Manager:', ''); r++;
+  leftLabeled(r, 'JOB CODE:', data.projectCode); rightField(r, 'Job Supervisor:', ''); r++;
+  leftLabeled(r, 'PROJECT SCOPE:', data.scopeName || data.projectScope); rightField(r, 'Job Team:', ''); r++;
+  rightField(r, 'Prepared By [IT Representative]:', data.preparedBy); r++;
+  rightField(r, 'Delivered To:', del.deliveredTo); r++;
+  rightField(r, 'Technical Support Approval:', ''); r += 2;
 
-  section('DELIVERABLES');
-  field('Delivered To:', del.deliveredTo);
-  field('Date:', del.date);
-  field('Wallet HDD', del.walletHDD || 0);
-  field('Other HDD', del.otherHDD || 0);
-  field('Memory Flash Drives', del.flashDrives || 0);
-  blank();
+  // --- MACHINES (full width) ---
+  sectionFull(r, 'MACHINES'); r++;
+  tableHeaderRow(r, 2, ['Item #', 'Machine Name', 'IP Address', 'Installed Software', 'Software Version', 'Activated', 'Comments']); r++;
+  const machines = data.sysarch?.machines || [];
+  machines.forEach((m, i) => { dataRowAt(r, 2, [i + 1, m.name || '', m.ip || '', m.software || '', m.version || '', m.activated || '', m.comments || '']); r++; });
+  sheet.getCell(r, 2).value = 'TOTALS'; sheet.getCell(r, 2).font = { bold: true };
+  sheet.getCell(r, 3).value = `Machines Count: ${machines.length}`;
+  r += 2;
 
-  section('DELIVERABLES NOTES');
-  if ((del.notes || []).length) del.notes.forEach(n => dataRow([n]));
-  else dataRow(['']);
-  blank();
+  // --- HARDWARE & CONSUMABLES (left, B:F) beside DELIVERABLES /
+  // DELIVERABLES NOTES / SIMULATION NOTES (right, G:H) — same rows,
+  // matching the original's side-by-side layout instead of stacking. ---
+  const equipment = data.sysarch?.equipment || [];
+  const notes = (del.notes || []).length ? del.notes : [''];
 
-  section('SIMULATION NOTES');
-  field('Simulation Date:', '');
-  blank();
+  const leftSeq = [];
+  leftSeq.push({ kind: 'sectionLeft', text: 'HARDWARE & CONSUMABLES' });
+  leftSeq.push({ kind: 'tableHeader', values: ['Item #', 'Item', 'Quantity', 'Comments'] });
+  equipment.forEach((e, i) => leftSeq.push({ kind: 'data', values: [i + 1, e.item || '', e.qty || 0, e.comments || ''] }));
+  leftSeq.push({ kind: 'totals', text: `Items Count: ${equipment.length}` });
 
-  section('SIMULATION STATUS');
-  tableHeader(['Item #', 'Machine Name', 'Testing Scenario', 'Expected Outcome', '% Complete', 'Status', 'Comments']);
-  (data.sysarch?.simStatus || []).forEach((s, i) => dataRow([i + 1, s.machine || '', s.scenario || '', s.expected || '', s.completion || 0, s.status || '', s.comments || '']));
+  const rightSeq = [];
+  rightSeq.push({ kind: 'sectionRight', text: 'DELIVERABLES' });
+  rightSeq.push({ kind: 'field', label: 'Delivered To :', value: del.deliveredTo });
+  rightSeq.push({ kind: 'field', label: 'Date :', value: del.date });
+  rightSeq.push({ kind: 'field', label: 'Wallet HDD', value: del.walletHDD || 0 });
+  rightSeq.push({ kind: 'field', label: 'Other HDD', value: del.otherHDD || 0 });
+  rightSeq.push({ kind: 'field', label: 'Memory Flash Drives', value: del.flashDrives || 0 });
+  rightSeq.push({ kind: 'blank' });
+  rightSeq.push({ kind: 'sectionRight', text: 'DELIVERABLES NOTES' });
+  notes.forEach((n, i) => rightSeq.push({ kind: 'note', label: i === 0 ? 'Notes From' : '', value: n }));
+  rightSeq.push({ kind: 'sectionRight', text: 'SIMULATION NOTES' });
+  rightSeq.push({ kind: 'field', label: 'SIMULATION DATE:', value: '' });
+
+  const parallelRows = Math.max(leftSeq.length, rightSeq.length);
+  for (let i = 0; i < parallelRows; i++) {
+    const row = r + i;
+    const left = leftSeq[i];
+    if (left) {
+      if (left.kind === 'sectionLeft') sectionN(sheet, row, 2, JSD_LEFT_COLS, left.text);
+      else if (left.kind === 'tableHeader') tableHeaderRow(row, 2, left.values);
+      else if (left.kind === 'data') dataRowAt(row, 2, left.values);
+      else if (left.kind === 'totals') { sheet.getCell(row, 2).value = 'TOTALS'; sheet.getCell(row, 2).font = { bold: true }; sheet.getCell(row, 3).value = left.text; }
+    }
+    const right = rightSeq[i];
+    if (right) {
+      if (right.kind === 'sectionRight') sectionN(sheet, row, 7, 2, right.text);
+      else if (right.kind === 'field') rightField(row, right.label, right.value);
+      else if (right.kind === 'note') { if (right.label) fillCell(row, 7, JSD_LABEL_FILL, true).value = right.label; sheet.getCell(row, 8).value = right.value; }
+    }
+  }
+  r += parallelRows + 1;
+
+  // --- SIMULATION STATUS (full width) ---
+  sectionFull(r, 'SIMULATION STATUS'); r++;
+  tableHeaderRow(r, 2, ['Item #', 'Machine Name', 'Testing Scenario', 'Expected Outcome', '% Complete', 'Status', 'Comments']); r++;
+  (data.sysarch?.simStatus || []).forEach((s, i) => { dataRowAt(r, 2, [i + 1, s.machine || '', s.scenario || '', s.expected || '', s.completion || 0, s.status || '', s.comments || '']); r++; });
 
   return wb;
+}
+
+// Teal section header spanning `span` columns starting at `fromCol` (used
+// for the side-by-side Hardware/Deliverables block, where each side's
+// header only spans its own half of the sheet instead of the full width).
+function sectionN(sheet, row, fromCol, span, label) {
+  if (span > 1) sheet.mergeCells(row, fromCol, row, fromCol + span - 1);
+  const cell = sheet.getCell(row, fromCol);
+  cell.value = label;
+  cell.font = { bold: true };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_SECTION_FILL } };
+  for (let c = fromCol + 1; c < fromCol + span; c++) {
+    sheet.getCell(row, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: JSD_SECTION_FILL } };
+  }
 }
 
 function buildSimulationDocChildren(data) {
