@@ -11,7 +11,7 @@
 // into a final required/optional sensor list.
 export const BASE_SCOPES = {
   'platform-conventional': {
-    name: 'Platform Conventional Inspection (GVI - CVI - CP - UT - ACFM)', category: 'Platform',
+    name: 'Platform Inspection (GVI-CVI-CP-UT-ACFM)', category: 'Platform',
     sensors: [
       { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
       { name: 'Depth', status: 'required' }, { name: 'CP', status: 'required' },
