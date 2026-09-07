@@ -126,9 +126,10 @@
         }
 
         /* --- GENERAL STYLES --- */
+        ::selection { background: #F9921C; color: #162239; }
         input, select, textarea { background-color: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; padding: 10px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.2s; }
         input::placeholder, select::placeholder, textarea::placeholder { color: #6C88A6; }
-        input:focus, select:focus, textarea:focus { border-color: #47A3DC; box-shadow: 0 0 0 3px rgba(71,163,220,0.14); }
+        input:focus, select:focus, textarea:focus { border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0A111C; }
@@ -415,7 +416,7 @@
         }
         .sim-collapse-btn i { font-size: 15px; transition: transform .2s ease; flex-shrink: 0; }
         .sim-collapse-btn:hover { color: #E9F0F8; background: rgba(120,166,212,0.06); }
-        .sim-collapse-btn:focus-visible { outline: 2px solid #47A3DC; outline-offset: -2px; }
+        .sim-collapse-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: -2px; }
         aside.sim-collapsed .sim-collapse-btn i { transform: rotate(180deg); display: inline-block; }
         aside.sim-collapsed .sim-collapse-btn { justify-content: center; padding: 0; }
         aside.sim-collapsed .sim-collapse-btn #sim-collapse-label { display: none; }
@@ -465,7 +466,7 @@
             cursor: pointer; font-size: 16px; flex-shrink: 0; transition: background .15s ease, color .15s ease;
         }
         .sim-hamburger-btn:hover { background: #14243A; color: #E9F0F8; }
-        .sim-hamburger-btn:focus-visible { outline: 2px solid #47A3DC; outline-offset: 1px; }
+        .sim-hamburger-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: 1px; }
         .sim-drawer-backdrop {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 45;
             opacity: 0; transition: opacity .2s ease;
@@ -545,7 +546,7 @@
         }
         .rfield { background: #0C1727; border: 1px solid rgba(120,166,212,0.16); color: #E9F0F8; border-radius: 10px; height: 42px; padding: 0 13px; font-size: 13.5px; }
         .rfield::placeholder { color: #6C88A6; }
-        .rfield:focus { outline: none; border-color: #47A3DC; box-shadow: 0 0 0 3px rgba(71,163,220,0.14); }
+        .rfield:focus { outline: none; border-color: #F9921C; box-shadow: 0 0 0 3px rgba(249,146,28,0.14); }
         .rfield-label { display: block; font-size: 13px; font-weight: 600; color: #9AB0C8; margin-bottom: 6px; }
         .rfield-label .req { color: #F0912D; margin-left: 2px; }
 
@@ -560,7 +561,7 @@
         .scope-bundle-mark { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(120,166,212,0.28); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.18s ease; }
         .scope-bundle-btn[aria-pressed="true"] .scope-bundle-mark { background: #F0912D; border-color: #F0912D; color: #20130A; }
         .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #E9F0F8; line-height: 1.35; margin: 0; }
-        .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(71,163,220,0.4); color: #47A3DC; background: rgba(71,163,220,0.14); }
+        .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(249,146,28,0.4); color: #F9921C; background: rgba(249,146,28,0.14); }
         .scope-bundle-delete { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; background: rgba(239,68,68,0.1); border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.15s ease, background 0.15s ease; }
         .scope-bundle-delete:hover { opacity: 1; background: rgba(239,68,68,0.22); }
         .scope-detail { border: 1px solid rgba(120,166,212,0.16); border-radius: 12px; background: #14243A; overflow: hidden; margin-top: 18px; }
