@@ -218,7 +218,7 @@ function renderSensorsTable() {
     const idx = sensors.indexOf(sensor);
     const qty = Math.max(1, sensor.qty || 1);
     const instances = ensureSensorInstances(sensor);
-    const rowBg = i % 2 === 0 ? 'rgba(17,24,39,0.45)' : 'rgba(17,24,39,0.15)';
+    const rowBg = 'rgba(17,24,39,0.45)';
 
     instances.forEach((instance, unitIdx) => {
       const tr = document.createElement('tr');
@@ -434,38 +434,59 @@ function renderFixedSensorsSection() {
   table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
     <th class="px-4 py-2 text-left">Sensor</th><th class="px-3 py-2 text-left">Model</th>
     <th class="px-3 py-2 text-left">Serial No.</th>
-    <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th></tr></thead>`;
+    <th class="px-3 py-2 text-center">Calibrated</th><th class="px-3 py-2 text-center">Tested</th>
+    <th class="px-3 py-2 text-center">In scope</th></tr></thead>`;
   const tbody = document.createElement('tbody');
   fixed.forEach((sensor, i) => {
+    const inScope = !sensor.disabled;
     const tr = document.createElement('tr');
-    tr.style.cssText = `background:${i % 2 === 0 ? 'rgba(17,24,39,0.45)' : 'rgba(17,24,39,0.15)'};border-bottom:1px solid rgba(55,65,81,0.25)`;
+    tr.style.cssText = `background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);${inScope ? '' : 'opacity:0.5;'}`;
     const tdName = document.createElement('td'); tdName.className = 'px-4 py-2.5 text-sm text-gray-200';
     const dot = document.createElement('span');
     dot.className = 'fixedsens-dot'; dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563';
     const nameWrap = document.createElement('span'); nameWrap.className = 'inline-flex items-center';
     nameWrap.appendChild(dot); nameWrap.append(sensor.name);
     tdName.appendChild(nameWrap);
+    if (!inScope) {
+      const badge = document.createElement('span');
+      badge.textContent = 'Not used';
+      badge.style.cssText = 'margin-left:8px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#9ca3af;background:rgba(75,85,99,0.3);border-radius:9999px;padding:2px 8px;';
+      tdName.appendChild(badge);
+    }
 
     const tdModel = document.createElement('td'); tdModel.className = 'px-3 py-2.5';
     const modelInput = document.createElement('input');
     modelInput.type = 'text'; modelInput.value = sensor.model || ''; modelInput.placeholder = 'Model...';
-    modelInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600';
+    modelInput.disabled = !inScope;
+    modelInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     modelInput.addEventListener('input', () => { sensor.model = modelInput.value; scheduleSimSync(); });
     tdModel.appendChild(modelInput);
 
     const tdSerial = document.createElement('td'); tdSerial.className = 'px-3 py-2.5';
     const serialInput = document.createElement('input');
     serialInput.type = 'text'; serialInput.value = sensor.serial || ''; serialInput.placeholder = 'S/N...';
-    serialInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600';
+    serialInput.disabled = !inScope;
+    serialInput.className = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     serialInput.style.color = '#459fd9';
     serialInput.addEventListener('input', () => { sensor.serial = serialInput.value; scheduleSimSync(); });
     tdSerial.appendChild(serialInput);
 
     const tdCal = document.createElement('td'); tdCal.className = 'px-3 py-2.5 text-center';
-    tdCal.appendChild(buildDateToggleCell(sensor, 'calibrated', '#f39124', () => { dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563'; }));
+    const calToggle = buildDateToggleCell(sensor, 'calibrated', '#f39124', () => { dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563'; });
+    if (!inScope) calToggle.style.pointerEvents = 'none';
+    tdCal.appendChild(calToggle);
     const tdTest = document.createElement('td'); tdTest.className = 'px-3 py-2.5 text-center';
-    tdTest.appendChild(buildDateToggleCell(sensor, 'tested', '#459fd9'));
-    tr.append(tdName, tdModel, tdSerial, tdCal, tdTest);
+    const testToggle = buildDateToggleCell(sensor, 'tested', '#459fd9');
+    if (!inScope) testToggle.style.pointerEvents = 'none';
+    tdTest.appendChild(testToggle);
+
+    const tdScope = document.createElement('td'); tdScope.className = 'px-3 py-2.5 text-center';
+    tdScope.appendChild(buildToggle(inScope, '#22c55e', () => {
+      sensor.disabled = inScope; // was in scope, now marking it not-used
+      scheduleSimSync();
+      renderSimContent();
+    }));
+    tr.append(tdName, tdModel, tdSerial, tdCal, tdTest, tdScope);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -490,7 +511,7 @@ function renderReadinessCard() {
   const sensors = simState.shared.sensors || [];
   const scopeActive = sensors.filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
   const scopeActiveItems = scopeActive.flatMap(sensorReadinessItems);
-  const fixedAll = Object.values(simState.shared.rovSensors || {}).flat();
+  const fixedAll = Object.values(simState.shared.rovSensors || {}).flat().filter(s => !s.disabled);
   const active = [...scopeActiveItems, ...fixedAll];
   const total = active.length;
 
