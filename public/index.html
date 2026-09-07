@@ -35,56 +35,57 @@
         .nav-item {
             cursor: pointer;
             position: relative;
-            padding: 8px 12px;
+            min-height: 46px;
+            padding: 0 12px;
             margin: 2px 6px;
-            border-radius: 10px;
-            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-            color: #9AB0C8;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+            color: #CEDEED;
             display: flex;
             align-items: center;
             gap: 9px;
             font-weight: 500;
-            font-size: 0.825rem;
+            font-size: 14px;
             background: transparent;
-            border-left: 3px solid transparent;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .nav-item:hover {
-            background: #14243A;
-            color: #E9F0F8;
-            border-left-color: transparent;
-            box-shadow: none;
+            background: rgba(42,59,84,0.55);
+            color: #F7FAFF;
         }
 
         /* ACTIVE STATE */
         .nav-item.active {
-            background: rgba(71,163,220,0.18);
-            color: #E9F0F8;
+            background: #2A3B54;
+            border-color: #45556E;
+            color: #F7FAFF;
             font-weight: 700;
-            border-left-color: transparent;
-            box-shadow: none;
         }
         .nav-item.active::before {
-            content: ''; position: absolute; left: -14px; top: 8px; bottom: 8px; width: 3px;
-            background: #F0912D; border-radius: 0 3px 3px 0;
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+            background: #F9921C;
         }
-        .nav-item:focus-visible { outline: 2px solid #47A3DC; outline-offset: -2px; }
+        .nav-item:focus-visible { outline: 2px solid #F9921C; outline-offset: -2px; }
 
         /* Sidebar entries that need a project code before they can be opened
-           (Sensors and equipment / Topology) — dimmed with a "not-allowed"
-           cursor instead of being removed entirely, so the requirement stays
-           visible/discoverable rather than the item just disappearing. */
+           (Sensors & equipment / Topology) — muted with a "not-allowed" cursor
+           and a lock icon (.nav-lock-icon below) instead of being removed
+           entirely, so the requirement stays visible/discoverable rather than
+           the item just disappearing. */
         .nav-item.nav-item-disabled {
-            opacity: 0.4;
+            color: #96A7BF;
             cursor: not-allowed;
         }
         .nav-item.nav-item-disabled:hover {
             background: transparent;
-            color: #9AB0C8;
+            color: #96A7BF;
         }
+        .nav-lock-icon { display: none; margin-left: auto; color: #90A4BD; font-size: 13px; flex-shrink: 0; }
+        .nav-item.nav-item-disabled .nav-lock-icon { display: inline-flex; }
 
         /* Applied to the Scope catalog and MiniSpectors grid when viewing
            Mission Info / MiniSpectors from within an already-started
@@ -315,47 +316,56 @@
 
         /* ── Sidebar nav shape (unified, both modes) ── */
         .nav-item-ic { font-size: 15px; color: #6C88A6; flex-shrink: 0; width: 16px; text-align: center; }
-        .nav-item.active .nav-item-ic { color: #F0912D; }
-        .nav-item:hover .nav-item-ic { color: #E9F0F8; }
-        .nav-tag { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #9AB0C8; border: 1px solid rgba(120,166,212,0.28); border-radius: 20px; padding: 0 7px; line-height: 16px; }
-        .nav-item.active .nav-tag { color: #F0912D; border-color: rgba(240,145,45,0.4); }
-        .sim-nav-label { margin: 0 0 6px; padding: 10px 16px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #6C88A6; border-bottom: none; }
+        .nav-item.active .nav-item-ic { color: #F9921C; }
+        .nav-item:hover .nav-item-ic { color: #F7FAFF; }
+        .nav-tag { margin-left: auto; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 700; color: #AEBFD4; border: 1px solid rgba(174,191,212,0.28); border-radius: 20px; padding: 0 7px; line-height: 16px; }
+        .nav-item.active .nav-tag { color: #F9921C; border-color: rgba(249,146,28,0.4); }
+        .sim-nav-label { margin: 0 0 6px; padding: 10px 16px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #AABDD5; border-bottom: none; }
         .sim-nav-label-accent { padding-top: 10px; }
         /* Small manual nudge up, closer to the Preparation group above it. */
         #sim-heading-sim { padding-top: 4px; }
 
-        /* Brand block: centered/stacked, compact footprint so the whole nav
-           fits without scrolling at short (768px) viewport heights. */
-        .brand-block { flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px 8px; border-bottom: none; }
-        .brand-block img { height: 46px; margin-bottom: 8px; }
-        .brand-block h1 { font-size: 14.5px; }
-        .brand-block p { margin-top: 3px; font-size: 10px; }
+        /* Brand block: logo + product name left-aligned, divider below
+           separating it from nav. */
+        .brand-block { flex-direction: column; align-items: flex-start; justify-content: center; padding: 22px 18px 16px; border-bottom: 1px solid #33455F; }
+        .brand-block img { height: 46px; margin-bottom: 10px; }
+        .brand-block h1 { font-size: 15px; font-weight: 500; color: #F7FAFF; }
+        .brand-block p { margin-top: 4px; font-size: 12px; line-height: 1.4; color: #AEBFD4; text-align: left; }
         nav { padding-top: 0; padding-bottom: 4px; }
 
-        /* Sidebar footer: name/role card with avatar. */
+        /* Sidebar footer: bottom user area with avatar, name, admin/sign-out. */
         .user-card-role { display: none; }
         .sidebar-footer {
             height: auto; justify-content: flex-start; gap: 0;
-            margin: 8px; padding: 9px 10px; border-radius: 12px;
-            background: #14243A; border: 1px solid rgba(120,166,212,0.16);
-            border-top: 1px solid rgba(120,166,212,0.16);
+            margin: 0; padding: 16px 14px; border-radius: 0;
+            background: #152238; border: none;
+            border-top: 1px solid #33455F;
         }
         #user-id-label { display: none; }
         .user-avatar {
             display: flex; align-items: center; justify-content: center;
-            width: 32px; height: 32px; border-radius: 8px; margin-right: 10px;
-            background: #459fd9; color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+            width: 36px; height: 36px; border-radius: 50%; margin-right: 10px;
+            background: #459fd9; color: #fff; font-size: 13px; font-weight: 700; flex-shrink: 0;
         }
         .user-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-        #display-user-id { display: block; font-size: 13px; font-weight: 700; color: #E9F0F8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-        .user-card-role { display: block; font-size: 11px; color: #6C88A6; margin-top: 1px; }
+        #display-user-id { display: block; font-size: 13px; font-weight: 700; color: #F7FAFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .user-card-role { display: block; font-size: 11px; color: #AEBFD4; margin-top: 1px; }
         .sidebar-footer button { margin-left: 6px; flex-shrink: 0; }
+        .footer-icon-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+            background: transparent; color: #B5CDE4; transition: background 0.15s ease, color 0.15s ease;
+        }
+        .footer-icon-btn i { font-size: 16px; }
+        .footer-icon-btn:hover { background: rgba(181,205,228,0.1); color: #F7FAFF; }
+        .footer-icon-btn:focus-visible { outline: 2px solid #F9921C; outline-offset: 1px; }
+        .footer-icon-btn.active { background: rgba(249,146,28,0.16); color: #F9921C; }
 
         /* ── Sidebar shell: rounded right edge, flush against the canvas ── */
         aside {
-            background: #101B2C; border-color: rgba(120,166,212,0.16);
-            width: 250px; margin: 0; border-radius: 0 20px 20px 0; border: none; overflow: visible;
-            border-right: 1px solid rgba(120,166,212,0.16);
+            background: #17253D; border-color: #33455F;
+            width: 280px; margin: 0; border-radius: 0 20px 20px 0; border: none; overflow: visible;
+            border-right: 1px solid #33455F;
             backdrop-filter: none; box-shadow: none;
         }
         .blur-me { background: #0D111C !important; }
@@ -464,7 +474,7 @@
                 transform: translateX(-100%); transition: transform .25s ease;
                 box-shadow: 0 0 40px rgba(0,0,0,0.5);
             }
-            aside.sim-collapsed { width: 268px; } /* rail collapse is desktop-only; ignore it in drawer mode */
+            aside.sim-collapsed { width: 280px; } /* rail collapse is desktop-only; ignore it in drawer mode */
             aside.sim-collapsed .brand-block h1,
             aside.sim-collapsed .brand-block p,
             aside.sim-collapsed .nav-item span:not(.nav-tag),
@@ -765,7 +775,7 @@
             <!-- Review Access panel — hidden by default -->
             <div id="review-panel" class="hidden mt-4">
                 <label for="review-code-input" class="block text-sm font-medium mb-1.5 text-[#B9C7D9]">Project code</label>
-                <input type="text" id="review-code-input" placeholder="PRJ-MCS-2024-XXXX"
+                <input type="text" id="review-code-input" placeholder="J-XXXX"
                     autocomplete="off"
                     class="w-full h-12 px-3.5 rounded-lg text-base text-[#F7FAFF] placeholder-[#6C88A6] bg-[#162239] border outline-none transition-colors font-mono"
                     style="border-color:rgba(181,205,228,0.3);text-transform:uppercase;letter-spacing:0.04em;"
@@ -954,7 +964,7 @@
 
         <!-- Project code search -->
         <label class="block text-xs font-semibold text-[#B9C7D9] mb-2 uppercase tracking-wider">Project Code</label>
-        <input id="join-code-input" type="text" placeholder="PRJ-MCS-2024-XXXX" autocomplete="off"
+        <input id="join-code-input" type="text" placeholder="J-XXXX" autocomplete="off"
             class="w-full px-3 py-2.5 rounded-lg text-sm text-[#F7FAFF] placeholder-[#6C88A6] outline-none transition-all font-mono"
             style="background:rgba(0,0,0,0.3);border:1px solid rgba(181,205,228,0.25);text-transform:uppercase;letter-spacing:0.04em;"
             onfocus="this.style.borderColor='#B5CDE4'" onblur="this.style.borderColor='rgba(181,205,228,0.25)'"
@@ -1012,8 +1022,8 @@
     <aside id="app-sidebar" class="flex flex-col relative z-10">
         <div class="brand-block flex">
             <img src="assets/logo.png" alt="Logo" class="h-12 w-auto object-contain mb-2">
-            <h1 class="text-sm font-bold text-white tracking-wide">MiniSpector® Log System</h1>
-            <p class="text-[10px] text-[#6C88A6] mt-0.5 text-center">Service Development &amp; Technical Support</p>
+            <h1 class="tracking-wide">MiniSpector® Log System</h1>
+            <p>Service Development &amp;<br>Technical Support</p>
         </div>
 <nav id="main-sidebar-nav" class="flex-1 overflow-y-auto py-4 space-y-1 px-2" aria-label="Main navigation">
 
@@ -1105,12 +1115,10 @@
     <div id="nav-simulation-section" class="hidden">
         <h3 id="sim-heading-prep" class="sim-nav-label sim-nav-label-accent">Preparation</h3>
         <div id="nav-prep-group" role="group" aria-labelledby="sim-heading-prep">
-        <div onclick="goToPreparationTab('mission')" class="nav-item flex items-center gap-2" id="sim-nav-mission" data-tooltip="Mission Info">
-            <i class="ti ti-target-arrow nav-item-ic" aria-hidden="true"></i>
-            <span>Mission Info</span>
+        <div onclick="goToPreparationTab('mission')" class="nav-item" id="sim-nav-mission" data-tooltip="Mission info">
+            <span>Mission info</span>
         </div>
-        <div onclick="goToPreparationTab('units')" class="nav-item flex items-center gap-2" id="sim-nav-units" data-tooltip="MiniSpectors — 0 selected">
-            <i class="ti ti-anchor nav-item-ic" aria-hidden="true"></i>
+        <div onclick="goToPreparationTab('units')" class="nav-item" id="sim-nav-units" data-tooltip="MiniSpectors — 0 selected">
             <span>MiniSpectors</span>
         </div>
         </div>
@@ -1119,38 +1127,30 @@
             <span>Simulation</span>
         </h3>
         <div role="group" aria-labelledby="sim-heading-sim">
-        <div onclick="goToWorkspaceSubTab('sensors', 'sim-nav-sensors')" class="nav-item flex items-center gap-2" id="sim-nav-sensors" data-tooltip="Sensors and equipment — 0/0 ready">
-            <i class="ti ti-cpu nav-item-ic" aria-hidden="true"></i>
-            <span>Sensors and equipment</span>
+        <div onclick="goToWorkspaceSubTab('sensors', 'sim-nav-sensors')" class="nav-item" id="sim-nav-sensors" data-tooltip="Sensors &amp; equipment — 0/0 ready">
+            <span>Sensors &amp; equipment</span>
+            <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
-        <div onclick="goToWorkspaceSubTab('sysarch', 'sim-nav-topology')" class="nav-item flex items-center gap-2" id="sim-nav-topology" data-tooltip="Topology">
-            <i class="ti ti-sitemap nav-item-ic" aria-hidden="true"></i>
+        <div onclick="goToWorkspaceSubTab('sysarch', 'sim-nav-topology')" class="nav-item" id="sim-nav-topology" data-tooltip="Topology">
             <span>Topology</span>
+            <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
         </div>
         </div>
     </div>
 
-    <!-- Visible to the two hardcoded privileged User IDs, plus anyone with users.is_admin
-         set — toggled in enterDashboard() (navigation.js). The Admin Management panel's own
-         Projects tab covers the cross-project directory, so there's no separate sidebar item for it. -->
-    <div id="nav-admin-group" class="hidden">
-        <div class="sim-nav-label">Admin</div>
-        <div id="nav-admin-mgmt-item" onclick="openAdminManagement()" class="nav-item hidden">
-            Admin Management
-        </div>
-    </div>
 
 </nav>
             <div class="sidebar-footer text-xs flex items-center">
-                <div id="user-avatar" class="user-avatar hidden" aria-hidden="true">--</div>
+                <div id="user-avatar" class="user-avatar" aria-hidden="true">--</div>
                 <span class="user-card-text">
                     <span id="user-id-label">User: </span><span id="display-user-id">Not Logged In</span>
-                    <span id="display-user-role" class="user-card-role hidden"></span>
+                    <span class="user-card-role">Signed in</span>
                 </span>
-                <button onclick="signOut()" title="Sign Out" aria-label="Sign Out" class="w-6 h-6 flex items-center justify-center rounded-md text-[#6C88A6] hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
+                <button id="footer-admin-btn" onclick="openAdminManagement()" title="Admin management" aria-label="Admin management" class="footer-icon-btn hidden">
+                    <i class="ti ti-settings" aria-hidden="true"></i>
+                </button>
+                <button onclick="signOut()" title="Sign out" aria-label="Sign out" class="footer-icon-btn">
+                    <i class="ti ti-logout" aria-hidden="true"></i>
                 </button>
             </div>
         </aside>

@@ -31,8 +31,7 @@ export function enterDashboard() {
   // Here they just also count as admin, alongside anyone with the per-user
   // users.is_admin DB flag set from the Users tab — see requireAdminAuth.
   const isAdmin = APPROVER_IDS.includes(String(state.currentUserId)) || !!state.currentUserIsAdmin;
-  document.getElementById('nav-admin-group')?.classList.toggle('hidden', !isAdmin);
-  document.getElementById('nav-admin-mgmt-item')?.classList.toggle('hidden', !isAdmin);
+  document.getElementById('footer-admin-btn')?.classList.toggle('hidden', !isAdmin);
 }
 
 function openSupport() {

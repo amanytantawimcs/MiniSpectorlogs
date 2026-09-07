@@ -191,7 +191,7 @@ export function renderWorkspaceShell() {
 }
 
 const SUBTAB_NAV_IDS = { sensors: 'sim-nav-sensors', sysarch: 'sim-nav-topology' };
-const SUBTAB_TITLES = { sensors: 'Sensors and equipment', sysarch: 'Topology' };
+const SUBTAB_TITLES = { sensors: 'Sensors & equipment', sysarch: 'Topology' };
 
 export function switchSimSubTab(tab) {
   simState.activeSubTab = tab;
@@ -267,7 +267,7 @@ function updateSimTabBadges() {
   const sensorsReady = sensorItems.filter(s => s.calibrated && s.tested && s.model).length;
   const navSensorsBadge = document.getElementById('sim-nav-badge-sensors');
   if (navSensorsBadge) navSensorsBadge.textContent = `${sensorsReady}/${sensorItems.length}`;
-  labelNavItem('sim-nav-sensors', `Sensors and equipment — ${sensorsReady}/${sensorItems.length} ready`);
+  labelNavItem('sim-nav-sensors', `Sensors & equipment — ${sensorsReady}/${sensorItems.length} ready`);
 }
 
 function updateSimProgress() {

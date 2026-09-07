@@ -73,6 +73,7 @@ async function doAdminSetup() {
 function openAdminPanel() {
   document.getElementById('admin-panel-screen').classList.remove('hidden');
   document.getElementById('admin-panel-screen').style.display = 'flex';
+  document.getElementById('footer-admin-btn')?.classList.add('active');
   showAdminTab('users');
 }
 
@@ -93,6 +94,7 @@ function openAdminManagement() {
 function exitAdminPanel() {
   document.getElementById('admin-panel-screen').classList.add('hidden');
   document.getElementById('admin-panel-screen').style.display = 'none';
+  document.getElementById('footer-admin-btn')?.classList.remove('active');
   isAdminLoggedIn = false;
   clearAdminSessionToken();
 }
