@@ -322,15 +322,20 @@
         .nav-item.active .nav-tag { color: #F9921C; border-color: rgba(249,146,28,0.4); }
         .sim-nav-label { margin: 0 0 6px; padding: 10px 16px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #AABDD5; border-bottom: none; }
         .sim-nav-label-accent { padding-top: 10px; }
-        /* Small manual nudge up, closer to the Preparation group above it. */
-        #sim-heading-sim { padding-top: 4px; }
 
-        /* Brand block: logo + product name left-aligned, divider below
+        /* Preparation/Simulation no longer have visible text labels — a thin
+           divider between the two groups replaces them (collapsed-rail mode
+           already draws this same divider via its own rule below). */
+        #nav-simulation-section div[role="group"] + div[role="group"] {
+            border-top: 1px solid #33455F; margin-top: 8px; padding-top: 8px;
+        }
+
+        /* Brand block: logo + product name centered, divider below
            separating it from nav. */
-        .brand-block { flex-direction: column; align-items: flex-start; justify-content: center; padding: 22px 18px 16px; border-bottom: 1px solid #33455F; }
+        .brand-block { flex-direction: column; align-items: center; justify-content: center; padding: 22px 18px 16px; border-bottom: 1px solid #33455F; }
         .brand-block img { height: 46px; margin-bottom: 10px; }
-        .brand-block h1 { font-size: 15px; font-weight: 500; color: #F7FAFF; }
-        .brand-block p { margin-top: 4px; font-size: 12px; line-height: 1.4; color: #AEBFD4; text-align: left; }
+        .brand-block h1 { font-size: 15px; font-weight: 500; color: #F7FAFF; text-align: center; }
+        .brand-block p { margin-top: 4px; font-size: 12px; line-height: 1.4; color: #AEBFD4; text-align: center; }
         nav { padding-top: 0; padding-bottom: 4px; }
 
         /* Sidebar footer: bottom user area with avatar, name, admin/sign-out. */
@@ -1113,8 +1118,7 @@
     </div><!-- end nav-operation-sections -->
 
     <div id="nav-simulation-section" class="hidden">
-        <h3 id="sim-heading-prep" class="sim-nav-label sim-nav-label-accent">Preparation</h3>
-        <div id="nav-prep-group" role="group" aria-labelledby="sim-heading-prep">
+        <div id="nav-prep-group" role="group" aria-label="Preparation">
         <div onclick="goToPreparationTab('mission')" class="nav-item" id="sim-nav-mission" data-tooltip="Mission info">
             <span>Mission info</span>
         </div>
@@ -1123,10 +1127,7 @@
         </div>
         </div>
 
-        <h3 id="sim-heading-sim" class="sim-nav-label sim-nav-label-accent">
-            <span>Simulation</span>
-        </h3>
-        <div role="group" aria-labelledby="sim-heading-sim">
+        <div role="group" aria-label="Simulation">
         <div onclick="goToWorkspaceSubTab('sensors', 'sim-nav-sensors')" class="nav-item" id="sim-nav-sensors" data-tooltip="Sensors &amp; equipment — 0/0 ready">
             <span>Sensors &amp; equipment</span>
             <i class="ti ti-lock nav-lock-icon" aria-hidden="true"></i>
