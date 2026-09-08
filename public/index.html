@@ -1355,9 +1355,13 @@
          Vessel/Location are edited there now too. Team/ROV roster access is
          this icon instead, opening the same modal Simulation's workspace
          header already uses (projectManagement.js). -->
-    <div class="flex justify-end mb-5">
+    <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+            <h3 class="text-2xl font-bold text-white tracking-tight">Project Details</h3>
+            <p class="text-[#9AB0C8] mt-1 text-sm">Job data log, weather conditions, and crew roster for this operation.</p>
+        </div>
         <button onclick="openProjectManagement()" title="Project management"
-            class="w-9 h-9 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all border border-[rgba(120,166,212,0.16)]">
+            class="w-9 h-9 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all border border-[rgba(120,166,212,0.16)] flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
         </button>
     </div>
@@ -1369,7 +1373,7 @@
     <div class="chart-card mb-5">
         <div class="chart-card-header">
             <span class="chart-title">
-                <span class="chart-dot" style="background:#459fd9"></span>
+                <span class="chart-dot" style="background:#F0912D"></span>
                 Project Data Log
             </span>
         </div>
