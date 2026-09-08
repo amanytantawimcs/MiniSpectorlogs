@@ -708,9 +708,18 @@ export function installSimSetup() {
   // listener the typed code just sits in the DOM and never reaches
   // simState.projectData.code, so nothing saves and canSyncToOperation()
   // keeps rejecting the crossing into Operation.
+  //
+  // The scheduleSimSync() call is gated on isSimulationStarted() — before
+  // beginSimulation() has ever run for this project, saving on every
+  // keystroke would create a real row via the non-createOnly upsert path
+  // (markNewSimProject()/isNewProjectFlow aren't set yet), which then makes
+  // beginSimulation()'s own "is this code already taken?" check find the
+  // draft it's mid-typing and wrongly report it as already in use. Before
+  // the workspace has started, this just keeps simState.projectData.code
+  // current for beginSimulation() to read when the user actually starts.
   document.getElementById('sim-project-code')?.addEventListener('input', (e) => {
     simState.projectData.code = e.target.value.trim();
-    scheduleSimSync();
+    if (isSimulationStarted()) scheduleSimSync();
   });
   document.getElementById('sim-gen-code')?.addEventListener('click', () => {
     const alphabet = 'ABCDEFGHJKLMNPRSTVWXZ';
