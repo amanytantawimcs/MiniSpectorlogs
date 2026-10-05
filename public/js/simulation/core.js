@@ -309,6 +309,10 @@ export async function saveSimulation({ silent } = {}) {
     if (!silent) showToast('Enter a Project Code before saving.', 'warn');
     return;
   }
+  // Silent saves (the 20-second autosave, scheduled syncs) must not create the
+  // project before Start Simulation. A draft row there makes the code look
+  // taken when Start is pressed. Only beginSimulation() creates a project.
+  if (silent && !isSimulationStarted()) return;
   // Same reasoning as projectDetails.js's isFirstSave: only refresh the
   // embedded Project Team section on the save that first persists this
   // project server-side, not on every 20s autosave after that, which
