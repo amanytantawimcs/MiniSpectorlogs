@@ -425,6 +425,10 @@ function updateDescCount() {
 }
 
 function updateBeginBtn() {
+  // The saved scope selection is the source of truth. If the working copy was
+  // lost (for example a bundle that had not loaded yet when it was restored),
+  // rebuild it, so Start does not stay disabled until the scope is picked again.
+  if (!scopeWorking && simState.selectedScope) syncScopeWorkingFromState();
   const count = simState.selectedROVs.size;
   const btn = document.getElementById('btn-begin-sim');
   const hasScope = !!(scopeWorking && scopeWorking.req.length);
@@ -435,7 +439,7 @@ export function showSimSetupTab(tab) {
   ['mission', 'units'].forEach(t => {
     document.getElementById(`sim-setup-${t}`)?.classList.toggle('hidden', t !== tab);
   });
-  if (tab === 'units') renderUnitGrid();
+  if (tab === 'units') { renderUnitGrid(); updateBeginBtn(); }
   if (tab === 'mission') renderProjectTeam('team-container-sim', simState.projectData.code);
 }
 
@@ -617,7 +621,12 @@ function returnToWorkspace() {
 export function initSimROVGrid() {
   resetSimState();
   // Pull bundles other users published; the catalog redraws when they arrive.
-  loadSharedBundles().then(() => renderScopeCatalog()).catch(() => {});
+  loadSharedBundles().then(() => {
+    if (!scopeWorking && simState.selectedScope) syncScopeWorkingFromState();
+    renderScopeCatalog();
+    renderScopeDetail();
+    updateBeginBtn();
+  }).catch(() => {});
 
   document.getElementById('sim-step-1').classList.remove('hidden');
   document.getElementById('sim-step-2').classList.add('hidden');
