@@ -1,7 +1,8 @@
 import { state, getDeviceId } from './state.js';
 import { showToast } from './ui.js';
 import { api, getSessionToken, rememberLastProjectCode } from './api.js';
-import { noteSavedUpdatedAt } from './staleCheck.js';
+import { noteSavedUpdatedAt, getKnownUpdatedAt } from './staleCheck.js';
+import { CREW_ROLES, STALE_SAVE_MESSAGE } from './constants.js';
 import { recordSave, isUnchangedSinceSave } from './historyChanges.js';
 import { collectAllData } from './projectData.js';
 import { renderProjectTeam, flushPendingTeam } from './projectTeam.js';
@@ -10,7 +11,6 @@ export const ROLE_COLORS_MAP = {
   'ROV Supervisor': '#f39124', 'ROV Operator': '#459fd9', 'ROV Technician': '#10b981',
   'CSWIP 3.4U Ispector': '#8b5cf6', 'PRC Engineer': '#f59e0b', 'Inspection Engineer': '#ef4444',
 };
-export const CREW_ROLES = ['ROV Supervisor', 'ROV Operator', 'ROV Technician', 'CSWIP 3.4U Ispector', 'PRC Engineer', 'Inspection Engineer'];
 
 export function getInitials(n) {
   const w = n.trim().split(' ').filter(Boolean);
@@ -48,6 +48,7 @@ export async function saveProject({ silent } = {}) {
     return;
   }
   if (silent && isUnchangedSinceSave('operation', data)) return;
+  if (state.saveBlocked) { if (!silent) showToast(STALE_SAVE_MESSAGE, 'error'); return; }
   // Only re-render the embedded Project Team section on the save that first
   // gives this project a code — not on every 20s autosave after that, which
   // would otherwise wipe out an in-progress search the user is typing there.
@@ -65,6 +66,7 @@ export async function saveProject({ silent } = {}) {
     project_name: data.projectName || projectCode,
     data,
     createOnly: isFirstSave,
+    base_updated_at: getKnownUpdatedAt(),
   });
   if (result.success) {
     state.currentProjectCode = projectCode;
@@ -86,6 +88,9 @@ export async function saveProject({ silent } = {}) {
       else showToast('Saved!', 'success');
     }
     recordSave({ mode: 'operation', section: 'Operation', projectCode, data });
+  } else if (result.stale) {
+    state.saveBlocked = true;
+    showToast(STALE_SAVE_MESSAGE, 'error');
   } else if (result.codeTaken) {
     // Always surfaced, even on a silent autosave — a code collision needs
     // the user to act (pick a different code), unlike a transient offline
@@ -120,6 +125,7 @@ export function flushSaveOnUnload() {
   if (!projectCode) return;
   const payload = JSON.stringify({
     device_id: getDeviceId(),
+    base_updated_at: getKnownUpdatedAt(),
     project_code: projectCode,
     mode: 'operation',
     created_by: state.currentUserName,

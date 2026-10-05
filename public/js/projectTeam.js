@@ -13,6 +13,7 @@
 // renderProjectTeam(containerId, projectCode).
 
 import { state } from './state.js';
+import { CREW_ROLES } from './constants.js';
 import { api } from './api.js';
 import { showToast, escapeHtml } from './ui.js';
 
@@ -46,7 +47,6 @@ function explainerHTML(hasTeam, isPending) {
 // Same role list as the full Crew Roster editor (Operation's Project
 // Details tab, projectDetails.js) — kept in sync manually since they're
 // two different UIs over the same crew_members.role text column.
-const CREW_ROLES = ['ROV Supervisor', 'ROV Operator', 'ROV Technician', 'CSWIP 3.4U Ispector', 'PRC Engineer', 'Inspection Engineer'];
 
 function crewSectionHTML(m, readOnly, isPending) {
   if (readOnly) {

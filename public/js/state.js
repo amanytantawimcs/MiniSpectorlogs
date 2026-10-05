@@ -12,6 +12,7 @@ export const state = {
   currentProjectName: null,
   currentDeviceRole: null,       // 'vessel' | 'office'
   isDirty: false,
+  saveBlocked: false,            // set when a save was refused as stale; reload to continue
 
   currentReportData: {
     diveLogs: [], maintenanceLogs: [], hseReports: [], standbyLogs: [], faultLogs: [], issueReports: [], shiftLogs: [],

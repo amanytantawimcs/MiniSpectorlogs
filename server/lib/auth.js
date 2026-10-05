@@ -19,9 +19,8 @@ const { getSession } = require('./sessions');
 const { getProjectRowByCode } = require('./projectData');
 const { asyncRoute } = require('./asyncRoute');
 
-// Same two privileged User IDs as the simulation approver gate (APPROVER_IDS
-// in public/js/simulation/config.js) and the /overview privileged-user gate
-// in routes/projects.js — keep all three lists in sync.
+// The privileged User IDs. Only this list exists now: the client receives the
+// result as isAdmin at login.
 const PRIVILEGED_USER_IDS = ['1162', '1774'];
 
 function requireAuth(req, res, next) {
@@ -67,13 +66,26 @@ const requireAdminAuth = asyncRoute(async function requireAdminAuth(req, res, ne
 // POST / route, which needs it to resolve project_code's on-file casing
 // before it can even call this) pass it straight through instead of paying
 // for a second identical getProjectRowByCode query.
-async function assertCanWrite(userId, projectCode, knownProject) {
-  const project = knownProject !== undefined ? knownProject : await getProjectRowByCode(projectCode);
-  if (!project) return true; // new project — any logged-in user may create it
+// Access rules, used by every project route:
+//  - privileged users: read and write everything
+//  - project with a team: members can read; writing needs a role other than viewer
+//  - project with no team: fail closed. Signed-in users may read it (to ask to be
+//    added); nobody but privileged users may write it until a team is set
+async function accessFor(userId, project) {
+  if (PRIVILEGED_USER_IDS.includes(String(userId))) return { canRead: true, canWrite: true, role: 'operator' };
   const { rows } = await pool.query('SELECT user_id, role FROM project_members WHERE project_id = $1', [project.id]);
-  if (rows.length === 0) return true; // no team configured yet — open project
+  if (rows.length === 0) return { canRead: true, canWrite: false, role: 'viewer' };
   const mine = rows.find(r => String(r.user_id) === String(userId));
-  return !!mine && mine.role !== 'viewer'; // team configured: unlisted users are implicitly viewers
+  if (!mine) return { canRead: false, canWrite: false, role: 'none' };
+  return { canRead: true, canWrite: mine.role !== 'viewer', role: mine.role };
 }
 
-module.exports = { requireAuth, requireAdminAuth, assertCanWrite, PRIVILEGED_USER_IDS };
+// A brand-new project (no row yet) may be created by any signed-in user; the
+// create route adds the creator as its first member.
+async function assertCanWrite(userId, projectCode, knownProject) {
+  const project = knownProject !== undefined ? knownProject : await getProjectRowByCode(projectCode);
+  if (!project) return true;
+  return (await accessFor(userId, project)).canWrite;
+}
+
+module.exports = { requireAuth, requireAdminAuth, assertCanWrite, accessFor, PRIVILEGED_USER_IDS };

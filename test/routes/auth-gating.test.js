@@ -115,15 +115,12 @@ test('POST /api/projects/:code/lock-simulation is rejected with no session', asy
 });
 
 // ---------------------------------------------------------------------------
-// GET /api/projects/:code is intentionally public (project-code-as-access,
-// used by the Reviewer login flow) — should NOT require any session.
+// GET /api/projects/:code needs a session: a project code alone no longer
+// opens a project (team members only, see accessFor() in lib/auth.js).
 // ---------------------------------------------------------------------------
-test('GET /api/projects/:code does not require authentication', async () => {
-  fakePool.respondWith({ rows: [] }); // getProjectRowByCode finds nothing
+test('GET /api/projects/:code requires authentication', async () => {
   const res = await fetch(`${baseUrl}/api/projects/UNKNOWN-CODE`);
-  assert.equal(res.status, 404, 'unauthenticated but reaches real route logic, not a 401');
-  const body = await res.json();
-  assert.equal(body.notFound, true);
+  assert.equal(res.status, 401);
 });
 
 // ---------------------------------------------------------------------------

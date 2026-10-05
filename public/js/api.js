@@ -121,6 +121,12 @@ export async function flushOfflineQueue() {
       const next = remaining.find(it => it.queuedByUserId === state.currentUserId);
       if (!next) break; // nothing left that belongs to whoever is currently logged in
       const r = await request('/projects', { method: 'POST', body: JSON.stringify(next.payload) });
+      if (r.status === 409) {
+        // Changed on another device since this was queued: it can never apply, so drop it and carry on.
+        writeQueue(readQueue().filter(it => it !== next));
+        showToast('A queued change was not saved: the project changed on another device.', 'warn');
+        continue;
+      }
       if (!r.ok) break; // still offline, or now a real rejection — stop, leave the rest queued
       writeQueue(remaining.filter(it => it !== next));
       flushedAny = true;
@@ -196,7 +202,7 @@ export const api = {
         enqueueFailedSave(payload);
         if (!alreadyQueued) showToast('Offline — save queued, will retry automatically.', 'warn');
       }
-      return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false, codeTaken: !!r.data.codeTaken };
+      return { success: false, error: r.data.error || 'Request failed', offline: r.networkError || false, codeTaken: !!r.data.codeTaken, stale: r.status === 409 };
     }
     return { success: true, updated_at: r.data.updated_at };
   },
@@ -256,14 +262,15 @@ export const api = {
   },
 
   checkProjectAccess: async (projectCode, userId) => {
-    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/access/' + encodeURIComponent(userId));
+    // The server answers for the signed-in user only; userId is kept for the old call sites.
+    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/access');
     // Fail closed: a request failure (network blip, rate limit, cold start)
     // must never be indistinguishable from "you're a full operator" — that
     // silently defeated the whole point of restricting a project to a team.
     // Entry still isn't blocked (matches the by-design "team restricts
     // writes, not viewing" rule the /access route itself documents), but the
     // uncertain case always resolves to the least-privileged role.
-    if (!r.ok) return { allowed: true, role: 'viewer' };
+    if (!r.ok) return { allowed: false, role: 'none' };
     return r.data;
   },
 

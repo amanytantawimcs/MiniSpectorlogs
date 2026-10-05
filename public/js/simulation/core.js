@@ -4,7 +4,8 @@
 
 import { state, getDeviceId } from '../state.js';
 import { api, getSessionToken } from '../api.js';
-import { noteSavedUpdatedAt } from '../staleCheck.js';
+import { noteSavedUpdatedAt, getKnownUpdatedAt } from '../staleCheck.js';
+import { STALE_SAVE_MESSAGE } from '../constants.js';
 import { recordSave, primeHistory, isUnchangedSinceSave } from '../historyChanges.js';
 import { showToast, setActiveNavItem } from '../ui.js';
 import { simState } from './state.js';
@@ -313,6 +314,7 @@ export async function saveSimulation({ silent } = {}) {
   // project before Start Simulation. A draft row there makes the code look
   // taken when Start is pressed. Only beginSimulation() creates a project.
   if (silent && !isSimulationStarted()) return;
+  if (state.saveBlocked) { if (!silent) showToast(STALE_SAVE_MESSAGE, 'error'); return; }
   // Same reasoning as projectDetails.js's isFirstSave: only refresh the
   // embedded Project Team section on the save that first persists this
   // project server-side, not on every 20s autosave after that, which
@@ -329,6 +331,7 @@ export async function saveSimulation({ silent } = {}) {
     project_name: simState.projectData.name || simState.projectData.code,
     data,
     createOnly: isNewProjectFlow && isFirstSave,
+    base_updated_at: getKnownUpdatedAt(),
   });
   if (result.success) {
     lastSavedAt = Date.now();
@@ -337,6 +340,9 @@ export async function saveSimulation({ silent } = {}) {
     if (isFirstSave) { await flushPendingTeam(simState.projectData.code); renderProjectTeam('team-container-sim', simState.projectData.code); }
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
+  } else if (result.stale) {
+    state.saveBlocked = true;
+    showToast(STALE_SAVE_MESSAGE, 'error');
   } else if (result.codeTaken) {
     // Always surfaced (even silent autosave/debounced sync) and throttled to
     // once per distinct code — see projectDetails.js's saveProject() for the
@@ -378,6 +384,7 @@ export function flushSimOnUnload() {
   if (state.currentMode !== 'simulation' || !simState.projectData.code) return;
   const payload = JSON.stringify({
     device_id: getDeviceId(),
+    base_updated_at: getKnownUpdatedAt(),
     project_code: simState.projectData.code,
     mode: 'simulation',
     created_by: state.currentUserName,

@@ -1,5 +1,4 @@
 import { state } from './state.js';
-import { APPROVER_IDS } from './simulation/config.js';
 import { setActiveNavItem } from './ui.js';
 import { clearPersistedSessionToken, forgetLastProjectCode } from './api.js';
 
@@ -26,11 +25,11 @@ export function enterDashboard() {
   document.getElementById('session-screen')?.classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
 
-  // Same two IDs as the simulation approver gate — see APPROVER_IDS in
-  // simulation/config.js, which still gates simulation approvals separately.
+  // The privileged user IDs are decided on the server (PRIVILEGED_USER_IDS in
+  // server/lib/auth.js) and sent back as isAdmin at login.
   // Here they just also count as admin, alongside anyone with the per-user
   // users.is_admin DB flag set from the Users tab — see requireAdminAuth.
-  const isAdmin = APPROVER_IDS.includes(String(state.currentUserId)) || !!state.currentUserIsAdmin;
+  const isAdmin = !!state.currentUserIsAdmin;
   document.getElementById('footer-admin-btn')?.classList.toggle('hidden', !isAdmin);
 }
 

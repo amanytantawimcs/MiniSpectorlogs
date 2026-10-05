@@ -6,7 +6,7 @@ import { state } from '../state.js';
 import { api, rememberLastProjectCode } from '../api.js';
 import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
-import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE, APPROVER_IDS } from './config.js';
+import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE } from './config.js';
 import {
   getAllBundles, findScope, scopeName, addCustomBundle, deleteCustomBundle, getAddOnsForBase, loadSharedBundles,
   encodeScopeId, resolveScopeSelection,
@@ -73,7 +73,7 @@ function syncScopeWorkingFromState() {
 // the Admin Management sidebar item — reused here so custom-bundle deletion
 // has one consistent definition of "admin" across the app.
 function isAdminUser() {
-  return APPROVER_IDS.includes(String(state.currentUserId)) || !!state.currentUserIsAdmin;
+  return !!state.currentUserIsAdmin;
 }
 
 function renderScopeCatalog() {

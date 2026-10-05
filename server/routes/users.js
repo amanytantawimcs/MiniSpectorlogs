@@ -2,7 +2,7 @@ const express = require('express');
 const pool = require('../db');
 const { hashPasscode, verifyPasscode, PASSCODE_FORMAT } = require('../lib/passcode');
 const { createSession } = require('../lib/sessions');
-const { requireAuth, requireAdminAuth } = require('../lib/auth');
+const { requireAuth, requireAdminAuth, PRIVILEGED_USER_IDS } = require('../lib/auth');
 const { rateLimit } = require('../lib/rateLimit');
 const { asyncRoute } = require('../lib/asyncRoute');
 const { recordLogin } = require('../lib/loginLog');
@@ -33,7 +33,7 @@ router.get('/search', requireAuth, asyncRoute(async (req, res) => {
 router.get('/me', requireAuth, asyncRoute(async (req, res) => {
   const { rows } = await pool.query('SELECT id, name, role, is_admin FROM users WHERE id = $1', [req.userId]);
   if (!rows[0]) return res.status(404).json({ success: false, error: 'User not found' });
-  res.json({ success: true, userId: rows[0].id, name: rows[0].name, role: rows[0].role, isAdmin: rows[0].is_admin });
+  res.json({ success: true, userId: rows[0].id, name: rows[0].name, role: rows[0].role, isAdmin: !!rows[0].is_admin || PRIVILEGED_USER_IDS.includes(String(rows[0].id)) });
 }));
 
 router.get('/:id', asyncRoute(async (req, res) => {
@@ -44,7 +44,7 @@ router.get('/:id', asyncRoute(async (req, res) => {
   // puts the login screen into verify mode (not set-a-new-one mode) even
   // though this user has never set a MiniSpector-local passcode.
   const hasPasscode = !!rows[0].passcode_hash || hasRealLmsPassword(await getLmsUser(id));
-  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode, isAdmin: rows[0].is_admin });
+  res.json({ success: true, name: rows[0].name, role: rows[0].role, hasPasscode, isAdmin: !!rows[0].is_admin || PRIVILEGED_USER_IDS.includes(String(rows[0].id)) });
 }));
 
 // First-time credential set. Rejected if a passcode already exists locally

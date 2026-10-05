@@ -4,13 +4,13 @@ const {
   getProjectRowByCode, upsertOperationProject, upsertSimulationProject,
   buildOperationData, buildSimulationData, lockSimulation,
 } = require('../lib/projectData');
-const { requireAuth, assertCanWrite, PRIVILEGED_USER_IDS } = require('../lib/auth');
+const { requireAuth, assertCanWrite, PRIVILEGED_USER_IDS, accessFor } = require('../lib/auth');
 const { asyncRoute } = require('../lib/asyncRoute');
 
 const router = express.Router();
 
 router.post('/', requireAuth, asyncRoute(async (req, res) => {
-  const { mode, created_by, project_name, data, createOnly } = req.body || {};
+  const { mode, created_by, project_name, data, createOnly, base_updated_at } = req.body || {};
   const rawCode = (req.body?.project_code || '').trim();
   if (!rawCode) return res.status(400).json({ success: false, error: 'project_code required' });
 
@@ -24,6 +24,19 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
   // future lookups (including this one) stay consistent going forward.
   const existing = await getProjectRowByCode(rawCode);
   const project_code = existing ? existing.project_code : rawCode.toUpperCase();
+
+  // A project is created only by an explicit create. Any other save to a code
+  // that does not exist is refused, so drafts cannot be created by accident.
+  if (!existing && !createOnly) {
+    return res.status(404).json({ success: false, notFound: true, error: 'Project does not exist. Create it first.' });
+  }
+  // The device saved against an older version than the one on file: refuse,
+  // so its whole-project save cannot overwrite newer work or child rows.
+  // Saves without a base version (older clients) are still accepted.
+  const baseMs = base_updated_at ? Date.parse(base_updated_at) : NaN;
+  if (existing && Number.isFinite(baseMs) && new Date(existing.updated_at).getTime() !== baseMs) {
+    return res.status(409).json({ success: false, stale: true, error: 'This project was changed on another device.' });
+  }
 
   if (!(await assertCanWrite(req.userId, project_code, existing))) {
     return res.status(403).json({ success: false, error: 'You have view-only access to this project.' });
@@ -97,9 +110,11 @@ router.get('/', requireAuth, asyncRoute(async (req, res) => {
   res.json({ success: true, projects: rows });
 }));
 
-router.get('/:code', asyncRoute(async (req, res) => {
+router.get('/:code', requireAuth, asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, notFound: true, error: 'Not found' });
+  const access = await accessFor(req.userId, project);
+  if (!access.canRead) return res.status(403).json({ success: false, error: 'You do not have access to this project. Ask the project team to add you.' });
   let data;
   if (project.mode === 'simulation') {
     data = await buildSimulationData(project);
@@ -122,6 +137,7 @@ router.get('/:code', asyncRoute(async (req, res) => {
       created_by: project.created_by,
       project_name: project.project_name,
       updated_at: project.updated_at,
+      role: access.role,
       last_saved_device: project.last_saved_device || '',
       is_sim_locked: project.is_sim_locked,
       data,
@@ -147,9 +163,10 @@ router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) =
 // project's crew list, not a guaranteed link. A member with no matching
 // crew row just gets is_crew: false; nothing about their edit access
 // depends on this, it's informational only.
-router.get('/:code/members', asyncRoute(async (req, res) => {
+router.get('/:code/members', requireAuth, asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.json({ success: true, members: [] });
+  if (!(await accessFor(req.userId, project)).canRead) return res.status(403).json({ success: false, error: 'You do not have access to this project.' });
   const { rows } = await pool.query(
     `SELECT pm.user_id, pm.role, pm.added_by, pm.added_at, u.name,
             (c.id IS NOT NULL) AS is_crew, c.role AS crew_role, c.shift AS crew_shift,
@@ -256,13 +273,11 @@ router.delete('/:code/crew-member', requireAuth, asyncRoute(async (req, res) => 
 // anyone can still open the project, they just land as a viewer if they
 // aren't on the team. { allowed: false } is reserved for a code that
 // doesn't resolve to a project at all (handled above the members check).
-router.get('/:code/access/:userId', asyncRoute(async (req, res) => {
+router.get('/:code/access', requireAuth, asyncRoute(async (req, res) => {
   const project = await getProjectRowByCode(req.params.code);
-  if (!project) return res.json({ allowed: true, role: 'operator' });
-  const { rows: members } = await pool.query('SELECT user_id, role FROM project_members WHERE project_id = $1', [project.id]);
-  if (members.length === 0) return res.json({ allowed: true, role: 'operator' }); // no team configured — open project
-  const member = members.find(m => String(m.user_id) === String(req.params.userId));
-  res.json({ allowed: true, role: member ? member.role : 'viewer' });
+  if (!project) return res.json({ allowed: false, role: 'none' });
+  const access = await accessFor(req.userId, project);
+  res.json({ allowed: access.canRead, role: access.role });
 }));
 
 module.exports = router;

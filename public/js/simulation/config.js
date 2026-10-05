@@ -309,6 +309,3 @@ export const PREOP_CHECKLIST = [
   'Supervisor approved',
 ];
 
-// User IDs allowed to approve simulations. TODO: move to a DB-driven role
-// once the admin panel grows role management — hardcoded for parity for now.
-export const APPROVER_IDS = ['1774', '1162'];

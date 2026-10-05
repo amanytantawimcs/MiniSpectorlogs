@@ -5,7 +5,8 @@
 
 import { state } from './state.js';
 import { escapeHtml } from './ui.js';
-import { ROLE_COLORS_MAP, getInitials, CREW_ROLES } from './projectDetails.js';
+import { ROLE_COLORS_MAP, getInitials } from './projectDetails.js';
+import { CREW_ROLES } from './constants.js';
 
 const INPUT_STYLE = 'background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3;padding:0 10px;border-radius:8px;width:100%;outline:none;height:36px;font-size:0.82rem;';
 const ROW_STYLE = 'display:grid;grid-template-columns:52px 1fr 1fr 110px 130px 130px 44px;gap:8px;align-items:center;padding:8px;border-radius:10px;margin-bottom:4px;background:rgba(16,27,44,0.5);border:1px solid rgba(120,166,212,0.12);';

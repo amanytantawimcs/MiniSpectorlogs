@@ -24,7 +24,7 @@ async function checkProjectAccessForUser(code, userId) {
   // this catch is the network-threw-entirely case (that function only
   // handles a non-ok HTTP response), and must resolve the same way.
   try { return await api.checkProjectAccess(code, userId); }
-  catch (e) { return { allowed: true, role: 'viewer' }; }
+  catch (e) { return { allowed: false, role: 'none' }; }
 }
 
 async function saveSessionMeta(code, role, userName) {
@@ -371,53 +371,12 @@ export function installAuth() {
     }
   });
 
-  document.getElementById('btn-review-login').addEventListener('click', async () => {
-    const code = document.getElementById('review-code-input').value.trim().toUpperCase();
+  document.getElementById('btn-review-login').addEventListener('click', () => {
+    // Reviewers no longer open a project with only its code. They sign in with
+    // their user ID and join; the project team sets their viewer (read-only) access.
     const errEl = document.getElementById('review-error');
-    errEl.classList.add('hidden');
-
-    if (!code) { errEl.innerText = 'Please enter a project code.'; errEl.classList.remove('hidden'); return; }
-
-    errEl.innerText = 'Loading project…';
+    errEl.innerText = 'Sign in with your user ID first, then join the project with its code. The project team sets your viewer access.';
     errEl.style.color = '#9ca3af';
     errEl.classList.remove('hidden');
-
-    try {
-      const result = await api.pullProject(code);
-      if (!result.success) {
-        errEl.innerText = result.notFound ? 'Project code not found. Check the code and try again.' : 'Connection failed. Check your internet connection.';
-        errEl.style.color = '#f87171';
-        return;
-      }
-
-      const project = result.project;
-      state.currentUserRole = 'reviewer';
-      state.currentUserId = 'reviewer';
-      state.currentMode = 'operation';
-      state.currentProjectCode = code;
-      document.body.classList.remove('sim-mode');
-      setUserCardName('Reviewer');
-      setUserCardRole('reviewer');
-
-      enterDashboard();
-      document.getElementById('nav-operation-sections').classList.remove('hidden');
-      document.getElementById('header-operation-buttons')?.classList.remove('hidden');
-      document.getElementById('nav-simulation-section').classList.add('hidden');
-
-      if (project.mode === 'simulation') {
-        // The pulled data here is the shape saveSimulation() writes, not what
-        // populateUI() (an Operation-shape reader) expects — showing it as an
-        // empty Operation dashboard would be just as misleading as before, so
-        // say plainly that this project doesn't have a review view yet rather
-        // than silently rendering nothing.
-        showToast(`Loaded project ${code} — this is a Simulation-mode project; a read-only Simulation view isn't built yet.`, 'info');
-      } else {
-        populateUI(project.data);
-        showToast(`Loaded project ${code} (read-only).`, 'info');
-      }
-    } catch (err) {
-      errEl.innerText = 'Unexpected error. Try again.';
-      errEl.classList.remove('hidden');
-    }
   });
 }

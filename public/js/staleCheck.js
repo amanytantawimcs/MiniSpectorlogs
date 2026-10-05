@@ -26,6 +26,12 @@ let pollTimer = null;
 // round instead of flashing a false banner; the next tick re-checks cleanly.
 let epoch = 0;
 
+// The version this device last saved or loaded, sent with each save so the
+// server can refuse one made against an older version.
+export function getKnownUpdatedAt() {
+  return knownMs === null ? null : new Date(knownMs).toISOString();
+}
+
 export function noteSavedUpdatedAt(ts) {
   const ms = Date.parse(ts);
   if (Number.isFinite(ms)) { knownMs = ms; epoch++; }
