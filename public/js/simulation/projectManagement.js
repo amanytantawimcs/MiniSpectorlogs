@@ -15,7 +15,6 @@ import { simState } from './state.js';
 import { renderProjectTeam } from '../projectTeam.js';
 import { renderCrewEditor } from '../crewRoster.js';
 import { exportProjectHistory } from '../export.js';
-import { showTab } from '../navigation.js';
 
 function formatWhen(iso) {
   if (!iso) return '';
@@ -170,15 +169,20 @@ export async function renderProjectManagementContent(area) {
   renderProjectTeam('team-container-sim', projectCode);
 }
 
-// Opens Project Management as a page (sidebar entry or the top-bar button).
 export function openProjectManagement() {
-  const body = document.getElementById('projectmgmt-body');
-  if (!body) return;
-  const navId = state.currentMode === 'operation' ? 'nav-projmgmt-op' : 'sim-nav-projmgmt';
-  showTab('projectmgmt', document.getElementById(navId));
+  const modal = document.getElementById('project-mgmt-modal');
+  const body = document.getElementById('project-mgmt-modal-body');
+  if (!modal || !body) return;
+  modal.style.display = 'flex';
   renderProjectManagementContent(body);
+}
+
+export function closeProjectManagement() {
+  const modal = document.getElementById('project-mgmt-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 export function installProjectManagement() {
   window.openProjectManagement = openProjectManagement;
+  window.closeProjectManagement = closeProjectManagement;
 }

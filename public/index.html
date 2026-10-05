@@ -1058,18 +1058,12 @@
             <span>Topology</span>
         </div>
         </div>
-
-        <div onclick="openProjectManagement()" class="nav-item" id="sim-nav-projmgmt" data-tooltip="Project management">
-            <span>Project Management</span>
-        </div>
     </div>
 
     <div id="nav-operation-sections">
 
     <!-- ── Project (also covers Crew Roster / Shift Log — merged in) ──── -->
     <div onclick="showTab('project', this); renderProjectTeamOp();" class="nav-item active">Project Details</div>
-
-    <div onclick="openProjectManagement()" class="nav-item" id="nav-projmgmt-op" data-tooltip="Project management">Project Management</div>
 
     <!-- Packing List & Equipment + Final Setup — one item, two sub-tabs (see #tab-preopfinal) -->
     <div onclick="showTab('preopfinal', this); enterPreOpFinal();" class="nav-item">Packing List &amp; Final Setup</div>
@@ -1950,12 +1944,14 @@
         </div>
     </div>
 
-    <div id="tab-projectmgmt" class="tab-content hidden max-w-full w-full">
-        <div class="mb-6">
-            <h3 class="text-2xl font-bold text-white tracking-tight">Project Management</h3>
-            <p class="text-[#9AB0C8] mt-1 text-sm">Crew roster, team access and the project's edit history.</p>
+    <div id="project-mgmt-modal" class="modal-overlay" style="display: none; z-index: 100;">
+        <div class="modal-container max-w-2xl bg-[#101B2C] border border-[rgba(120,166,212,0.16)] text-left">
+            <div class="flex justify-between items-center mb-5 border-b border-[rgba(120,166,212,0.16)] pb-4">
+                <h3 class="text-xl font-bold text-white">Project management</h3>
+                <button onclick="closeProjectManagement()" class="text-[#9AB0C8] hover:text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div id="project-mgmt-modal-body"></div>
         </div>
-        <div id="projectmgmt-body"></div>
     </div>
 
     <div id="privacy-policy-modal" class="modal-overlay" style="display: none; z-index: 100;">
