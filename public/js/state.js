@@ -20,6 +20,7 @@ export const state = {
   },
 
   preOpData: null,
+  crewRoster: [],               // Operation crew: { name, role, shift, signOn, signOff } — see crewRoster.js
   activeChecklistType: 'mobilization',
   activeChecklistDiveKeys: { preOp: '1', postOp: '1' },
 

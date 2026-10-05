@@ -15,7 +15,10 @@ function ensureSysarch() {
   if (!sa.equipment) sa.equipment = [];
   if (!sa.simStatus) sa.simStatus = [];
   if (!sa.deliverables) sa.deliverables = {};
-  if (!sa.systemIPs || sa.systemIPs.length === 0) sa.systemIPs = DEFAULT_SYSTEM_IPS.map(p => ({ ...p }));
+  if (!sa.systemIPs) sa.systemIPs = [];
+  // Add standard rows a saved project predates (e.g. External PCs), matched by name.
+  const haveNames = new Set(sa.systemIPs.map(p => p.name));
+  DEFAULT_SYSTEM_IPS.filter(p => !haveNames.has(p.name)).forEach(p => sa.systemIPs.push({ ...p }));
   if (!simState.shared.issues) simState.shared.issues = [];
   if (!sa.setEquipment) sa.setEquipment = { main: {}, backup: {} };
   return sa;
@@ -70,6 +73,12 @@ function card(title, key) {
 
   el.append(header, body);
   return { el, header, body };
+}
+
+// Standard Domain Spectrum system IPs are fixed across projects and locked.
+// Only camera and payload addresses vary per project configuration.
+function isEditableSystemIp(ip) {
+  return ip.category === 'MiniSpector Cameras' || ip.category === 'External PCs' || /payload/i.test(ip.name || '');
 }
 
 function textCell(value, placeholder, onChange, mono) {
@@ -151,7 +160,7 @@ function renderMachines(sa) {
 
 // ---- Equipment & Consumables (merged: replaces old sysarch.equipment + packingList) ----
 function renderEquipment(sa) {
-  const { el, header, body } = card('Equipment', 'equipment');
+  const { el, header, body } = card('Hardware & Peripherals', 'equipment');
   header.appendChild(addBtn('Add Item', () => { sa.equipment.push({ batch: '', category: EQUIP_CATEGORIES[0], item: '', serial: '', qty: 1, rovAssignment: 'Shared', comments: '' }); renderSimContent(); scheduleSimSync(); }));
 
   const table = document.createElement('table');
@@ -211,27 +220,131 @@ function renderEquipment(sa) {
 }
 
 // ---- Equipment IDs — Main Set / Backup Set (fixed items, not user-addable) ----
+// Equipment IDs table (feedback point 11): each Main Set and Backup Set is a
+// group of ID columns (Main 1 ID, Backup 1 ID, Backup 2 ID, ...). Columns are
+// added from the header buttons and removed with the × in each header. Each
+// column's values live in sa.setEquipment.mainIds / backupIds (one array per
+// item, one slot per column) so columns stay aligned. The main/backup maps
+// keep one comma-joined string per item, which is what the export and Pre-Op
+// readers print. Styled like the Fixed payloads table (single header row,
+// one text color, no colored bands).
+const SET_GROUPS = {
+  main: { short: 'Main' },
+  backup: { short: 'Backup' },
+};
+
+function setGroupCount(se, kind) {
+  return Math.max(1, se[kind + 'Cols'] || 1);
+}
+
+function setGroupValues(se, kind, key) {
+  const store = se[kind + 'Ids'];
+  if (!store[key]) store[key] = (se[kind][key] || '').split(',').map(s => s.trim()).filter(Boolean);
+  return store[key];
+}
+
+function saveSetGroup(se, kind, key) {
+  se[kind][key] = setGroupValues(se, kind, key).map(s => (s || '').trim()).filter(Boolean).join(', ');
+}
+
+function addSetGroupColumn(se, kind) {
+  se[kind + 'Cols'] = setGroupCount(se, kind) + 1;
+  renderSimContent();
+  scheduleSimSync();
+}
+
+function removeSetGroupColumn(se, kind, index) {
+  SET_EQUIPMENT_ITEMS.forEach(({ key }) => {
+    setGroupValues(se, kind, key).splice(index, 1);
+    saveSetGroup(se, kind, key);
+  });
+  se[kind + 'Cols'] = setGroupCount(se, kind) - 1;
+  renderSimContent();
+  scheduleSimSync();
+}
+
+function setIdInput(se, kind, key, index) {
+  const values = setGroupValues(se, kind, key);
+  const input = document.createElement('input');
+  input.type = 'text'; input.value = values[index] || ''; input.placeholder = 'ID...';
+  input.className = 'w-full min-w-[120px] bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-xs font-mono text-gray-200 outline-none focus:border-[#459fd9] transition-colors';
+  input.addEventListener('input', () => {
+    values[index] = input.value;
+    saveSetGroup(se, kind, key);
+    scheduleSimSync();
+  });
+  return input;
+}
+
 function renderSetEquipment(sa) {
   const { el, body } = card('Equipment IDs — Main Set / Backup Set', 'setEquipment');
+  const se = sa.setEquipment;
+  se.mainIds ||= {}; se.backupIds ||= {};
+  const groupKinds = ['main', 'backup'];
+  const counts = { main: setGroupCount(se, 'main'), backup: setGroupCount(se, 'backup') };
 
   const table = document.createElement('table');
+  table.className = 'fixedsens-table';
   table.style.cssText = 'width:100%;border-collapse:collapse';
-  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="text-[9px] uppercase font-semibold">
-    <th class="px-3 py-2 text-left" style="font-size:9px;">Item</th><th class="px-3 py-2 text-left" style="font-size:9px;">Main Set ID</th><th class="px-3 py-2 text-left" style="font-size:9px;">Backup Set ID</th></tr></thead>`;
-  const tbody = document.createElement('tbody');
 
+  const headRow = document.createElement('tr');
+  headRow.style.cssText = 'background:#16233A;color:#9AB0C8;';
+  headRow.className = 'uppercase font-semibold';
+  const addHeaderTh = (text) => {
+    const th = document.createElement('th');
+    th.className = 'px-4 py-2 text-left';
+    th.style.fontSize = '9px';
+    th.textContent = text;
+    headRow.appendChild(th);
+    return th;
+  };
+  addHeaderTh('Item');
+  groupKinds.forEach(kind => {
+    const short = SET_GROUPS[kind].short;
+    for (let i = 0; i < counts[kind]; i++) {
+      const th = addHeaderTh(`${short} ${i + 1} ID`);
+      if (counts[kind] > 1) {
+        const rm = document.createElement('button');
+        rm.type = 'button'; rm.innerHTML = '&times;'; rm.title = `Remove ${short} ${i + 1} column`;
+        rm.className = 'ml-2 text-gray-500 hover:text-red-400 text-base font-bold leading-none';
+        rm.addEventListener('click', () => removeSetGroupColumn(se, kind, i));
+        th.appendChild(rm);
+      }
+    }
+    const addTh = document.createElement('th');
+    addTh.className = 'px-4 py-2 text-left';
+    const add = document.createElement('button');
+    add.type = 'button'; add.textContent = `+ ${short} ID`;
+    add.title = `Add a ${short} ID column`;
+    add.className = 'text-[10px] font-bold px-2 py-0.5 rounded whitespace-nowrap';
+    add.style.cssText = 'color:#f39124;background:rgba(243,145,36,0.1);border:1px solid rgba(243,145,36,0.25);';
+    add.addEventListener('click', () => addSetGroupColumn(se, kind));
+    addTh.appendChild(add);
+    headRow.appendChild(addTh);
+  });
+  const thead = document.createElement('thead');
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
   SET_EQUIPMENT_ITEMS.forEach(({ key, label }) => {
     const tr = document.createElement('tr');
-    tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
-    const tdLabel = document.createElement('td'); tdLabel.className = 'px-3 py-2 text-xs text-gray-200'; tdLabel.textContent = label;
-    const tdMain = document.createElement('td'); tdMain.className = 'px-3 py-2';
-    tdMain.appendChild(textCell(sa.setEquipment.main[key], 'ID...', (v) => { sa.setEquipment.main[key] = v; }, true));
-    const tdBackup = document.createElement('td'); tdBackup.className = 'px-3 py-2';
-    tdBackup.appendChild(textCell(sa.setEquipment.backup[key], 'ID...', (v) => { sa.setEquipment.backup[key] = v; }, true));
-    tr.append(tdLabel, tdMain, tdBackup);
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);';
+    const tdLabel = document.createElement('td'); tdLabel.className = 'px-4 py-2.5 text-sm text-gray-200 whitespace-nowrap'; tdLabel.textContent = label;
+    tr.appendChild(tdLabel);
+    groupKinds.forEach(kind => {
+      for (let i = 0; i < counts[kind]; i++) {
+        const td = document.createElement('td'); td.className = 'px-4 py-2';
+        td.appendChild(setIdInput(se, kind, key, i));
+        tr.appendChild(td);
+      }
+      tr.appendChild(document.createElement('td'));
+    });
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+  // The global td rule in index.html draws row lines; this table has none.
+  table.querySelectorAll('td, th').forEach(cell => { cell.style.borderBottom = 'none'; });
   body.appendChild(table);
   return el;
 }
@@ -357,66 +470,28 @@ function renderSystemIPs(sa) {
     }
     const tr = document.createElement('tr');
     tr.style.cssText = 'background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);';
-    const tdName = document.createElement('td'); tdName.className = 'px-3 py-2'; tdName.appendChild(textCell(ip.name, 'Device name', v => ip.name = v));
+    const editable = isEditableSystemIp(ip);
+    const tdName = document.createElement('td'); tdName.className = 'px-3 py-2';
+    if (editable) tdName.appendChild(textCell(ip.name, 'Device name', v => ip.name = v));
+    else tdName.innerHTML = `<span class="text-xs text-gray-300">${escapeHtml(ip.name)}</span>`;
     const tdCat = document.createElement('td'); tdCat.style.display = 'none';
     const tdIp = document.createElement('td'); tdIp.className = 'px-3 py-2';
-    if (ip.hasIP) tdIp.appendChild(textCell(ip.ip, 'IP address', v => ip.ip = v, true)); else tdIp.innerHTML = '<span class="text-gray-600 text-xs">—</span>';
+    if (ip.hasIP) {
+      if (editable) tdIp.appendChild(textCell(ip.ip, 'IP address', v => ip.ip = v, true));
+      else tdIp.innerHTML = `<span class="font-mono text-xs" style="color:#459fd9">${escapeHtml(ip.ip || '—')}</span>`;
+    } else tdIp.innerHTML = '<span class="text-gray-600 text-xs">—</span>';
     const tdPort = document.createElement('td'); tdPort.className = 'px-3 py-2';
-    if (ip.hasPort) tdPort.appendChild(textCell(ip.port, 'Port', v => ip.port = v, true)); else tdPort.innerHTML = '<span class="text-gray-600 text-xs">—</span>';
+    if (ip.hasPort) {
+      if (editable) tdPort.appendChild(textCell(ip.port, 'Port', v => ip.port = v, true));
+      else tdPort.innerHTML = `<span class="font-mono text-xs" style="color:#459fd9">${escapeHtml(ip.port || '—')}</span>`;
+    } else tdPort.innerHTML = '<span class="text-gray-600 text-xs">—</span>';
     tr.append(tdCat, tdName, tdIp, tdPort);
-    tr.appendChild(removeBtnCell(() => { sa.systemIPs.splice(i, 1); renderSimContent(); scheduleSimSync(); }));
+    if (editable) tr.appendChild(removeBtnCell(() => { sa.systemIPs.splice(i, 1); renderSimContent(); scheduleSimSync(); }));
+    else tr.appendChild(document.createElement('td'));
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   body.appendChild(table);
-  return el;
-}
-
-// ---- Issues (new — see rebuild note above) ----
-function renderIssues() {
-  const issues = simState.shared.issues;
-  const { el, header, body } = card('Issues', 'issues');
-  header.appendChild(addBtn('Add Issue', () => { issues.push({ title: '', description: '', severity: 'medium', status: 'open' }); renderSimContent(); scheduleSimSync(); }));
-
-  if (issues.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'text-center text-gray-600 py-8 text-sm';
-    empty.textContent = 'No issues flagged.';
-    body.appendChild(empty);
-    return el;
-  }
-
-  const list = document.createElement('div'); list.className = 'p-4 space-y-3';
-  issues.forEach((issue, i) => {
-    const row = document.createElement('div');
-    row.className = 'rounded-lg p-3';
-    row.style.cssText = 'background:rgba(17,24,39,0.5);border:1px solid rgba(55,65,81,0.4);';
-
-    const topRow = document.createElement('div'); topRow.className = 'flex gap-2 mb-2';
-    const titleInput = textCell(issue.title, 'Issue title...', v => issue.title = v);
-    titleInput.className += ' font-semibold';
-    const sevSelect = document.createElement('select');
-    sevSelect.className = 'bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1.5 text-xs outline-none';
-    ['low', 'medium', 'high'].forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s[0].toUpperCase() + s.slice(1); o.selected = s === issue.severity; sevSelect.appendChild(o); });
-    sevSelect.addEventListener('change', () => { issue.severity = sevSelect.value; scheduleSimSync(); });
-    const statusSelect = document.createElement('select');
-    statusSelect.className = 'bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1.5 text-xs outline-none';
-    ['open', 'resolved'].forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s[0].toUpperCase() + s.slice(1); o.selected = s === issue.status; statusSelect.appendChild(o); });
-    statusSelect.addEventListener('change', () => { issue.status = statusSelect.value; scheduleSimSync(); });
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button'; removeBtn.innerHTML = '&times;'; removeBtn.className = 'text-gray-500 hover:text-red-400 text-lg font-bold leading-none px-1';
-    removeBtn.addEventListener('click', () => { issues.splice(i, 1); renderSimContent(); scheduleSimSync(); });
-    topRow.append(titleInput, sevSelect, statusSelect, removeBtn);
-
-    const descInput = document.createElement('textarea');
-    descInput.rows = 2; descInput.placeholder = 'Description...'; descInput.value = issue.description || '';
-    descInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-2 py-1.5 text-xs text-gray-200 outline-none resize-none';
-    descInput.addEventListener('input', () => { issue.description = descInput.value; scheduleSimSync(); });
-
-    row.append(topRow, descInput);
-    list.appendChild(row);
-  });
-  body.appendChild(list);
   return el;
 }
 
@@ -432,7 +507,7 @@ export function renderSysArchContent(area) {
   `;
 
   const wrap = document.createElement('div');
-  wrap.className = 'mx-auto pb-6';
+  wrap.className = 'mx-auto pb-6 topology-tab';
   const titleWrap = document.createElement('div');
   titleWrap.className = 'mb-6';
   titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Topology</h3>
@@ -440,19 +515,19 @@ export function renderSysArchContent(area) {
   wrap.appendChild(titleWrap);
   if (simState.locked) wrap.appendChild(renderLockedNotice());
 
-  const sectionHeading = document.createElement('div');
-  sectionHeading.className = 'text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3';
-  sectionHeading.textContent = 'Inspection Systems';
-  wrap.appendChild(sectionHeading);
-
-  wrap.append(renderMachines(sa), renderSetEquipment(sa), renderSimStatus(sa), renderDeliverables(sa), renderSystemIPs(sa), renderIssues());
-
-  const payloadsHeading = document.createElement('div');
-  payloadsHeading.className = 'text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3 mt-2';
-  payloadsHeading.textContent = 'Payloads';
-  wrap.appendChild(payloadsHeading);
-
-  wrap.append(renderEquipment(sa));
+  // Three main categories, each with its own heading.
+  const categories = [
+    { title: 'Inspection Systems', cards: [renderMachines(sa), renderSimStatus(sa), renderDeliverables(sa)] },
+    { title: 'Equipment IDs & System IPs', cards: [renderSetEquipment(sa), renderSystemIPs(sa)] },
+    { title: 'Hardware & Peripherals', cards: [renderEquipment(sa)] },
+  ];
+  categories.forEach(({ title, cards }, i) => {
+    const heading = document.createElement('div');
+    heading.className = `text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3${i > 0 ? ' mt-2' : ''}`;
+    heading.textContent = title;
+    wrap.appendChild(heading);
+    wrap.append(...cards);
+  });
 
   area.appendChild(datalists);
   area.appendChild(wrap);

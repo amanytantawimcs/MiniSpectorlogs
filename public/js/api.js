@@ -2,7 +2,7 @@
 // Same origin as the page, so no base URL or CORS config needed.
 
 import { showToast } from './ui.js';
-import { state } from './state.js';
+import { state, getDeviceId } from './state.js';
 
 // Session token minted server-side at login (see routes/users.js). Sent on
 // every request — as a header (covers GET/DELETE) and merged into the body
@@ -187,7 +187,8 @@ export const api = {
     return { success: r.ok, error: r.data.error, unauthorized: r.status === 401 };
   },
 
-  pushProject: async (payload) => {
+  pushProject: async (payloadIn) => {
+    const payload = { ...payloadIn, device_id: getDeviceId() };
     const r = await request('/projects', { method: 'POST', body: JSON.stringify(payload) });
     if (!r.ok) {
       if (r.networkError) {
@@ -207,8 +208,24 @@ export const api = {
     return { success: true, project: r.data.project };
   },
 
+  // Shared scope bundles (visible to every signed-in user).
+  listSharedBundles: async () => {
+    const r = await request('/scope-bundles');
+    return r.ok && Array.isArray(r.data?.bundles) ? r.data.bundles : [];
+  },
+
+  saveSharedBundle: async (bundle) => {
+    const r = await request('/scope-bundles/' + encodeURIComponent(bundle.id), { method: 'PUT', body: JSON.stringify({ bundle }) });
+    return { success: r.ok, error: r.data?.error };
+  },
+
+  deleteSharedBundle: async (id) => {
+    const r = await request('/scope-bundles/' + encodeURIComponent(id), { method: 'DELETE' });
+    return { success: r.ok, error: r.data?.error };
+  },
+
   lockSimulation: async (projectCode) => {
-    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/lock-simulation', { method: 'POST' });
+    const r = await request('/projects/' + encodeURIComponent(projectCode) + '/lock-simulation', { method: 'POST', body: JSON.stringify({ device_id: getDeviceId() }) });
     return { success: r.ok, updated_at: r.data && r.data.updated_at };
   },
 

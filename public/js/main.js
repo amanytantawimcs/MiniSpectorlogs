@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { installAuth, tryRestoreSession } from './auth.js';
+import { flushAllHistory } from './historyChanges.js';
 import { installNavigationStubs } from './navigation.js';
 import { installProjectDetails, flushSaveOnUnload } from './projectDetails.js';
 import { installAdmin } from './admin.js';
@@ -59,6 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Best-effort flush + warn if there's unsaved work when the tab closes/reloads.
 window.addEventListener('beforeunload', (e) => {
+  flushAllHistory();
   if (state.currentMode === 'operation') flushSaveOnUnload();
   else if (state.currentMode === 'simulation') flushSimOnUnload();
 

@@ -8,6 +8,30 @@ import { state } from './state.js';
 import { showToast } from './ui.js';
 import { collectAllData } from './projectData.js';
 import { collectSimState } from './simulation/core.js';
+import { LOG_CONFIGS } from './logConfigs.js';
+
+// All operation logs in one workbook, one tab per category (feedback point 9).
+// Columns are each category's own fields, so the file matches what was entered.
+const OP_LOG_SHEETS = [
+  ['diveLogs', 'Dive Logs'],
+  ['standbyLogs', 'Standby'],
+  ['maintenanceLogs', 'Maintenance'],
+  ['issueReports', 'Issues'],
+];
+
+export function exportOperationLogsExcel() {
+  const wb = XLSX.utils.book_new();
+  OP_LOG_SHEETS.forEach(([key, sheetName]) => {
+    const config = LOG_CONFIGS[key];
+    const rows = state.currentReportData?.[key] || [];
+    const headers = config.fields.map(f => f.label);
+    const body = rows.map(row => config.fields.map(f => row[f.key] ?? ''));
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...body]);
+    ws['!cols'] = headers.map(h => ({ wch: Math.min(40, Math.max(12, h.length + 4)) }));
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  });
+  XLSX.writeFile(wb, `OperationLogs-${state.currentProjectCode || 'project'}.xlsx`);
+}
 
 export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -119,17 +143,17 @@ export function exportSimulationExcel() {
   const allFixed = Object.entries(data.rovSensors || {})
     .sort((a, b) => parseInt(a[0], 10) - parseInt(b[0], 10))
     .flatMap(([num, arr]) => arr.map(s => ({
-      ROV: `MS-${num}`, Sensor: s.name, Model: s.model || '—',
+      ROV: `MS-${num}`, Payload: s.name, Model: s.model || '—',
       Calibrated: s.calibrated ? 'Yes' : 'No', Tested: s.tested ? 'Yes' : 'No',
     })));
-  if (allFixed.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allFixed), 'Fixed Sensors');
+  if (allFixed.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allFixed), 'Fixed Payloads');
 
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
     (data.sensors || []).map((s, i) => ({
-      '#': i + 1, Sensor: s.name, Model: s.model || '—', Qty: s.qty || 1,
+      '#': i + 1, Payload: s.name, Model: s.model || '—', Qty: s.qty || 1,
       Calibrated: s.calibrated ? 'Yes' : 'No', Tested: s.tested ? 'Yes' : 'No', Status: s.status,
     })),
-  ), 'Mission Sensors');
+  ), 'Mission Payloads');
 
   if (data.sysarch?.machines?.length) {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(
@@ -220,5 +244,6 @@ export function installExport() {
   window.exportSimulationWord = exportSimulationWord;
   window.exportSimulationExcel = exportSimulationExcel;
   window.exportJobSimulationDeliverables = exportJobSimulationDeliverables;
+  window.exportOperationLogsExcel = exportOperationLogsExcel;
   window.saveSimulationJSON = saveSimulationJSON;
 }

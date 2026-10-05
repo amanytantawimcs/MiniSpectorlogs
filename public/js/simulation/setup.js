@@ -8,7 +8,7 @@ import { showToast, escapeHtml } from '../ui.js';
 import { simState, resetSimState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, SENSOR_HARDWARE, APPROVER_IDS } from './config.js';
 import {
-  getAllBundles, findScope, scopeName, addCustomBundle, deleteCustomBundle, getAddOnsForBase,
+  getAllBundles, findScope, scopeName, addCustomBundle, deleteCustomBundle, getAddOnsForBase, loadSharedBundles,
   encodeScopeId, resolveScopeSelection,
 } from './scopeCatalog.js';
 import {
@@ -32,7 +32,6 @@ let scopeSelectedId = null;
 let scopeSelectedAddOns = new Set();
 let scopeWorking = null;
 let scopeDirty = false;
-let scopeSearchEl = null;
 let scopeFamEl = null;
 
 function rovHasDiveLogs(num) {
@@ -78,14 +77,9 @@ function isAdminUser() {
 }
 
 function renderScopeCatalog() {
-  const term = (scopeSearchEl?.value || '').trim().toLowerCase();
   const fam = scopeFamEl?.value || '';
   const all = getAllBundles();
-  const list = all.filter(b => {
-    if (fam && b.fam !== fam) return false;
-    if (!term) return true;
-    return (b.name + ' ' + b.id + ' ' + b.req.join(' ') + ' ' + b.opt.join(' ')).toLowerCase().indexOf(term) > -1;
-  });
+  const list = all.filter(b => !fam || b.fam === fam);
 
   const countEl = document.getElementById('scope-cat-count');
   if (countEl) countEl.textContent = `${list.length} of ${all.length} bundles`;
@@ -246,10 +240,8 @@ function renderScopeDetail() {
     </div>
     ${addOnsHtml}
     <div class="scope-sensor-cols">
-      <div class="scope-scol"><h5>Required sensors<b>${scopeWorking.req.length}</b></h5><div class="scope-sensors">${chipList(scopeWorking.req, 'req')}</div>
+      <div class="scope-scol"><h5>Required sensors<b>${scopeWorking.req.length}</b></h5><div class="mb-3"><div class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#6C88A6">Fixed on every MiniSpector</div><div class="flex flex-wrap gap-1.5">${MINISPECTOR_FIXED_SENSORS.map(x => `<span class="text-xs px-2.5 py-1 rounded-md" style="color:#9AB0C8;background:rgba(120,166,212,0.08);border:1px solid rgba(120,166,212,0.2);">${escapeHtml(x.name)}</span>`).join('')}</div></div><div class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color:#6C88A6">Payloads</div><div class="scope-sensors">${chipList(scopeWorking.req, 'req')}</div>
         <div class="scope-addrow"><select id="scope-add-req" aria-label="Add required sensor"><option value="">Add required sensor…</option>${sensorOptions(used)}</select></div></div>
-      <div class="scope-scol"><h5>Optional sensors<b>${scopeWorking.opt.length || 'none'}</b></h5><div class="scope-sensors">${chipList(scopeWorking.opt, 'opt')}</div>
-        <div class="scope-addrow"><select id="scope-add-opt" aria-label="Add optional sensor"><option value="">Add optional sensor…</option>${sensorOptions(used)}</select></div></div>
     </div>
     <div class="scope-dirty-bar${scopeDirty ? ' on' : ''}">
       <span>Edited from the catalog version. Save it as a new bundle to keep these changes.</span>
@@ -272,14 +264,9 @@ function renderScopeDetail() {
     });
   });
   const addReq = document.getElementById('scope-add-req');
-  const addOpt = document.getElementById('scope-add-opt');
   if (addReq) addReq.onchange = function () {
     if (this.value === '__custom__') { this.value = ''; addCustomSensorName('req'); return; }
     if (this.value) { scopeWorking.req.push(this.value); scopeDirty = true; renderScopeDetail(); renderUnitGrid(); updateBeginBtn(); }
-  };
-  if (addOpt) addOpt.onchange = function () {
-    if (this.value === '__custom__') { this.value = ''; addCustomSensorName('opt'); return; }
-    if (this.value) { scopeWorking.opt.push(this.value); scopeDirty = true; renderScopeDetail(); }
   };
   const resetBtn = document.getElementById('scope-reset-btn');
   const saveAsBtn = document.getElementById('scope-save-as-btn');
@@ -319,7 +306,7 @@ function openBundleSheet() {
   document.getElementById('bundle-name').value = scopeWorking.name === 'Untitled bundle' ? '' : scopeWorking.name + ' (edited)';
   document.getElementById('bundle-fam').value = scopeWorking.fam;
   document.getElementById('bundle-note').value = '';
-  document.getElementById('bundle-summary').textContent = `${scopeWorking.req.length} required · ${scopeWorking.opt.length} optional sensors will be saved.`;
+  document.getElementById('bundle-summary').textContent = `${scopeWorking.req.length} payloads will be saved.`;
   const sheet = document.getElementById('bundle-sheet');
   sheet.style.display = 'flex';
   document.getElementById('bundle-name').focus();
@@ -340,7 +327,7 @@ function addUnit(num) {
   simState.selectedROVs.set(num, role);
   if (!simState.shared.rovSensors[num]) {
     simState.shared.rovSensors[num] = MINISPECTOR_FIXED_SENSORS.map(s => ({
-      name: s.name, category: s.category, model: '', serial: '', qty: 1,
+      name: s.name, category: s.category, model: '', serial: '', qty: s.qty ?? 1,
       calibrated: false, calibratedDate: '', tested: false, testedDate: '', fixed: true,
     }));
   }
@@ -629,6 +616,8 @@ function returnToWorkspace() {
 
 export function initSimROVGrid() {
   resetSimState();
+  // Pull bundles other users published; the catalog redraws when they arrive.
+  loadSharedBundles().then(() => renderScopeCatalog()).catch(() => {});
 
   document.getElementById('sim-step-1').classList.remove('hidden');
   document.getElementById('sim-step-2').classList.add('hidden');
@@ -640,7 +629,6 @@ export function initSimROVGrid() {
   });
   updateDescCount();
 
-  if (scopeSearchEl) scopeSearchEl.value = '';
   if (scopeFamEl) scopeFamEl.value = '';
   syncScopeWorkingFromState();
 
@@ -660,9 +648,7 @@ export function installSimSetup() {
   window.goToWorkspaceSubTab = goToWorkspaceSubTab;
   window.__updateSimUnitsBadge = updateUnitsBadge;
 
-  scopeSearchEl = document.getElementById('scope-search');
   scopeFamEl = document.getElementById('scope-fam-filter');
-  scopeSearchEl?.addEventListener('input', renderScopeCatalog);
   scopeFamEl?.addEventListener('change', renderScopeCatalog);
 
   // Project Name/Description stay editable during a Mission Info review —

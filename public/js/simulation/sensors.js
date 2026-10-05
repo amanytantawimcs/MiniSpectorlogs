@@ -119,14 +119,14 @@ function buildModelCell(sensor, onChange) {
   if (hardware.length === 0 || (sensor.model && !hardware.includes(sensor.model))) {
     const input = document.createElement('input');
     input.type = 'text';
-    input.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-blue-500 outline-none placeholder-gray-600 transition-colors';
+    input.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs text-white focus:border-blue-500 outline-none placeholder-gray-600 transition-colors';
     input.placeholder = hardware.length ? 'Custom model / S/N...' : 'Model / S/N...';
     input.value = sensor.model || '';
     input.addEventListener('input', () => onChange(input.value));
     return input;
   }
   const select = document.createElement('select');
-  select.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#459fd9] outline-none transition-colors';
+  select.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs text-white focus:border-[#459fd9] outline-none transition-colors';
   select.innerHTML = `<option value=""${sensor.model ? '' : ' selected'}>Select model...</option>` +
     hardware.map(h => `<option value="${escapeHtml(h)}"${h === sensor.model ? ' selected' : ''}>${escapeHtml(h)}</option>`).join('') +
     `<option value="__custom__">Custom...</option>`;
@@ -134,6 +134,16 @@ function buildModelCell(sensor, onChange) {
     onChange(select.value === '__custom__' ? ' ' : select.value);
   });
   return select;
+}
+
+// Small tag after a payload name. Built from DOM nodes so the name above it
+// is never re-parsed as markup.
+function sensorBadge(text, background, color) {
+  const span = document.createElement('span');
+  span.className = 'text-[9px] px-1.5 py-0.5 rounded';
+  span.style.cssText = `background:${background};color:${color};`;
+  span.textContent = text;
+  return span;
 }
 
 function renderFleetSection() {
@@ -146,42 +156,54 @@ function renderFleetSection() {
   }
   const header = document.createElement('div');
   header.className = 'flex items-center gap-3 px-6 py-3.5 border-b rcard-head';
-  header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#f39124"></span><span class="text-xs font-bold text-white uppercase tracking-widest">MiniSpector Fleet</span>`;
+  header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#f39124"></span><span class="rcard-title">MiniSpector Fleet</span>`;
   card.appendChild(header);
 
-  entries.forEach(([num, role], idx) => {
-    const row = document.createElement('div');
-    row.className = 'flex items-center gap-3 px-5 py-3 flex-wrap';
-    row.style.background = idx % 2 === 0 ? 'rgba(17,24,39,0.35)' : 'rgba(17,24,39,0.15)';
+  const table = document.createElement('table');
+  table.className = 'fixedsens-table';
+  table.style.cssText = 'width:100%;border-collapse:collapse';
+  table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
+    <th class="px-4 py-2 text-left" style="font-size:9px;">MiniSpector</th><th class="px-4 py-2 text-left" style="font-size:9px;">Serial No.</th>
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Description</th><th class="px-4 py-2 text-left" style="font-size:9px;">Role</th></tr></thead>`;
+  const tbody = document.createElement('tbody');
+  entries.forEach(([num, role]) => {
+    const tr = document.createElement('tr');
+    tr.style.cssText = 'background:rgba(17,24,39,0.45);';
 
-    const label = document.createElement('span');
-    label.className = 'font-bold text-white text-sm shrink-0';
-    label.style.minWidth = '55px';
-    label.textContent = `MiniSpector-${num}`;
+    const tdLabel = document.createElement('td'); tdLabel.className = 'px-4 py-2.5 text-sm font-bold text-white whitespace-nowrap';
+    tdLabel.textContent = `MiniSpector-${num}`;
 
+    const tdSerial = document.createElement('td'); tdSerial.className = 'px-4 py-2.5';
     const serialInput = document.createElement('input');
     serialInput.type = 'text';
     serialInput.placeholder = 'Serial No.';
     serialInput.value = simState.rovSerials.get(num) || '';
-    serialInput.className = 'bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono focus:border-[#459fd9] outline-none placeholder-gray-600 shrink-0';
+    serialInput.className = 'bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs font-mono focus:border-[#459fd9] outline-none placeholder-gray-600';
     serialInput.style.cssText += 'width:150px;color:#459fd9';
     serialInput.addEventListener('input', () => { simState.rovSerials.set(num, serialInput.value); scheduleSimSync(); });
+    tdSerial.appendChild(serialInput);
 
+    const tdDesc = document.createElement('td'); tdDesc.className = 'px-4 py-2.5 w-full';
     const descInput = document.createElement('input');
     descInput.type = 'text';
     descInput.placeholder = 'Description (optional)...';
     descInput.value = simState.rovDescriptions.get(num) || '';
-    descInput.className = 'flex-1 bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:border-orange-400 outline-none placeholder-gray-600';
+    descInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:border-orange-400 outline-none placeholder-gray-600';
     descInput.addEventListener('input', () => { simState.rovDescriptions.set(num, descInput.value); scheduleSimSync(); });
+    tdDesc.appendChild(descInput);
 
+    const tdRole = document.createElement('td'); tdRole.className = 'px-4 py-2.5';
     const roleBadge = document.createElement('span');
-    roleBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0';
+    roleBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full';
     roleBadge.style.cssText = role === 'main' ? 'background:rgba(243,145,36,0.2);color:#f39124;' : 'background:rgba(69,159,217,0.18);color:#459fd9;';
     roleBadge.textContent = role === 'main' ? 'MAIN' : 'STANDBY';
+    tdRole.appendChild(roleBadge);
 
-    row.append(label, serialInput, descInput, roleBadge);
-    card.appendChild(row);
+    tr.append(tdLabel, tdSerial, tdDesc, tdRole);
+    tbody.appendChild(tr);
   });
+  table.appendChild(tbody);
+  card.appendChild(table);
   return card;
 }
 
@@ -196,7 +218,7 @@ function renderSensorsTable() {
   const header = document.createElement('div');
   header.className = 'flex items-center gap-3 px-6 py-3.5 border-b rcard-head';
   header.innerHTML = `<span class="w-2 h-2 rounded-full" style="background:#f39124"></span>
-    <span class="text-xs font-bold text-white uppercase tracking-widest">Sensors</span>
+    <span class="rcard-title">Payloads</span>
     <span class="text-xs text-gray-600">${active.length} item${active.length !== 1 ? 's' : ''} — scope: <span style="color:#f39124">${escapeHtml(scope?.name || '–')}</span></span>`;
   card.appendChild(header);
 
@@ -205,14 +227,14 @@ function renderSensorsTable() {
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;min-width:740px;border-collapse:collapse';
   table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
-    <th class="px-4 py-2 text-left" style="font-size:9px;">Sensor</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Payload</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
     <th class="px-3 py-2 text-left" style="font-size:9px;">Serial No.</th><th class="px-3 py-2 text-center" style="font-size:9px;">Qty</th>
     <th class="px-3 py-2 text-center" style="font-size:9px;">Calibrated</th><th class="px-3 py-2 text-center" style="font-size:9px;">Tested</th>
     <th class="px-3 py-2 text-left" style="font-size:9px;">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
 
   if (active.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600 text-sm">No sensors — select a scope or add a custom sensor below</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-gray-600 text-sm">No payloads — select a scope or add a custom payload below</td></tr>`;
   }
   active.forEach((sensor, i) => {
     const idx = sensors.indexOf(sensor);
@@ -222,15 +244,15 @@ function renderSensorsTable() {
 
     instances.forEach((instance, unitIdx) => {
       const tr = document.createElement('tr');
-      tr.style.cssText = `background:${rowBg};border-bottom:1px solid rgba(55,65,81,0.25)`;
+      tr.style.cssText = `background:${rowBg}`;
 
       if (unitIdx === 0) {
         const tdName = document.createElement('td');
         tdName.className = 'px-4 py-2.5 text-sm text-gray-200 align-top';
         tdName.rowSpan = qty;
         tdName.textContent = sensor.name;
-        if (qty > 1) tdName.innerHTML += ` <span class="text-[9px] px-1.5 py-0.5 rounded" style="background:rgba(69,159,217,0.15);color:#459fd9;">×${qty}</span>`;
-        if (sensor.custom) tdName.innerHTML += ` <span class="text-[9px] px-1.5 py-0.5 rounded" style="background:rgba(249,115,22,0.15);color:#fb923c;">CUSTOM</span>`;
+        if (qty > 1) tdName.append(' ', sensorBadge(`×${qty}`, 'rgba(69,159,217,0.15)', '#459fd9'));
+        if (sensor.custom) tdName.append(' ', sensorBadge('CUSTOM', 'rgba(249,115,22,0.15)', '#fb923c'));
         tr.appendChild(tdName);
       }
 
@@ -292,10 +314,10 @@ function renderSensorsTable() {
   const addRow = document.createElement('div');
   addRow.className = 'flex gap-2.5 px-4 py-3 border-t border-gray-700/40 items-center';
   const addInput = document.createElement('input');
-  addInput.type = 'text'; addInput.placeholder = 'Add a custom sensor...';
+  addInput.type = 'text'; addInput.placeholder = 'Add a custom payload...';
   addInput.className = 'flex-1 bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-2 text-xs text-white outline-none placeholder-gray-600';
   const addBtn = document.createElement('button');
-  addBtn.type = 'button'; addBtn.textContent = 'Add Sensor';
+  addBtn.type = 'button'; addBtn.textContent = 'Add Payload';
   addBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap';
   addBtn.style.cssText = 'background:rgba(243,145,36,0.12);color:#f39124;border:1px solid rgba(243,145,36,0.3);';
   const doAdd = () => {
@@ -325,12 +347,12 @@ function renderOptionalSensors() {
 
   const card = document.createElement('div');
   card.className = 'rcard mb-5';
-  card.innerHTML = `<div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head"><span class="w-2 h-2 rounded-full" style="background:#6b7280"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Optional Sensors</span></div>`;
+  card.innerHTML = `<div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head"><span class="w-2 h-2 rounded-full" style="background:#6b7280"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Optional Payloads</span></div>`;
 
   const head = document.createElement('div');
   head.style.cssText = `display:grid;grid-template-columns:${OPT_SENSOR_GRID};gap:12px;align-items:center;background:#16233A;color:#9AB0C8;`;
   head.className = 'px-5 py-2 uppercase font-semibold';
-  head.innerHTML = `<span></span><span style="font-size:9px;">Sensor</span><span style="font-size:9px;">Model</span>
+  head.innerHTML = `<span></span><span style="font-size:9px;">Payload</span><span style="font-size:9px;">Model</span>
     <span style="font-size:9px;text-align:center;">Calibrated</span><span style="font-size:9px;text-align:center;">Tested</span>`;
   card.appendChild(head);
 
@@ -389,7 +411,7 @@ function renderFixedSensorsSection() {
 
   const left = document.createElement('div');
   left.className = 'flex items-center gap-3';
-  left.innerHTML = `<span class="rcard-bar"></span><span class="rcard-title">Fixed unit sensors</span><span class="text-xs" style="color:#6C88A6">Permanently mounted, logged per unit</span>`;
+  left.innerHTML = `<span class="rcard-bar"></span><span class="rcard-title">Fixed payloads</span><span class="text-xs" style="color:#6C88A6">Permanently mounted, logged per unit</span>`;
   header.appendChild(left);
 
   const right = document.createElement('div');
@@ -439,9 +461,10 @@ function renderFixedSensorsSection() {
 
   const fixed = simState.shared.rovSensors[activeNum] || [];
   const table = document.createElement('table');
+  table.className = "fixedsens-table";
   table.style.cssText = 'width:100%;border-collapse:collapse';
   table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
-    <th class="px-4 py-2 text-left" style="font-size:9px;">Sensor</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Payload</th><th class="px-3 py-2 text-left" style="font-size:9px;">Model</th>
     <th class="px-3 py-2 text-left" style="font-size:9px;">Serial No.</th>
     <th class="px-3 py-2 text-center" style="font-size:9px;">Calibrated</th><th class="px-3 py-2 text-center" style="font-size:9px;">Tested</th>
     <th class="px-3 py-2 text-center" style="font-size:9px;">In scope</th></tr></thead>`;
@@ -449,7 +472,7 @@ function renderFixedSensorsSection() {
   fixed.forEach((sensor, i) => {
     const inScope = !sensor.disabled;
     const tr = document.createElement('tr');
-    tr.style.cssText = `background:rgba(17,24,39,0.45);border-bottom:1px solid rgba(55,65,81,0.25);${inScope ? '' : 'opacity:0.5;'}`;
+    tr.style.cssText = `background:rgba(17,24,39,0.45);${inScope ? '' : 'opacity:0.5;'}`;
     const tdName = document.createElement('td'); tdName.className = 'px-4 py-2.5 text-sm text-gray-200';
     const dot = document.createElement('span');
     dot.className = 'fixedsens-dot'; dot.style.background = sensor.calibrated ? '#f39124' : '#4b5563';
@@ -467,7 +490,7 @@ function renderFixedSensorsSection() {
     const modelInput = document.createElement('input');
     modelInput.type = 'text'; modelInput.value = sensor.model || ''; modelInput.placeholder = 'Model...';
     modelInput.disabled = !inScope;
-    modelInput.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600 disabled:cursor-not-allowed';
+    modelInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs text-white outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     modelInput.addEventListener('input', () => { sensor.model = modelInput.value; scheduleSimSync(); });
     tdModel.appendChild(modelInput);
 
@@ -475,7 +498,7 @@ function renderFixedSensorsSection() {
     const serialInput = document.createElement('input');
     serialInput.type = 'text'; serialInput.value = sensor.serial || ''; serialInput.placeholder = 'S/N...';
     serialInput.disabled = !inScope;
-    serialInput.className = 'w-full bg-gray-900/50 border border-gray-600 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600 disabled:cursor-not-allowed';
+    serialInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-3 py-1.5 text-xs font-mono outline-none placeholder-gray-600 disabled:cursor-not-allowed';
     serialInput.style.color = '#459fd9';
     serialInput.addEventListener('input', () => { sensor.serial = serialInput.value; scheduleSimSync(); });
     tdSerial.appendChild(serialInput);
@@ -510,33 +533,51 @@ function renderThrustersSection() {
   card.className = 'rcard mb-5';
   const header = document.createElement('div');
   header.className = 'flex items-center justify-between px-6 py-3.5 border-b rcard-head';
-  header.innerHTML = `<div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full" style="background:#459fd9"></span><span class="text-xs font-bold text-white uppercase tracking-widest">Thrusters</span></div>`;
+  header.innerHTML = `<div class="flex items-center gap-3"><span class="w-2 h-2 rounded-full" style="background:#459fd9"></span><span class="rcard-title">Thrusters</span></div>`;
   const addBtn = document.createElement('button');
   addBtn.type = 'button'; addBtn.textContent = 'Add Thruster';
   addBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold';
   addBtn.style.cssText = 'background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.3);';
-  addBtn.addEventListener('click', () => { thrusters.push({ number: '', serial: '', rovAssignment: 'Shared' }); renderSimContent(); scheduleSimSync(); });
+  addBtn.addEventListener('click', () => { thrusters.push({ number: String(thrusters.length + 1), serial: '', rovAssignment: 'Shared' }); renderSimContent(); scheduleSimSync(); });
   header.appendChild(addBtn);
   card.appendChild(header);
 
   const table = document.createElement('table');
   table.style.cssText = 'width:100%;border-collapse:collapse';
   table.innerHTML = `<thead><tr style="background:#16233A;color:#9AB0C8;" class="uppercase font-semibold">
-    <th class="px-4 py-2 text-left" style="font-size:9px;">Thruster No.</th><th class="px-4 py-2 text-left" style="font-size:9px;">Serial</th>
+    <th class="px-4 py-2 text-left" style="font-size:9px;">Thruster No.</th><th class="px-4 py-2 text-left" style="font-size:9px;">Bulkhead No.</th><th class="px-4 py-2 text-left" style="font-size:9px;">Propeller type</th><th class="px-4 py-2 text-left" style="font-size:9px;">Serial</th>
     <th class="px-4 py-2 text-left" style="font-size:9px;">Assignment</th><th></th></tr></thead>`;
   const tbody = document.createElement('tbody');
   if (thrusters.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-gray-600 text-sm">No thrusters added</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-600 text-sm">No thrusters added</td></tr>`;
   }
   thrusters.forEach((t, i) => {
     const tr = document.createElement('tr');
-    tr.style.cssText = `background:${i % 2 === 0 ? 'rgba(17,24,39,0.25)' : 'rgba(17,24,39,0.08)'};border-bottom:1px solid rgba(55,65,81,0.3)`;
+    tr.style.cssText = 'background:rgba(17,24,39,0.45)';
     const tdNum = document.createElement('td'); tdNum.className = 'px-4 py-3';
     const numInput = document.createElement('input');
-    numInput.type = 'text'; numInput.value = t.number || ''; numInput.placeholder = 'T-01';
+    numInput.type = 'text'; numInput.value = t.number || ''; numInput.placeholder = '1';
     numInput.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-xs text-white outline-none';
     numInput.addEventListener('input', () => { t.number = numInput.value; scheduleSimSync(); });
     tdNum.appendChild(numInput);
+
+    const tdBulkhead = document.createElement('td'); tdBulkhead.className = 'px-4 py-3';
+    const bulkheadSelect = document.createElement('select');
+    bulkheadSelect.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-xs text-white outline-none';
+    const takenByOthers = thrusters.filter(x => x !== t && x.bulkhead).map(x => String(x.bulkhead));
+    const bulkheadChoices = BULKHEAD_NUMBERS.map(String).filter(n => n === String(t.bulkhead || '') || !takenByOthers.includes(n));
+    bulkheadSelect.innerHTML = '<option value="">Not assigned yet</option>' + bulkheadChoices.map(n => `<option value="${n}">${n}</option>`).join('');
+    bulkheadSelect.value = t.bulkhead ? String(t.bulkhead) : '';
+    bulkheadSelect.addEventListener('change', () => { t.bulkhead = bulkheadSelect.value; scheduleSimSync(); renderSimContent(); });
+    tdBulkhead.appendChild(bulkheadSelect);
+
+    const tdProp = document.createElement('td'); tdProp.className = 'px-4 py-3';
+    const propSelect = document.createElement('select');
+    propSelect.className = 'w-full bg-gray-900/50 border border-gray-700/50 rounded-md px-3 py-1.5 text-xs text-white outline-none';
+    propSelect.innerHTML = '<option value="">Not assigned yet</option><option value="Right Hand">Right Hand</option><option value="Left Hand">Left Hand</option>';
+    propSelect.value = t.propeller || '';
+    propSelect.addEventListener('change', () => { t.propeller = propSelect.value; scheduleSimSync(); });
+    tdProp.appendChild(propSelect);
 
     const tdSerial = document.createElement('td'); tdSerial.className = 'px-4 py-3';
     const serialInput = document.createElement('input');
@@ -555,7 +596,7 @@ function renderThrustersSection() {
     removeBtn.addEventListener('click', () => { thrusters.splice(i, 1); renderSimContent(); scheduleSimSync(); });
     tdRemove.appendChild(removeBtn);
 
-    tr.append(tdNum, tdSerial, tdAss, tdRemove);
+    tr.append(tdNum, tdBulkhead, tdProp, tdSerial, tdAss, tdRemove);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -563,10 +604,13 @@ function renderThrustersSection() {
   return card;
 }
 
+// Bulkhead positions on the MiniSpector frame; 16 is not a valid position.
+const BULKHEAD_NUMBERS = [11, 12, 13, 14, 15, 17, 18];
+
 export function renderSensorsContent(area) {
   area.innerHTML = '';
   const wrap = document.createElement('div');
-  wrap.className = 'mx-auto pb-6';
+  wrap.className = 'mx-auto pb-6 equip-setup';
   const titleWrap = document.createElement('div');
   titleWrap.className = 'mb-6';
   titleWrap.innerHTML = `<h3 class="text-2xl font-bold text-white tracking-tight">Equipment setup</h3>

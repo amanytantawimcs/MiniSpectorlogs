@@ -551,16 +551,17 @@
 
         /* ── SIMULATION: operation-scope bundle catalog ── */
         .scope-fam-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #6C88A6; margin: 16px 0 8px; display: flex; align-items: center; gap: 10px; }
-        .scope-fam-label::after { content: ''; flex: 1; height: 1px; background: rgba(120,166,212,0.16); }
-        .scope-bundles-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(250px,1fr)); gap: 10px; }
-        .scope-bundle-btn { position: relative; text-align: left; padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; cursor: pointer; transition: all 0.18s ease; display: block; width: 100%; color: inherit; }
+        .scope-bundles-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(380px,1fr)); grid-auto-rows: 42px; gap: 10px; }
+        .scope-bundle-btn { position: relative; text-align: left; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: rgba(17,24,39,0.5); cursor: pointer; transition: all 0.18s ease; display: flex; align-items: center; gap: 8px; width: 100%; height: 42px; box-sizing: border-box; color: inherit; }
+        .scope-bundle-btn:has(.scope-bundle-delete) { padding-right: 40px; }
         .scope-bundle-btn:hover { border-color: rgba(120,166,212,0.28); transform: translateY(-1px); }
         .scope-bundle-btn[aria-pressed="true"] { border-color: #F0912D; background: rgba(240,145,45,0.1); }
-        .scope-bundle-btn .row { display: flex; align-items: center; gap: 9px; }
+        .scope-bundle-btn .row { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+        .scope-bundle-btn .row > span:last-child { min-width: 0; overflow: hidden; }
         .scope-bundle-mark { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(120,166,212,0.28); flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: transparent; transition: all 0.18s ease; }
         .scope-bundle-btn[aria-pressed="true"] .scope-bundle-mark { background: #F0912D; border-color: #F0912D; color: #20130A; }
-        .scope-bundle-btn h4 { font-size: 13px; font-weight: 600; color: #D3DAE3; line-height: 1.35; margin: 0; }
-        .scope-bundle-tag { display: inline-block; margin-top: 8px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(249,146,28,0.4); color: #F9921C; background: rgba(249,146,28,0.14); }
+        .scope-bundle-btn h4 { font-size: 13px; font-weight: 400; color: #D3DAE3; line-height: 1.35; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .scope-bundle-tag { display: inline-block; flex-shrink: 0; margin-top: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; padding: 2px 7px; border-radius: 20px; border: 1px solid rgba(249,146,28,0.4); color: #F9921C; background: rgba(249,146,28,0.14); }
         .scope-bundle-delete { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 6px; background: rgba(239,68,68,0.1); border: none; color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.65; transition: opacity 0.15s ease, background 0.15s ease; }
         .scope-bundle-delete:hover { opacity: 1; background: rgba(239,68,68,0.22); }
         .scope-detail { border: 1px solid rgba(120,166,212,0.16); border-radius: 12px; background: #14243A; overflow: hidden; margin-top: 18px; }
@@ -608,6 +609,10 @@
         .unit-promote-btn:hover { background: rgba(69,159,217,0.15); }
 
         /* ── SIMULATION: Fixed unit sensors table (per-unit tab switcher) ── */
+        .sim-tool-btn { display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 12px; border-radius:8px; border:1px solid transparent; background:transparent; color:#9AB0C8; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; transition:background .15s ease, color .15s ease, border-color .15s ease; }
+        .sim-tool-btn:hover { background:rgba(120,166,212,0.12); color:#D3DAE3; border-color:rgba(120,166,212,0.2); }
+        .sim-tool-btn-primary { background:#f39124; color:#0A111C; font-weight:700; border-color:#f39124; }
+        .sim-tool-btn-primary:hover { background:#F9921C; color:#0A111C; border-color:#F9921C; }
         .fixedsens-tabs { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: #0C1727; border: 1px solid rgba(120,166,212,0.16); }
         .fixedsens-tab { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: none; border-radius: 7px; background: transparent; color: #6C88A6; font-size: 12px; font-weight: 700; font-family: 'IBM Plex Mono', ui-monospace, monospace; cursor: pointer; transition: all 0.18s ease; white-space: nowrap; }
         .fixedsens-tab.active { background: #1f2937; color: #f3f4f6; }
@@ -617,6 +622,9 @@
         .fixedsens-copy-btn { height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(120,166,212,0.16); background: #101B2C; color: #D3DAE3; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: border-color .18s ease; }
         .fixedsens-copy-btn:hover { border-color: rgba(120,166,212,0.32); }
         .fixedsens-copy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .equip-setup td { border-bottom: none; }
+        /* Topology: no row lines in any of its tables (tr borders are set inline, hence !important) */
+        .topology-tab tr, .topology-tab td, .topology-tab th { border-bottom: none !important; }
         .fixedsens-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; flex-shrink: 0; }
 
         /* ── Viewer / Read-only mode ── */
@@ -934,7 +942,7 @@
                 </svg>
             </div>
             <h2 class="text-xl font-bold mb-2.5 text-[#DCE3EC]">New project</h2>
-            <p class="text-base leading-relaxed mb-6 text-[#B9C7D9]">Plan equipment and sensors, simulate your inspection, then move to live operation.</p>
+            <p class="text-base leading-relaxed mb-6 text-[#B9C7D9]">Plan equipment and payloads, simulate your inspection, then move to live operation.</p>
             <div class="mt-auto inline-flex self-start items-center gap-2 px-5 py-3 rounded-lg text-base font-bold bg-[#F9921C] text-[#192643]">
                 <span>Create project</span>
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -1360,9 +1368,9 @@
             <h3 class="text-2xl font-bold text-white tracking-tight">Project Details</h3>
             <p class="text-[#9AB0C8] mt-1 text-sm">Job data log, weather conditions, and crew roster for this operation.</p>
         </div>
-        <button onclick="openProjectManagement()" title="Project management"
-            class="w-9 h-9 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all border border-[rgba(120,166,212,0.16)] flex-shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
+        <button type="button" onclick="openProjectManagement()" title="Project management" class="sim-tool-btn sim-tool-btn-primary flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+            Project Management
         </button>
     </div>
 
@@ -1370,80 +1378,52 @@
          Data Log page (Job Start Date/Contractor/PM/Mission Details/Weather,
          plus a Main Set/Backup Set equipment ID inventory). Operators 1-6 for
          the export are derived from the crew roster above, not re-entered here. -->
-    <div class="chart-card mb-5">
-        <div class="chart-card-header">
-            <span class="chart-title">
-                <span class="chart-dot" style="background:#F0912D"></span>
-                Project Data Log
-            </span>
+    <div class="rcard mb-5">
+        <div class="flex items-center gap-3 px-6 py-3.5 border-b rcard-head">
+            <span class="rcard-bar"></span>
+            <span class="rcard-title">Project Data Log</span>
         </div>
-
+        <div class="p-5" style="background:rgba(17,24,39,0.45);">
         <div class="grid grid-cols-3 gap-4 mb-4">
             <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Job Start Date</label>
-                <input type="date" id="startDate" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">Job Start Date</label>
+                <input type="date" id="startDate" class="rfield w-full">
             </div>
             <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Contractor</label>
-                <input type="text" id="contractor" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">Contractor</label>
+                <input type="text" id="contractor" class="rfield w-full">
             </div>
             <div>
-                <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Project Manager</label>
-                <input type="text" id="projectManager" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">Project Manager</label>
+                <input type="text" id="projectManager" class="rfield w-full">
             </div>
         </div>
 
         <div class="mb-4">
-            <label class="block text-[#6C88A6] text-xs font-bold mb-1 uppercase tracking-wider">Mission Details</label>
-            <textarea id="missionDetails" rows="2" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] rounded-lg px-3 py-2 text-white w-full"></textarea>
+            <label class="rfield-label">Mission Details</label>
+            <textarea id="missionDetails" rows="2" class="rfield w-full" style="height:84px;padding:10px 13px;resize:vertical;"></textarea>
         </div>
 
-        <p class="text-[#6C88A6] text-xs font-bold uppercase tracking-wider mb-2">Weather Conditions</p>
+        <p class="rfield-label">Weather Conditions</p>
         <div class="grid grid-cols-4 gap-4 mb-5">
             <div>
-                <label class="block text-[#6C88A6] text-xs mb-1">High Temperature</label>
-                <input type="text" id="pdlWeatherHigh" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">High Temperature</label>
+                <input type="text" id="pdlWeatherHigh" class="rfield w-full">
             </div>
             <div>
-                <label class="block text-[#6C88A6] text-xs mb-1">Low Temperature</label>
-                <input type="text" id="pdlWeatherLow" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">Low Temperature</label>
+                <input type="text" id="pdlWeatherLow" class="rfield w-full">
             </div>
             <div>
-                <label class="block text-[#6C88A6] text-xs mb-1">Humidity</label>
-                <input type="text" id="pdlWeatherHumidity" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">Humidity</label>
+                <input type="text" id="pdlWeatherHumidity" class="rfield w-full">
             </div>
             <div>
-                <label class="block text-[#6C88A6] text-xs mb-1">General Notes</label>
-                <input type="text" id="pdlWeatherNotes" class="bg-[#0C1727] border-[rgba(120,166,212,0.16)] focus:border-[#459fd9] h-10 rounded-lg px-3 text-white w-full">
+                <label class="rfield-label">General Notes</label>
+                <input type="text" id="pdlWeatherNotes" class="rfield w-full">
             </div>
         </div>
-
-        <div class="flex justify-end mt-4">
-            <button type="button" onclick="exportWord('ProjectDataLog.docx')" class="px-6 py-2 bg-[#16233A] hover:bg-[#F59E0B] text-white rounded-lg shadow-lg font-bold text-sm">Export Project Data Log</button>
         </div>
-    </div>
-
-    <!-- Crew Roster / Shift Log — merged in from the former standalone Crew & Shifts tab -->
-    <div class="chart-card mb-5">
-        <div class="chart-card-header">
-            <span class="chart-title">
-                <span class="chart-dot" style="background:#459fd9"></span>
-                Crew Roster
-            </span>
-            <button onclick="addCrewRow()" style="font-size:0.72rem;font-weight:700;padding:5px 14px;border-radius:8px;background:rgba(69,159,217,0.12);color:#459fd9;border:1px solid rgba(69,159,217,0.2);cursor:pointer;" onmouseover="this.style.background='rgba(69,159,217,0.22)'" onmouseout="this.style.background='rgba(69,159,217,0.12)'">+ Add Member</button>
-        </div>
-        <!-- Column headers -->
-        <div style="display:grid;grid-template-columns:52px 1fr 1fr 110px 130px 130px 44px;gap:8px;padding:4px 8px 8px;border-bottom:1px solid rgba(255,255,255,0.05);margin-bottom:6px;">
-            <div></div>
-            <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;">Name</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;">Role</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;">Shift</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;">Sign On</div>
-            <div style="font-size:0.65rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.07em;">Sign Off</div>
-            <div></div>
-        </div>
-        <div id="crew-container"></div>
-        <div id="crew-empty-state" style="padding:28px;text-align:center;color:#4b5563;font-style:italic;font-size:0.875rem;">No crew members added yet.</div>
     </div>
 
     <!-- Shift Log -->
@@ -1487,7 +1467,7 @@
     
     <div id="sensor-empty-state" class="flex-1 flex flex-col items-center justify-center p-10 space-y-8 animate-in fade-in zoom-in duration-300">
         <div class="text-center">
-            <h2 class="text-3xl font-bold text-white mb-2">Sensor & Payload Configuration</h2>
+            <h2 class="text-3xl font-bold text-white mb-2">Payload Configuration</h2>
             <p class="text-[#9AB0C8]">No equipment currently assigned. Select a setup method below:</p>
         </div>
 
@@ -1497,7 +1477,7 @@
                     <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
                 <h3 class="text-xl font-bold text-white mb-2">Load Default Suite</h3>
-                <p class="text-sm text-[#9AB0C8] text-center">Populate with standard ROV camera and sensor package.</p>
+                <p class="text-sm text-[#9AB0C8] text-center">Populate with standard ROV camera and payload package.</p>
             </button>
 
             <button onclick="importPackingJSON()" class="group relative flex flex-col items-center p-8 bg-[#101B2C] border-2 border-[rgba(120,166,212,0.16)] hover:border-[--color-mcs-orange] rounded-2xl transition-all hover:bg-gray-750 hover:shadow-2xl hover:shadow-orange-900/20">
@@ -1538,13 +1518,13 @@
         </div>
 
         <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-bold text-[#9AB0C8]">Sensors & Payload</h3>
+            <h3 class="text-lg font-bold text-[#9AB0C8]">Payloads</h3>
         </div>
         <div class="bg-[#101B2C] rounded-xl overflow-hidden border border-[rgba(120,166,212,0.16)]">
             <table class="w-full text-left">
                 <thead>
                     <tr class="bg-[#16233A] text-[#9AB0C8] text-xs uppercase font-bold">
-                        <th class="p-4 w-1/4">Sensor</th>
+                        <th class="p-4 w-1/4">Payload</th>
                         <th class="p-4 w-1/6">Status</th>
                         <th class="p-4 w-1/6">Model</th>
                         <th class="p-4 w-1/6">Calibration</th>
@@ -1601,6 +1581,10 @@
                     <button type="button" class="dl-btn-nav" onclick="exportWord('OperationDailyLog.docx')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3v5h5M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
                         Operation Daily Log
+                    </button>
+                    <button type="button" class="dl-btn-nav" onclick="exportOperationLogsExcel()" title="All operation logs in one Excel file, one tab per category">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        All Logs (Excel)
                     </button>
                 </div>
                 <div class="dl-toolbar-divider"></div>
@@ -1719,9 +1703,16 @@
             <!-- PANEL: Mission Info -->
             <div id="sim-setup-mission">
 
-                <div class="mb-6">
-                    <h3 class="text-2xl font-bold text-white tracking-tight">Mission Information</h3>
-                    <p class="text-[#9AB0C8] mt-1 text-sm">Name the project, set the asset and window, and pick the operation scope.</p>
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-white tracking-tight">Mission Information</h3>
+                        <p class="text-[#9AB0C8] mt-1 text-sm">Name the project, set the asset and window, and pick the operation scope.</p>
+                    </div>
+                    <button onclick="goToPreparationTab('units')"
+                        class="rbtn-orange-outline flex items-center gap-2">
+                        MiniSpectors
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
                 </div>
 
                 <!-- Mission Info card -->
@@ -1730,7 +1721,7 @@
                         <span class="rcard-bar"></span>
                         <span class="rcard-title">Project details</span>
                     </div>
-                    <div class="p-5 grid grid-cols-3 gap-4">
+                    <div class="p-5 grid grid-cols-4 gap-4" style="background:rgba(17,24,39,0.45);">
                         <div>
                             <label class="rfield-label">Project Name</label>
                             <input id="sim-project-name" type="text" placeholder="e.g. ADNOC"
@@ -1740,16 +1731,6 @@
                             <label class="rfield-label">Project Code</label>
                             <input id="sim-project-code" type="text" placeholder="e.g. J-xxxx"
                                 class="w-full rfield placeholder-[#6C88A6] font-mono"/>
-                        </div>
-                        <input type="hidden" id="sim-project-weather" value=""/>
-                        <input type="hidden" id="sim-project-asset" value=""/>
-                        <div>
-                            <div class="flex items-center justify-between mb-1">
-                                <label class="rfield-label" style="margin-bottom:0;">Description</label>
-                                <span id="sim-desc-count" class="text-[10px] font-mono text-[#6C88A6]">0 / 280</span>
-                            </div>
-                            <textarea id="sim-project-desc" rows="1" maxlength="280" placeholder="Optional mission description..."
-                                class="w-full rfield placeholder-[#6C88A6] resize-y" style="height:42px;min-height:42px;padding-top:10px;padding-bottom:10px;"></textarea>
                         </div>
                         <div>
                             <label class="rfield-label">Vessel</label>
@@ -1761,6 +1742,16 @@
                             <input id="sim-project-location" type="text" placeholder="e.g. Field / Block name"
                                 class="w-full rfield placeholder-[#6C88A6]"/>
                         </div>
+                        <input type="hidden" id="sim-project-weather" value=""/>
+                        <input type="hidden" id="sim-project-asset" value=""/>
+                        <div class="col-span-4">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="rfield-label" style="margin-bottom:0;">Description</label>
+                                <span id="sim-desc-count" class="text-[10px] font-mono text-[#6C88A6]">0 / 280</span>
+                            </div>
+                            <textarea id="sim-project-desc" rows="1" maxlength="280" placeholder="Optional mission description..."
+                                class="w-full rfield placeholder-[#6C88A6] resize-y" style="height:42px;min-height:42px;padding-top:10px;padding-bottom:10px;"></textarea>
+                        </div>
                     </div>
                 </div>
 
@@ -1771,13 +1762,8 @@
                         <span class="rcard-title">Operation scope</span>
                         <span id="scope-cat-count" class="rcard-hint"></span>
                     </div>
-                    <div class="p-5">
+                    <div class="p-5" style="background:rgba(17,24,39,0.45);">
                         <div class="flex flex-wrap gap-2 mb-4">
-                            <div class="relative flex-1" style="min-width:230px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style="color:#6C88A6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-                                <input id="scope-search" type="search" placeholder="Search bundles or sensors — try PRC"
-                                    class="w-full rfield" style="padding-left:36px;"/>
-                            </div>
                             <select id="scope-fam-filter" class="rfield" style="width:auto;min-width:170px;cursor:pointer;">
                                 <option value="">All families</option>
                                 <option>Platform</option><option>Pipeline</option><option>PRC</option><option>Custom</option>
@@ -1790,15 +1776,6 @@
                         <div id="scope-catalog"></div>
                         <div id="scope-detail" class="mt-2"></div>
                     </div>
-                </div>
-
-                <!-- Next button -->
-                <div class="flex justify-end">
-                    <button onclick="showSimSetupTab('units')"
-                        class="rbtn-orange-outline flex items-center gap-2">
-                        MiniSpectors
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                    </button>
                 </div>
 
             </div>
@@ -1826,7 +1803,7 @@
                             <div class="text-[11px] mt-0.5" style="color:#6C88A6" id="units-hint"></div>
                         </div>
                     </div>
-                    <div class="p-5">
+                    <div class="p-5" style="background:rgba(17,24,39,0.45);">
                         <div id="sim-rov-chips" class="units-grid"></div>
                     </div>
                 </div>
@@ -1858,18 +1835,19 @@
              scrolling regardless of which workspace sub-tab is active. -->
         <div style="flex:1;overflow-y:auto;" class="p-6">
             <div style="position:sticky;top:0;height:0;overflow:visible;z-index:6;">
-              <div style="position:absolute;top:0;right:0;display:flex;gap:2px;">
-                <button onclick="exportSimulationExcel()" title="Export Packing List (Excel)"
-                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <div class="sim-toolbar" style="position:absolute;top:0;right:0;display:flex;align-items:center;gap:6px;padding:6px;border-radius:12px;background:rgba(17,24,39,0.7);border:1px solid rgba(120,166,212,0.16);backdrop-filter:blur(8px);">
+                <button type="button" onclick="exportSimulationExcel()" title="Export Packing List (Excel)" class="sim-tool-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Packing List
                 </button>
-                <button onclick="exportJobSimulationDeliverables()" title="Export Job Simulation &amp; Deliverables (Excel)"
-                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-green-400 hover:bg-green-500/10 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m0 12a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m0 0v12a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                <button type="button" onclick="exportJobSimulationDeliverables()" title="Export Job Simulation &amp; Deliverables (Excel)" class="sim-tool-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2m0 12a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m0 0v12a2 2 0 002 2h2a2 2 0 002-2V9a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                    Job Simulation &amp; Deliverables
                 </button>
-                <button onclick="openProjectManagement()" title="Project management"
-                    class="w-8 h-8 flex items-center justify-center rounded-md text-[#9AB0C8] hover:text-orange-400 hover:bg-orange-500/10 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/></svg>
+                <span style="width:1px;align-self:stretch;background:rgba(120,166,212,0.16);margin:4px 2px;"></span>
+                <button type="button" onclick="openProjectManagement()" title="Project management" class="sim-tool-btn sim-tool-btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+                    Project Management
                 </button>
               </div>
             </div>

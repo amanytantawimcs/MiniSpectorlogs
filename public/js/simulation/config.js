@@ -12,47 +12,32 @@
 export const BASE_SCOPES = {
   'platform-conventional': {
     name: 'Platform Inspection (GVI-CVI-CP-UT-ACFM)', category: 'Platform',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'CP', status: 'required' },
+    sensors: [ { name: 'CP', status: 'required' },
       { name: 'Manipulator', status: 'required' }, { name: 'UT', status: 'required' },
       { name: 'FMD', status: 'required' }, { name: 'Cleaning Brush', status: 'required' },
-      { name: 'PRC Camera 1', status: 'optional' }, { name: 'PRC Camera 2', status: 'optional' },
     ],
   },
   'platform-gvi': {
     name: 'Platform GVI - Video Only', category: 'Platform',
     sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'CP', status: 'optional' },
-      { name: 'Manipulator', status: 'optional' },
     ],
   },
   'platform-mass-cleaning': {
     name: 'Platform Mass Cleaning', category: 'Platform',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Water Jet', status: 'required' },
-      { name: 'Manipulator', status: 'optional' },
+    sensors: [ { name: 'Water Jet', status: 'required' },
     ],
   },
   'pipeline-conventional': {
     name: 'Pipeline Conventional Inspection', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
+    sensors: [ { name: 'Altimeter', status: 'required' },
       { name: 'CP', status: 'required' }, { name: 'Manipulator', status: 'required' },
-      { name: 'PRC External Frame', status: 'optional' },
       { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
       { name: 'Starboard Camera', status: 'required' },
     ],
   },
   'seabed-geophysical': {
     name: 'Seabed Geophysical Survey', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
-      { name: 'PRC External Frame', status: 'optional' },
+    sensors: [ { name: 'Altimeter', status: 'required' },
       { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
       { name: 'Starboard Camera', status: 'required' },
     ],
@@ -60,9 +45,6 @@ export const BASE_SCOPES = {
   'pipeline-gvi': {
     name: 'Pipeline GVI / Video Recording', category: 'Pipeline',
     sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'PRC External Frame', status: 'optional' },
-      { name: 'CP', status: 'optional' }, { name: 'Manipulator', status: 'optional' },
       { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
       { name: 'Starboard Camera', status: 'required' },
     ],
@@ -70,18 +52,15 @@ export const BASE_SCOPES = {
   'pre-eng-spools': {
     name: 'Pre-engineering Metrology (Spools)', category: 'Pipeline',
     sensors: [
-      { name: 'PRC External Frame', status: 'required' }, { name: 'Navigation', status: 'required' },
-      { name: 'Gyro', status: 'required' }, { name: 'Depth', status: 'required' },
-      { name: 'Altimeter', status: 'required' }, { name: 'Scan (SBES/Profiler)', status: 'optional' },
+      { name: 'PRC External Frame', status: 'required' },
+      { name: 'Altimeter', status: 'required' },
       { name: 'Center Camera', status: 'required' }, { name: 'Port Camera', status: 'required' },
       { name: 'Starboard Camera', status: 'required' },
     ],
   },
   'pipeline-mass-cleaning': {
     name: 'Pipeline Mass Cleaning', category: 'Pipeline',
-    sensors: [
-      { name: 'Navigation', status: 'required' }, { name: 'Gyro', status: 'required' },
-      { name: 'Depth', status: 'required' }, { name: 'Altimeter', status: 'required' },
+    sensors: [ { name: 'Altimeter', status: 'required' },
       { name: 'Water Jet', status: 'required' }, { name: 'Center Camera', status: 'required' },
       { name: 'Port Camera', status: 'required' }, { name: 'Starboard Camera', status: 'required' },
     ],
@@ -89,10 +68,7 @@ export const BASE_SCOPES = {
   'prc-camera-inspection': {
     name: 'PRC Camera Inspection', category: 'PRC',
     sensors: [
-      { name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' },
-      { name: 'Front/Boom Camera', status: 'required' }, { name: 'Rear Camera', status: 'required' },
-      { name: 'Gyro', status: 'required' }, { name: 'DVL', status: 'required' },
-      { name: 'Depth', status: 'required' },
+      { name: 'Front Camera', status: 'required' }, { name: 'DVL', status: 'required' },
     ],
   },
 };
@@ -103,11 +79,11 @@ export const BASE_SCOPES = {
 // conflicts — see composeScope() in scopeCatalog.js.
 export const SCOPE_ADD_ONS = {
   'sbes-profiler': {
-    label: '+ SBES/Profiler', appliesTo: ['pipeline-conventional'],
+    label: '+ SBES/Profiler', appliesTo: ['pipeline-conventional', 'pre-eng-spools'],
     sensors: [{ name: 'Scan (SBES/Profiler)', status: 'required' }],
   },
   'prc-ext-frame': {
-    label: '+ PRC', appliesTo: ['pipeline-conventional', 'pipeline-gvi'],
+    label: '+ PRC', appliesTo: ['pipeline-conventional', 'pipeline-gvi', 'seabed-geophysical'],
     sensors: [{ name: 'PRC External Frame', status: 'required' }],
   },
   pipetracker: {
@@ -116,7 +92,7 @@ export const SCOPE_ADD_ONS = {
   },
   'mbes-survey': {
     label: '+ MBES Survey', appliesTo: ['pipeline-conventional', 'seabed-geophysical'],
-    sensors: [{ name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'optional' }],
+    sensors: [{ name: 'MBES', status: 'required' }, { name: 'PipeTracker', status: 'required' }],
   },
   'prc-cameras-required': {
     label: '+ PRC', appliesTo: ['platform-conventional'],
@@ -124,9 +100,18 @@ export const SCOPE_ADD_ONS = {
   },
   'prc-cameras-optional': {
     label: '+ PRC Cameras', appliesTo: ['pre-eng-spools'],
-    sensors: [{ name: 'PRC Camera 1', status: 'optional' }, { name: 'PRC Camera 2', status: 'optional' }],
+    sensors: [{ name: 'PRC Camera 1', status: 'required' }, { name: 'PRC Camera 2', status: 'required' }],
+  },
+  'cp-optional': {
+    label: '+ CP', appliesTo: ['platform-gvi', 'pipeline-gvi'],
+    sensors: [{ name: 'CP', status: 'required' }],
+  },
+  'manipulator-optional': {
+    label: '+ Manipulator', appliesTo: ['platform-gvi', 'platform-mass-cleaning', 'pipeline-gvi'],
+    sensors: [{ name: 'Manipulator', status: 'required' }],
   },
 };
+
 
 // Maps the old flat OPERATION_SCOPES numeric ids (1-16) to their equivalent
 // base+add-ons composite id, so a simulation saved before this redesign
@@ -196,12 +181,14 @@ export const CAT_ORDER = { 'Cameras & Lighting': 0, 'Navigation & Depth': 1, 'In
 
 // Fixed unit sensors every selected ROV gets automatically (not scope-driven).
 export const MINISPECTOR_FIXED_SENSORS = [
-  { name: 'Rear Camera', category: 'Cameras & Lighting' },
-  { name: 'Front/Boom Camera', category: 'Cameras & Lighting' },
-  { name: 'PRC Camera 1', category: 'Payloads / Tooling' },
-  { name: 'PRC Camera 2', category: 'Payloads / Tooling' },
+  { name: 'PRC HD Camera 1', category: 'Cameras & Lighting' },
+  { name: 'PRC HD Camera 2', category: 'Cameras & Lighting' },
+  { name: 'Front LED Light 1', category: 'Cameras & Lighting' },
+  { name: 'Front LED Light 2', category: 'Cameras & Lighting' },
+  { name: 'Rear LED Lights', category: 'Cameras & Lighting' },
+  { name: 'Rear Fixed Camera', category: 'Cameras & Lighting' },
+  { name: 'Navigation', category: 'Navigation & Depth' },
   { name: 'Gyro', category: 'Navigation & Depth' },
-  { name: 'DVL', category: 'Navigation & Depth' },
   { name: 'Depth', category: 'Navigation & Depth' },
 ];
 
@@ -280,30 +267,36 @@ export const HARDWARE_ITEMS = [
 ];
 
 export const DEFAULT_SYSTEM_IPS = [
-  { category: 'MiniSpector Server', name: 'MiniSpector Server', ip: '', port: '', hasIP: true, hasPort: true },
-  { category: 'Piloting PC', name: 'Tablet IP / Piloting PC', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Clients', name: 'Motion', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Clients', name: 'PIU', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Clients', name: 'Serial HUB', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Hardware Clients (ODS)', name: 'HCU-Motion', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Hardware Clients (ODS)', name: 'HCU-PIU', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Hardware Clients (ODS)', name: 'Ethernet to Serial', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Hardware Clients (ODS)', name: 'Power Supply Status (LIM)', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Cameras', name: 'Rear Camera (MS-1 only)', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Cameras', name: 'PTZ Camera', ip: '', port: '', hasIP: true, hasPort: true },
-  { category: 'MiniSpector Cameras', name: 'Right PRC Camera', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'MiniSpector Cameras', name: 'Left PRC Camera', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Other Clients', name: 'On-Deck Station Fiber Ethernet Switch', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Other Clients', name: 'MiniSpector Fiber Switch', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Other Clients', name: 'MiniSpector Pod Moxa IP', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Other Clients', name: 'Decoder Box', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'Other Clients', name: 'Wi-Fi Module', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'External ODS Solutions', name: 'External Ethernet to Serial Solution', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'External ODS Solutions', name: 'External HCU-Motion Solution', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'External ODS Solutions', name: 'External HCU-PIU Solution', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'External ODS Solutions', name: 'External ODS Fiber Ethernet Solution', ip: '', port: '', hasIP: true, hasPort: false },
-  { category: 'RovLog Bridge', name: 'RovLog Bridge DMS', ip: '', port: '', hasIP: false, hasPort: true },
-  { category: 'RovLog Bridge', name: 'RovLog Bridge Depth', ip: '', port: '', hasIP: false, hasPort: true },
+  { category: 'MiniSpector Server', name: 'MiniSpector Server', ip: '172.168.20.10', port: '50000', hasIP: true, hasPort: true },
+  { category: 'Piloting PC', name: 'Tablet IP / Piloting PC', ip: '172.168.20.11', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Clients', name: 'Motion', ip: '172.168.20.251', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Clients', name: 'PIU', ip: '172.168.20.252', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Clients', name: 'Serial HUB', ip: '172.168.20.32', port: '', hasIP: true, hasPort: false },
+  { category: 'Hardware Clients (ODS)', name: 'HCU-Motion', ip: '172.168.20.90', port: '', hasIP: true, hasPort: false },
+  { category: 'Hardware Clients (ODS)', name: 'HCU-PIU', ip: '172.168.20.91', port: '', hasIP: true, hasPort: false },
+  { category: 'Hardware Clients (ODS)', name: 'Ethernet to Serial', ip: '172.168.20.28', port: '', hasIP: true, hasPort: false },
+  { category: 'Hardware Clients (ODS)', name: 'Power Supply Status (LIM)', ip: '172.168.20.92', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Cameras', name: 'Rear Camera (MS-1 only)', ip: '172.168.20.9', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Cameras', name: 'PTZ Camera', ip: '172.168.20.73', port: '8000', hasIP: true, hasPort: true },
+  { category: 'MiniSpector Cameras', name: 'Right PRC Camera', ip: '192.168.16.15', port: '', hasIP: true, hasPort: false },
+  { category: 'MiniSpector Cameras', name: 'Left PRC Camera', ip: '192.168.16.16', port: '', hasIP: true, hasPort: false },
+  { category: 'Other Clients', name: 'On-Deck Station Fiber Ethernet Switch', ip: '172.168.20.3', port: '', hasIP: true, hasPort: false },
+  { category: 'Other Clients', name: 'MiniSpector Fiber Switch', ip: '172.168.20.2', port: '', hasIP: true, hasPort: false },
+  { category: 'Other Clients', name: 'MiniSpector Pod Moxa IP', ip: '172.168.20.210', port: '', hasIP: true, hasPort: false },
+  { category: 'Other Clients', name: 'Decoder Box', ip: '172.168.20.67', port: '', hasIP: true, hasPort: false },
+  { category: 'Other Clients', name: 'Wi-Fi Module', ip: '172.168.20.254', port: '', hasIP: true, hasPort: false },
+  { category: 'External ODS Solutions', name: 'External Ethernet to Serial Solution', ip: '172.168.20.29', port: '', hasIP: true, hasPort: false },
+  { category: 'External ODS Solutions', name: 'External HCU-Motion Solution', ip: '172.168.20.93', port: '', hasIP: true, hasPort: false },
+  { category: 'External ODS Solutions', name: 'External HCU-PIU Solution', ip: '172.168.20.94', port: '', hasIP: true, hasPort: false },
+  { category: 'External ODS Solutions', name: 'External ODS Fiber Ethernet Solution', ip: '172.168.20.5', port: '', hasIP: true, hasPort: false },
+  { category: 'RovLog Bridge', name: 'RovLog Bridge DMS', ip: '', port: '50001', hasIP: false, hasPort: true },
+  { category: 'RovLog Bridge', name: 'RovLog Bridge Depth', ip: '', port: '50002', hasIP: false, hasPort: true },
+  { category: 'External PCs', name: 'External PC for PRC Camera', ip: '192.168.16.21', port: '', hasIP: true, hasPort: false },
+  { category: 'External PCs', name: 'External PC for GVI Camera', ip: '172.168.20.156', port: '', hasIP: true, hasPort: false },
+  { category: 'External PCs', name: 'External DVE PC for PTZ Camera', ip: '172.168.20.155', port: '', hasIP: true, hasPort: false },
+  { category: 'External PCs', name: 'External DVE PC for Rear Fixed Camera', ip: '172.168.20.152', port: '', hasIP: true, hasPort: false },
+  { category: 'External PCs', name: 'External RovLog PC', ip: '172.168.20.153', port: '', hasIP: true, hasPort: false },
+  { category: 'External PCs', name: 'External Online PC', ip: '172.168.20.154', port: '', hasIP: true, hasPort: false },
 ];
 
 export const PREOP_CHECKLIST = [

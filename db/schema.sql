@@ -76,6 +76,7 @@ CREATE TABLE projects (
   minispector_number   TEXT,
   supervisor_name      TEXT,
   is_sim_locked        BOOLEAN NOT NULL DEFAULT false,
+  last_saved_device    TEXT NOT NULL DEFAULT '',
 
   -- Document-shaped nested state — always read/written whole by renderer.js
   daily_summary        JSONB NOT NULL DEFAULT '{}',   -- startDate,endDate,location,weather,visibility,temperature,shiftno,scope
@@ -122,7 +123,9 @@ CREATE TABLE shift_logs (
   project_id  UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   shift_no    TEXT,
   start_date  TEXT,
+  start_time  TEXT,
   end_date    TEXT,
+  end_time    TEXT,
   weather     TEXT,
   visibility  TEXT,
   temperature TEXT,
@@ -250,6 +253,7 @@ CREATE TABLE simulations (
 
   approval_status   TEXT NOT NULL DEFAULT 'draft',
   approval_history  JSONB NOT NULL DEFAULT '[]',
+  custom_scope      JSONB,
 
   pushed_at         TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -302,3 +306,10 @@ CREATE TABLE sync_log (
   synced_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_sync_log_project ON sync_log(project_id, synced_at DESC);
+
+CREATE TABLE IF NOT EXISTS shared_scope_bundles (
+  id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  bundle JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

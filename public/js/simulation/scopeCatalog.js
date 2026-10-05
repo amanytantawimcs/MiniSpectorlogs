@@ -14,6 +14,8 @@
 // sensors, pre-op, sync-to-operation).
 
 import { BASE_SCOPES, SCOPE_ADD_ONS, LEGACY_SCOPE_IDS } from './config.js';
+import { api } from '../api.js';
+import { showToast } from '../ui.js';
 
 const STORAGE_KEY = 'mcs_custom_scope_bundles';
 
@@ -31,6 +33,16 @@ function saveCustom(list) {
 }
 
 let customBundles = loadCustom();
+// Bundles published by any user, loaded from the server (see loadSharedBundles).
+let sharedBundles = [];
+
+export async function loadSharedBundles() {
+  sharedBundles = await api.listSharedBundles();
+}
+
+function nextSharedBundleId() {
+  return 'SHR-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
 
 export function getBaseScopes() {
   return Object.entries(BASE_SCOPES).map(([id, s]) => ({
@@ -47,7 +59,12 @@ export function getCustomBundles() {
 }
 
 export function getAllBundles() {
-  return [...getBaseScopes(), ...customBundles];
+  const seen = new Set();
+  return [...getBaseScopes(), ...sharedBundles, ...customBundles].filter(b => {
+    if (seen.has(b.id)) return false;
+    seen.add(b.id);
+    return true;
+  });
 }
 
 // Every add-on whose appliesTo includes this base scope id — drives the
@@ -107,7 +124,7 @@ export function resolveScopeSelection(id) {
   if (BASE_SCOPES[baseId]) return { baseId, addonIds, custom: null };
   const legacy = LEGACY_SCOPE_IDS[id];
   if (legacy) return resolveScopeSelection(legacy);
-  const custom = customBundles.find(b => b.id === id);
+  const custom = customBundles.find(b => b.id === id) || sharedBundles.find(b => b.id === id);
   if (custom) return { baseId: null, addonIds: [], custom };
   return { baseId: null, addonIds: [], custom: null };
 }
@@ -166,6 +183,7 @@ function nextCustomBundleId() {
 }
 
 export function addCustomBundle({ name, fam, req, opt, note, shared }) {
+  if (shared) return publishBundle({ name, fam, req, opt, note });
   const bundle = {
     id: nextCustomBundleId(),
     fam: fam || 'Custom',
@@ -181,7 +199,48 @@ export function addCustomBundle({ name, fam, req, opt, note, shared }) {
   return bundle;
 }
 
+// The custom bundle a selection points to, or null for base scopes. Saved
+// with the project so the scope still resolves on another device.
+export function customBundleFor(id) {
+  const { custom } = resolveScopeSelection(id);
+  return custom ? { ...custom, req: [...custom.req], opt: [...custom.opt] } : null;
+}
+
+// Registers a bundle that came with a project. The project's copy wins if this
+// browser already has a bundle with the same id.
+export function ensureProjectBundle(bundle) {
+  if (!bundle || !bundle.id) return;
+  const copy = { ...bundle, custom: true, req: [...(bundle.req || [])], opt: [...(bundle.opt || [])] };
+  const idx = customBundles.findIndex(b => b.id === bundle.id);
+  if (idx >= 0) customBundles[idx] = copy;
+  else customBundles.push(copy);
+  saveCustom(customBundles);
+}
+
+// Publishes to the shared catalog. The bundle appears at once; if the server
+// refuses it, it is removed again and the user is told.
+function publishBundle({ name, fam, req, opt, note }) {
+  const bundle = { id: nextSharedBundleId(), fam: fam || 'Custom', name, req: req.slice(), opt: opt.slice(), custom: true, note: note || '', shared: true };
+  sharedBundles.push(bundle);
+  api.saveSharedBundle(bundle).then(res => {
+    if (res.success) return;
+    sharedBundles = sharedBundles.filter(b => b.id !== bundle.id);
+    showToast('Could not publish the bundle: ' + (res.error || 'server error'), 'error');
+  });
+  return bundle;
+}
+
 export function deleteCustomBundle(id) {
+  const sharedIdx = sharedBundles.findIndex(b => b.id === id);
+  if (sharedIdx !== -1) {
+    const [removed] = sharedBundles.splice(sharedIdx, 1);
+    api.deleteSharedBundle(id).then(res => {
+      if (res.success) return;
+      sharedBundles.push(removed);
+      showToast('Could not delete the shared bundle: ' + (res.error || 'server error'), 'error');
+    });
+    return true;
+  }
   const idx = customBundles.findIndex(b => b.id === id);
   if (idx === -1) return false;
   customBundles.splice(idx, 1);

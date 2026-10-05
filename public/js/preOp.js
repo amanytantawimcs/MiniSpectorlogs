@@ -84,6 +84,10 @@ export async function syncSimulationIntoOperation() {
     setEquipment: {
       main: { ...(simState.shared.sysarch?.setEquipment?.main || {}) },
       backup: { ...(simState.shared.sysarch?.setEquipment?.backup || {}) },
+      mainIds: structuredClone(simState.shared.sysarch?.setEquipment?.mainIds || {}),
+      backupIds: structuredClone(simState.shared.sysarch?.setEquipment?.backupIds || {}),
+      mainCols: simState.shared.sysarch?.setEquipment?.mainCols || 1,
+      backupCols: simState.shared.sysarch?.setEquipment?.backupCols || 1,
     },
     // Operation-side-only fields — preserved across re-syncs, not reset.
     additions: existing?.additions || { sensors: [], machines: [] },
@@ -204,7 +208,7 @@ export function renderPreOpTab() {
     <div class="grid grid-cols-5" style="border-top:1px solid rgba(120,166,212,0.16);">
       <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
         <p class="text-2xl font-bold" style="color:#f39124">${sensorsReady}<span class="text-sm text-[#6C88A6] font-normal">/${sensorsTotal}</span></p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Sensors Ready</p>
+        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Ready</p>
         ${sensorsCheck > 0 ? `<p class="text-[10px] mt-0.5" style="color:#f39124">${sensorsCheck} need check</p>` : '<p class="text-[10px] mt-0.5" style="color:#459fd9">All verified</p>'}
       </div>
       <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
@@ -240,7 +244,7 @@ export function renderPreOpTab() {
       <td class="px-4 py-2.5 text-center">${rdyBadge(s.calibrated && s.tested)}</td>
     </tr>`).join('');
     html += sectionWrap('#f39124', `MS-${num} Standard Equipment`, `${rovRole.toUpperCase()} · ${list.length} fixed sensors`,
-      `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Sensor</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal.</th><th class="${thC}">Test</th><th class="${thC}">Status</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${rows}</tbody></table>`);
+      `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Payload</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal.</th><th class="${thC}">Test</th><th class="${thC}">Status</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${rows}</tbody></table>`);
   });
 
   const sensorRows = allSensors.map((s, i) => `<tr>
@@ -252,8 +256,8 @@ export function renderPreOpTab() {
     <td class="px-4 py-2.5 text-center">${tstBadge(s.tested)}</td>
     <td class="px-4 py-2.5 text-center">${rdyBadge(s.calibrated && s.tested)}</td>
   </tr>`).join('');
-  html += sectionWrap('#10b981', 'Sensor Packing List', `${allSensors.length} items · ${sensorsReady} verified`,
-    `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Sensor</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal.</th><th class="${thC}">Test</th><th class="${thC}">Status</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${sensorRows || `<tr><td colspan="7" class="px-4 py-6 text-center text-[#6C88A6] text-sm">No sensors</td></tr>`}</tbody></table>`);
+  html += sectionWrap('#10b981', 'Payload Packing List', `${allSensors.length} items · ${sensorsReady} verified`,
+    `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Payload</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal.</th><th class="${thC}">Test</th><th class="${thC}">Status</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${sensorRows || `<tr><td colspan="7" class="px-4 py-6 text-center text-[#6C88A6] text-sm">No payloads</td></tr>`}</tbody></table>`);
 
   if (allMachines.length > 0) {
     const rows = allMachines.map((m, i) => `<tr>
@@ -356,9 +360,9 @@ export function renderPreOpTab() {
       <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-4">+ Operation-Time Additions</p>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="text-xs font-bold text-[#6C88A6] block mb-2">Add Sensor</label>
+          <label class="text-xs font-bold text-[#6C88A6] block mb-2">Add Payload</label>
           <div class="flex gap-2">
-            <input type="text" id="preop-add-sensor-name" placeholder="Sensor name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
+            <input type="text" id="preop-add-sensor-name" placeholder="Payload name" class="flex-1 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
             <input type="text" id="preop-add-sensor-model" placeholder="Model" class="w-28 bg-[#0C1727] border border-[rgba(120,166,212,0.16)] rounded-lg px-3 py-2 text-sm text-[#D3DAE3] placeholder-[#6C88A6] outline-none">
             <button type="button" id="preop-add-sensor-btn" class="px-3 py-2 text-xs font-bold rounded-lg text-[#D3DAE3]" style="background:#f39124;">+ Add</button>
           </div>
@@ -393,7 +397,7 @@ function preOpAddSensor() {
   if (!name) return;
   state.preOpData.additions.sensors.push({ name, model: modelEl?.value.trim() || '', qty: 1, calibrated: false, tested: false, origin: 'operation' });
   renderPreOpTab();
-  showToast(`"${name}" added as operation-time sensor.`, 'success');
+  showToast(`"${name}" added as operation-time payload.`, 'success');
 }
 
 function preOpAddMachine() {

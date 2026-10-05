@@ -139,7 +139,7 @@ export function renderFinalSetupTab() {
       </div>
     </div>
     <div class="grid grid-cols-3" style="border-top:1px solid rgba(120,166,212,0.16);">
-      <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Sensors Confirmed</p></div>
+      <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Confirmed</p></div>
       <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedThrusters}<span class="text-sm text-[#6C88A6] font-normal">/${totalThrusters}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters Confirmed</p></div>
       <div class="px-4 py-3 text-center"><p class="text-xl font-bold" style="color:${isLocked ? '#459fd9' : '#f39124'}">${isLocked ? '✓' : '—'}</p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Setup Status</p></div>
     </div>`;
@@ -164,7 +164,7 @@ export function renderFinalSetupTab() {
   // 2. Active Sensors
   const sensorTable = document.createElement('table');
   sensorTable.className = 'w-full';
-  sensorTable.innerHTML = `<thead><tr style="background:rgba(0,0,0,0.3)"><th class="${thC}" style="width:44px">✓</th><th class="${thL}">Sensor</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal</th><th class="${thC}">Test</th><th class="${thL}">Op. Note</th></tr></thead>`;
+  sensorTable.innerHTML = `<thead><tr style="background:rgba(0,0,0,0.3)"><th class="${thC}" style="width:44px">✓</th><th class="${thL}">Payload</th><th class="${thL}">Model</th><th class="${thC}">QTY</th><th class="${thC}">Cal</th><th class="${thC}">Test</th><th class="${thL}">Op. Note</th></tr></thead>`;
   const sensorTbody = document.createElement('tbody');
   sensorTbody.className = 'divide-y divide-[rgba(120,166,212,0.16)]';
   const rovNums = [...new Set(fs.sensors.filter(s => s._type === 'fixed').map(s => s.rovNum))].sort((a, b) => a - b);
@@ -198,7 +198,7 @@ export function renderFinalSetupTab() {
   if (missionSensors.length > 0) {
     const catRow = document.createElement('tr');
     catRow.style.background = 'rgba(12,23,39,0.7)';
-    catRow.innerHTML = `<td colspan="7" class="px-3 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">Mission Sensors</span></td>`;
+    catRow.innerHTML = `<td colspan="7" class="px-3 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">Mission Payloads</span></td>`;
     sensorTbody.appendChild(catRow);
     missionSensors.forEach(s => addSensorRow(s, fs.sensors.indexOf(s)));
   }
@@ -212,7 +212,7 @@ export function renderFinalSetupTab() {
   }
   if (fs.sensors.length === 0) sensorTbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-[#6C88A6] text-sm">No sensors</td></tr>`;
   sensorTable.appendChild(sensorTbody);
-  el.appendChild(renderSectionCard('#f39124', 'Active Sensors', `${confirmedSensors}/${totalSensors} confirmed`, sensorTable, { padded: true, collapsed: true, startOpen: wasSensorsOpen, id: 'final-sensors-card' }));
+  el.appendChild(renderSectionCard('#f39124', 'Active Payloads', `${confirmedSensors}/${totalSensors} confirmed`, sensorTable, { padded: true, collapsed: true, startOpen: wasSensorsOpen, id: 'final-sensors-card' }));
 
   // 3. Thrusters
   if (fs.thrusters.length > 0) {

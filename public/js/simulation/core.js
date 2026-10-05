@@ -2,15 +2,21 @@
 // bar/badges), scope loading, and the collect/load pair that mirrors
 // collectAllData()/populateUI() from the Operation side.
 
-import { state } from '../state.js';
+import { state, getDeviceId } from '../state.js';
 import { api, getSessionToken } from '../api.js';
 import { noteSavedUpdatedAt } from '../staleCheck.js';
+import { recordSave, primeHistory, isUnchangedSinceSave } from '../historyChanges.js';
 import { showToast, setActiveNavItem } from '../ui.js';
 import { simState } from './state.js';
 import { MINISPECTOR_FIXED_SENSORS, DEFAULT_SYSTEM_IPS } from './config.js';
-import { scopeName } from './scopeCatalog.js';
+import { scopeName, customBundleFor, ensureProjectBundle } from './scopeCatalog.js';
 import { sensorReadinessItems } from './sensors.js';
 import { renderProjectTeam, flushPendingTeam } from '../projectTeam.js';
+
+// Payloads that count toward readiness: required, included optional, and custom.
+export function activeSensors() {
+  return (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
+}
 
 let syncDebounceTimer = null;
 let autoSaveTimer = null;
@@ -97,6 +103,7 @@ export function collectSimState() {
     projectVessel: simState.projectData.vessel,
     projectLocation: simState.projectData.location,
     scopeId: simState.selectedScope,
+    customScope: customBundleFor(simState.selectedScope),
     scopeName: scopeName(simState.selectedScope),
     rovs: [...simState.selectedROVs.entries()].map(([num, role]) => ({
       rovNumber: num, role, serial: simState.rovSerials.get(num) || '', description: simState.rovDescriptions.get(num) || '',
@@ -112,6 +119,10 @@ export function collectSimState() {
       setEquipment: {
         main: { ...(simState.shared.sysarch?.setEquipment?.main || {}) },
         backup: { ...(simState.shared.sysarch?.setEquipment?.backup || {}) },
+        mainIds: structuredClone(simState.shared.sysarch?.setEquipment?.mainIds || {}),
+        backupIds: structuredClone(simState.shared.sysarch?.setEquipment?.backupIds || {}),
+        mainCols: simState.shared.sysarch?.setEquipment?.mainCols || 1,
+        backupCols: simState.shared.sysarch?.setEquipment?.backupCols || 1,
       },
     },
     issues: (simState.shared.issues || []).map(i => ({ ...i })),
@@ -140,6 +151,7 @@ export function loadSimulationState(data, isSimLocked, renderShell = true) {
     vessel: data.projectVessel || '', location: data.projectLocation || '',
   };
   simState.selectedScope = data.scopeId || null;
+  ensureProjectBundle(data.customScope);
   simState.approval = { status: data.approvalStatus || 'draft', history: data.approvalHistory || [] };
   simState.locked = !!isSimLocked;
 
@@ -167,13 +179,17 @@ export function loadSimulationState(data, isSimLocked, renderShell = true) {
       setEquipment: {
         main: { ...(data.sysarch?.setEquipment?.main || {}) },
         backup: { ...(data.sysarch?.setEquipment?.backup || {}) },
+        mainIds: structuredClone(data.sysarch?.setEquipment?.mainIds || {}),
+        backupIds: structuredClone(data.sysarch?.setEquipment?.backupIds || {}),
+        mainCols: data.sysarch?.setEquipment?.mainCols || 1,
+        backupCols: data.sysarch?.setEquipment?.backupCols || 1,
       },
     },
   };
   for (const [num] of simState.selectedROVs.entries()) {
     if (!simState.shared.rovSensors[num]) {
       simState.shared.rovSensors[num] = MINISPECTOR_FIXED_SENSORS.map(s => ({
-        name: s.name, category: s.category, model: '', serial: '', qty: 1,
+        name: s.name, category: s.category, model: '', serial: '', qty: s.qty ?? 1,
         calibrated: false, calibratedDate: '', tested: false, testedDate: '', fixed: true,
       }));
     }
@@ -184,6 +200,7 @@ export function loadSimulationState(data, isSimLocked, renderShell = true) {
   markSimulationStarted();
   simState.activeROV = Math.min(...simState.selectedROVs.keys());
   window.__updateSimUnitsBadge?.();
+  primeHistory('simulation', collectSimState());
   if (renderShell) renderWorkspaceShell();
 }
 
@@ -231,6 +248,7 @@ export async function renderSimContent() {
   // just stops the UI from pretending the edit did anything.
   const readOnly = state.currentUserRole === 'reviewer';
   area.style.pointerEvents = readOnly ? 'none' : '';
+  area.inert = readOnly;
   area.style.opacity = readOnly ? '0.6' : '';
   updateSimTabBadges();
   updateSimProgress();
@@ -247,7 +265,7 @@ export function labelNavItem(navId, text) {
 }
 
 function updateSimTabBadges() {
-  const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
+  const sensors = activeSensors();
   const sensorItems = sensors.flatMap(sensorReadinessItems);
   const machines = simState.shared.sysarch?.machines || [];
   const equip = simState.shared.sysarch?.equipment || [];
@@ -268,7 +286,7 @@ function updateSimTabBadges() {
 function updateSimProgress() {
   const bar = document.getElementById('sim-progress-bar');
   if (!bar) return;
-  const sensors = (simState.shared.sensors || []).filter(s => s.status === 'required' || (s.status === 'optional' && s.included) || s.custom);
+  const sensors = activeSensors();
   const sensorItems = sensors.flatMap(sensorReadinessItems);
   if (sensorItems.length === 0) { bar.style.width = '0%'; return; }
   const ready = sensorItems.filter(s => s.calibrated && s.tested && s.model).length;
@@ -282,24 +300,9 @@ let lastCodeTakenWarned = null;
 // (goToPreparationTab in setup.js, switchSimSubTab below). Deliberately
 // coarse ("who edited what section, when" — not a field-level diff): every
 // save while in that section would otherwise flood the log, so writes are
-// throttled per section below instead of happening on every autosave tick.
+// grouped per section (historyChanges.js) instead of being logged on every autosave tick.
 let currentSimSection = 'Mission info';
 export function setCurrentSimSection(label) { currentSimSection = label; }
-
-const HISTORY_THROTTLE_MS = 60_000;
-const lastHistoryLoggedAt = {};
-function maybeLogHistory() {
-  const now = Date.now();
-  if (lastHistoryLoggedAt[currentSimSection] && now - lastHistoryLoggedAt[currentSimSection] < HISTORY_THROTTLE_MS) return;
-  lastHistoryLoggedAt[currentSimSection] = now;
-  api.logSyncAction({
-    project_code: simState.projectData.code,
-    device_role: state.currentDeviceRole || 'vessel',
-    user_name: state.currentUserName,
-    action: 'update',
-    meta: { mode: 'simulation', section: currentSimSection },
-  });
-}
 
 export async function saveSimulation({ silent } = {}) {
   if (!simState.projectData.code) {
@@ -313,18 +316,20 @@ export async function saveSimulation({ silent } = {}) {
   // gates createOnly below — see isNewProjectFlow's comment for why
   // lastSavedAt alone isn't a safe enough signal for that.
   const isFirstSave = !lastSavedAt;
+  const data = collectSimState();
+  if (silent && isUnchangedSinceSave('simulation', data)) return;
   const result = await api.pushProject({
     project_code: simState.projectData.code,
     mode: 'simulation',
     created_by: state.currentUserName,
     project_name: simState.projectData.name || simState.projectData.code,
-    data: collectSimState(),
+    data,
     createOnly: isNewProjectFlow && isFirstSave,
   });
   if (result.success) {
     lastSavedAt = Date.now();
     noteSavedUpdatedAt(result.updated_at);
-    maybeLogHistory();
+    recordSave({ mode: 'simulation', section: currentSimSection, projectCode: simState.projectData.code, data });
     if (isFirstSave) { await flushPendingTeam(simState.projectData.code); renderProjectTeam('team-container-sim', simState.projectData.code); }
     updateSaveIndicator();
     if (!silent) showToast('Simulation saved.', 'success');
@@ -368,6 +373,7 @@ export function stopSimAutoSave() {
 export function flushSimOnUnload() {
   if (state.currentMode !== 'simulation' || !simState.projectData.code) return;
   const payload = JSON.stringify({
+    device_id: getDeviceId(),
     project_code: simState.projectData.code,
     mode: 'simulation',
     created_by: state.currentUserName,

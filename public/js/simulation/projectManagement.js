@@ -13,6 +13,7 @@ import { escapeHtml } from '../ui.js';
 import { state } from '../state.js';
 import { simState } from './state.js';
 import { renderProjectTeam } from '../projectTeam.js';
+import { renderCrewEditor } from '../crewRoster.js';
 import { exportProjectHistory } from '../export.js';
 
 function formatWhen(iso) {
@@ -30,15 +31,23 @@ function historyRowData(entry) {
   const section = entry.meta?.section || '';
   const person = entry.user_name || 'Someone';
   const what = section ? `updated ${section}` : (entry.action === 'create' ? 'created the project' : entry.action === 'join' ? 'joined the project' : 'made an update');
-  return { person, section, what, when: formatWhen(entry.synced_at) };
+  const changes = Array.isArray(entry.meta?.changes) ? entry.meta.changes : [];
+  const more = Number(entry.meta?.more) || 0;
+  const details = [...changes, ...(more ? [`+${more} more`] : [])].join('; ');
+  return { person, section, what, when: formatWhen(entry.synced_at), changes, more, details };
 }
 
 function historyRowHTML(entry) {
-  const { person, section, what, when } = historyRowData(entry);
-  const whatHtml = section ? `updated <strong>${escapeHtml(section)}</strong>` : escapeHtml(what);
-  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;border-bottom:1px solid rgba(120,166,212,0.1);">
+  const { person, section, when, changes, more } = historyRowData(entry);
+  const whatHtml = section ? `updated <strong>${escapeHtml(section)}</strong>` : escapeHtml(historyRowData(entry).what);
+  const changeItems = [...changes.map(c => `<li>${escapeHtml(c)}</li>`), ...(more ? [`<li>+${more} more</li>`] : [])].join('');
+  const changesHtml = changeItems
+    ? `<ul style="margin:4px 0 0 16px;font-size:11px;color:#9AB0C8;list-style:disc;">${changeItems}</ul>`
+    : '';
+  return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;border-radius:10px;border-bottom:1px solid rgba(120,166,212,0.1);">
     <div style="flex:1;min-width:0;font-size:13px;color:#D3DAE3;">
       <strong>${escapeHtml(person)}</strong> ${whatHtml}
+      ${changesHtml}
     </div>
     <div style="font-size:11px;color:#6C88A6;white-space:nowrap;">${escapeHtml(when)}</div>
   </div>`;
@@ -128,8 +137,16 @@ export async function renderProjectManagementContent(area) {
 
   const subtitle = document.createElement('p');
   subtitle.className = 'text-gray-400 mb-5 text-sm';
-  subtitle.textContent = 'Manage who can edit this project, and see its recent edit history.';
+  subtitle.textContent = 'Crew roster, who can edit this project, and recent edit history.';
   wrap.appendChild(subtitle);
+
+  // Operation projects: the crew roster is set up here, not on the Project Details page.
+  if (state.currentMode === 'operation') {
+    const crewContainer = document.createElement('div');
+    crewContainer.className = 'mb-5';
+    wrap.appendChild(crewContainer);
+    renderCrewEditor(crewContainer);
+  }
 
   // renderProjectTeam builds its own rcard (a <details> disclosure) directly
   // inside this container — no extra card wrapper needed here, that would

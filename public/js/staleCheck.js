@@ -5,24 +5,30 @@
 // instead of staying silent. Deliberately a warning + manual reload, not
 // automatic merging — merging two people's concurrent edits is a much bigger
 // problem than this app needs solved right now.
+//
+// Feedback point 4: the notice used to fire even when only this device had
+// been working. Two fixes: timestamps are compared as numbers (the save and
+// pull responses can differ in text form), and a change whose last writer is
+// this device is ignored (the server records the writer on every save).
 
-import { state } from './state.js';
+import { state, getDeviceId } from './state.js';
 import { api } from './api.js';
 import { showStaleDataBanner } from './ui.js';
 
-let knownUpdatedAt = null;
+let knownMs = null;
 let pollTimer = null;
 // Bumped on every local save/lock. syncSimulationIntoOperation() fires two
 // writes back to back (saveProject + lockSimulation) — if a poll's pull
 // request happens to be in flight while those land, it can resolve with a
-// pre-sync snapshot *after* knownUpdatedAt has already moved on locally,
+// pre-sync snapshot *after* knownMs has already moved on locally,
 // which reads as a mismatch even though nobody else touched the project.
 // Comparing the epoch before/after the await lets us discard that one stale
 // round instead of flashing a false banner; the next tick re-checks cleanly.
 let epoch = 0;
 
 export function noteSavedUpdatedAt(ts) {
-  if (ts) { knownUpdatedAt = ts; epoch++; }
+  const ms = Date.parse(ts);
+  if (Number.isFinite(ms)) { knownMs = ms; epoch++; }
 }
 
 async function checkForUpdates() {
@@ -32,11 +38,15 @@ async function checkForUpdates() {
   const result = await api.pullProject(code);
   if (!result.success || !result.project) return;
   if (epoch !== epochAtStart) return;
-  const serverUpdatedAt = result.project.updated_at;
-  if (knownUpdatedAt === null) { knownUpdatedAt = serverUpdatedAt; return; }
-  if (serverUpdatedAt && serverUpdatedAt !== knownUpdatedAt) {
-    showStaleDataBanner();
-  }
+  const serverMs = Date.parse(result.project.updated_at);
+  if (!Number.isFinite(serverMs)) return;
+  if (knownMs === null) { knownMs = serverMs; return; }
+  if (serverMs === knownMs) return;
+  knownMs = serverMs;
+  // Last saved by this device (for example, through a path that does not
+  // record its own save): not another person's change, so no notice.
+  if (result.project.last_saved_device === getDeviceId()) return;
+  showStaleDataBanner();
 }
 
 export function startStaleCheck() {

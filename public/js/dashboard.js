@@ -381,7 +381,7 @@ function renderPreOpReadinessPanel() {
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
-          <div style="font-size:9px;font-weight:700;color:#6C88A6;text-transform:uppercase;letter-spacing:0.08em;">Sensor Readiness</div>
+          <div style="font-size:9px;font-weight:700;color:#6C88A6;text-transform:uppercase;letter-spacing:0.08em;">Payload Readiness</div>
           <span style="font-size:16px;font-weight:800;color:${sColor};letter-spacing:-0.5px;">${sPct}%</span>
         </div>
         <div style="height:5px;background:rgba(120,166,212,0.16);border-radius:9999px;overflow:hidden;margin-bottom:6px;">

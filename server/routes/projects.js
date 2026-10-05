@@ -57,6 +57,7 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
         [row.id, req.userId, created_by || '']
       );
     }
+    await client.query('UPDATE projects SET last_saved_device = $1 WHERE id = $2', [String(req.body?.device_id || '').slice(0, 100), row.id]);
     await client.query('COMMIT');
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {
@@ -121,6 +122,7 @@ router.get('/:code', asyncRoute(async (req, res) => {
       created_by: project.created_by,
       project_name: project.project_name,
       updated_at: project.updated_at,
+      last_saved_device: project.last_saved_device || '',
       is_sim_locked: project.is_sim_locked,
       data,
     },
@@ -135,7 +137,7 @@ router.post('/:code/lock-simulation', requireAuth, asyncRoute(async (req, res) =
   }
   const project = await getProjectRowByCode(req.params.code);
   if (!project) return res.status(404).json({ success: false, error: 'Not found' });
-  const updatedAt = await lockSimulation(project.id);
+  const updatedAt = await lockSimulation(project.id, String(req.body?.device_id || '').slice(0, 100));
   res.json({ success: true, updated_at: updatedAt });
 }));
 

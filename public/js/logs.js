@@ -247,7 +247,7 @@ export function closeModal() {
 }
 
 function saveModal() {
-  if (modalSection === 'shiftLogs') { saveShiftModal(modalIndex); closeModal(); return; }
+  if (modalSection === 'shiftLogs') { if (saveShiftModal()) closeModal(); return; }
 
   const config = LOG_CONFIGS[modalSection];
   if (!config) return;

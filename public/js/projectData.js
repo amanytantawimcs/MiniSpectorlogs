@@ -3,6 +3,7 @@
 // yet in this phase (their DOM elements just aren't present, and every
 // getValue/getCheck/scrapeTable helper here degrades gracefully to '' / false / []).
 import { state } from './state.js';
+import { primeHistory } from './historyChanges.js';
 import { restoreSensorTables } from './sensorTable.js';
 import { simState } from './simulation/state.js';
 
@@ -38,17 +39,7 @@ export function collectAllData() {
   const cameraSystems = scrapeTable('camLightBody');
   const otherSensors = scrapeTable('sensorBody');
 
-  const crewList = [];
-  document.querySelectorAll('.crew-row').forEach(row => {
-    const name = row.querySelector('.crew-name-input')?.value;
-    const role = row.querySelector('.crew-role-select')?.value;
-    const signOn = row.querySelector('.crew-signon-input')?.value;
-    const signOff = row.querySelector('.crew-signoff-input')?.value;
-    const shiftSelect = row.querySelector('.crew-shift-select');
-    const shiftInput = row.querySelector('.crew-shift-input');
-    const shift = (shiftSelect && shiftSelect.style.display === 'none') ? shiftInput.value : shiftSelect?.value;
-    if (name) crewList.push({ name, role, shift, signOn, signOff });
-  });
+  const crewList = state.crewRoster.filter(c => (c.name || '').trim()).map(c => ({ ...c }));
   const supervisorEntry = crewList.find(c => c.role === 'ROV Supervisor');
 
   const systemsList = [];
@@ -210,14 +201,7 @@ export function populateUI(data) {
 
   setVal('additionalRemarks', data.remarks);
 
-  // crew rows — rebuilt via the crew module's addCrewRow, called from projectDetails.js
-  const crewContainer = document.getElementById('crew-container');
-  if (crewContainer) crewContainer.innerHTML = '';
-  const emptyState = document.getElementById('crew-empty-state');
-  if (emptyState) emptyState.style.display = (data.crew && data.crew.length) ? 'none' : '';
-  if (window.__addCrewRow) {
-    (data.crew || []).forEach(c => window.__addCrewRow(c.name, c.role, c.shift, c.signOn, c.signOff));
-  }
+  state.crewRoster = (data.crew || []).map(c => ({ name: c.name || '', role: c.role || 'ROV Supervisor', shift: c.shift || 'Day', signOn: c.signOn || '', signOff: c.signOff || '' }));
 
   restoreSensorTables(data.cameraSystems, data.otherSensors);
 
@@ -226,4 +210,5 @@ export function populateUI(data) {
 
   if (window.__renderLogs) window.__renderLogs();
   if (window.__refreshChecklists) window.__refreshChecklists();
+  primeHistory('operation', collectAllData());
 }

@@ -131,9 +131,9 @@ async function upsertOperationProject(client, { project_code, project_name, crea
   await client.query('DELETE FROM shift_logs WHERE project_id = $1', [projectId]);
   for (const s of d.shiftLogs || []) {
     await client.query(
-      `INSERT INTO shift_logs (project_id, shift_no, start_date, end_date, weather, visibility, temperature, notes, crew)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [projectId, s.shiftNo || '', s.startDate || '', s.endDate || '', s.weather || '', s.visibility || '', s.temperature || '', s.notes || '', s.crew || []]
+      `INSERT INTO shift_logs (project_id, shift_no, start_date, start_time, end_date, end_time, weather, visibility, temperature, notes, crew)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [projectId, s.shiftNo || '', s.startDate || '', s.startTime || '', s.endDate || '', s.endTime || '', s.weather || '', s.visibility || '', s.temperature || '', s.notes || '', s.crew || []]
     );
   }
 
@@ -231,8 +231,8 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
     `INSERT INTO simulations (
        project_id, project_code, scope_id, scope_name, report_date,
        sensors, rov_sensors, sysarch, issues, thrusters,
-       approval_status, approval_history
-     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       approval_status, approval_history, custom_scope
+     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
      ON CONFLICT (project_id) DO UPDATE SET
        project_code = EXCLUDED.project_code,
        scope_id = EXCLUDED.scope_id,
@@ -244,13 +244,15 @@ async function upsertSimulationProject(client, { project_code, project_name, cre
        issues = EXCLUDED.issues,
        thrusters = EXCLUDED.thrusters,
        approval_status = EXCLUDED.approval_status,
-       approval_history = EXCLUDED.approval_history
+       approval_history = EXCLUDED.approval_history,
+       custom_scope = EXCLUDED.custom_scope
      RETURNING id`,
     [
       projectId, project_code, d.scopeId || null, d.scopeName || '', d.reportDate || null,
       JSON.stringify(d.sensors || []), JSON.stringify(d.rovSensors || {}), JSON.stringify(d.sysarch || {}),
       JSON.stringify(d.issues || []), JSON.stringify(d.thrusters || []),
       d.approvalStatus || 'draft', JSON.stringify(d.approvalHistory || []),
+      d.customScope ? JSON.stringify(d.customScope) : null,
     ]
   );
   const simulationId = simResult.rows[0].id;
@@ -301,7 +303,7 @@ async function buildOperationData(project) {
     operationalIdAuto: project.operational_id_auto || '',
 
     shiftLogs: shifts.rows.map(s => ({
-      shiftNo: s.shift_no, startDate: s.start_date, endDate: s.end_date, weather: s.weather,
+      shiftNo: s.shift_no, startDate: s.start_date, startTime: s.start_time || '', endDate: s.end_date, endTime: s.end_time || '', weather: s.weather,
       visibility: s.visibility, temperature: s.temperature, notes: s.notes, crew: s.crew || [],
     })),
 
@@ -365,6 +367,7 @@ async function buildSimulationData(project) {
     projectLocation: project.location || '',
     scopeId: sim.scope_id,
     scopeName: sim.scope_name || '',
+    customScope: sim.custom_scope || null,
     rovs: rovRows.rows.map(r => ({ rovNumber: r.rov_number, role: r.role, serial: r.serial || '', description: r.description || '' })),
     sensors: sim.sensors || [],
     rovSensors: sim.rov_sensors || {},
@@ -376,8 +379,8 @@ async function buildSimulationData(project) {
   };
 }
 
-async function lockSimulation(projectId) {
-  const { rows } = await pool.query('UPDATE projects SET is_sim_locked = true WHERE id = $1 RETURNING updated_at', [projectId]);
+async function lockSimulation(projectId, deviceId = '') {
+  const { rows } = await pool.query('UPDATE projects SET is_sim_locked = true, last_saved_device = $2 WHERE id = $1 RETURNING updated_at', [projectId, deviceId]);
   await pool.query('UPDATE simulations SET pushed_at = now() WHERE project_id = $1', [projectId]);
   return rows[0]?.updated_at;
 }
