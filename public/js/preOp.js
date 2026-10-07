@@ -142,33 +142,11 @@ export function renderProjectSimInfo() {
 // ── Packing List & Final Setup shell ──────────────────────────────────
 // The two tabs share one sidebar item with a two-button sub-tab bar (see
 // index.html's #tab-preopfinal), mirroring Operation Logs/Checklists'
-// pattern. renderPreOpFinalHeader() is the shared identity block (project
-// name/code/scope/ROV badges) both tabs used to render separately — pulled
-// out here so switching between them doesn't repeat it; renderPreOpTab()
-// and finalSetup.js's renderFinalSetupTab() now only render what's
-// specific to each.
+// pattern. The two panels (renderPreOpTab() here, finalSetup.js's
+// renderFinalSetupTab()) each render only what's specific to them — the
+// shared identity header (project name/code/scope/ROV badges) they used to
+// sit under was removed.
 let preOpFinalActiveTab = 'preop';
-
-export function renderPreOpFinalHeader() {
-  const el = document.getElementById('preopfinal-header');
-  if (!el) return;
-  if (!state.preOpData) { el.innerHTML = ''; return; }
-  const preOpData = state.preOpData;
-  const syncedDate = preOpData.pushedAt ? new Date(preOpData.pushedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-  el.innerHTML = `
-  <div class="rounded-2xl mb-5 overflow-hidden" style="border:1px solid rgba(243,145,36,0.25);background:linear-gradient(135deg,rgba(243,145,36,0.06) 0%,rgba(16,27,44,0.8) 100%);">
-    <div class="flex items-center justify-between px-6 py-4 flex-wrap gap-3">
-      <div>
-        <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-0.5">Packing List &amp; Final Setup</p>
-        <p class="text-lg font-bold text-[#D3DAE3] leading-tight">${escapeHtml(preOpData.projectName || '—')}</p>
-        <p class="text-xs text-[#6C88A6] mt-0.5">${escapeHtml(preOpData.projectCode || '')} · ${escapeHtml(preOpData.scopeName || '')} · Synced ${syncedDate}</p>
-      </div>
-      <div class="flex gap-2 flex-wrap justify-end">
-        ${preOpData.rovs.map(r => `<span class="text-xs font-bold px-2.5 py-1 rounded-lg ${r.role === 'main' ? 'text-[#f39124] border border-[rgba(243,145,36,0.4)] bg-[rgba(243,145,36,0.08)]' : 'text-[#9AB0C8] border border-[rgba(120,166,212,0.16)] bg-[#101B2C]'}">MS-${r.rovNumber} · ${r.role.toUpperCase()}</span>`).join('')}
-      </div>
-    </div>
-  </div>`;
-}
 
 function switchPreOpFinalSubTab(tab) {
   preOpFinalActiveTab = tab;
@@ -181,7 +159,6 @@ function switchPreOpFinalSubTab(tab) {
 }
 
 function enterPreOpFinal() {
-  renderPreOpFinalHeader();
   switchPreOpFinalSubTab(preOpFinalActiveTab);
 }
 
