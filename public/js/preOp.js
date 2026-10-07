@@ -177,29 +177,35 @@ export function renderPreOpTab() {
   const sensorsTotal = allSensors.length + allFixed.length;
   const sensorsCheck = sensorsTotal - sensorsReady;
 
+  // The summary bar uses the app's own KPI card (.kpi-card/.kpi-icon/...,
+  // defined for Infographics in index.html) rather than one-off styling, so
+  // it reads as the same component instead of a page-specific box.
   let html = `
-  <div class="rounded-2xl mb-5 overflow-hidden" style="border:1px solid rgba(243,145,36,0.25);background:linear-gradient(135deg,rgba(243,145,36,0.06) 0%,rgba(16,27,44,0.8) 100%);">
-    <div class="flex items-center justify-end px-6 py-3">
-      <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
+  <div class="flex items-center justify-between mb-4">
+    <p class="text-[11px] font-bold text-[#6C88A6] uppercase tracking-widest">Packing List Summary</p>
+    <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
+  </div>
+  <div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-icon" style="color:#f39124"><i class="ti ti-box" style="font-size:20px;"></i></div>
+      <p class="kpi-label">Payloads Ready</p>
+      <p class="kpi-value">${sensorsReady}<span style="font-size:1rem;color:#6C88A6;font-weight:600;">/${sensorsTotal}</span></p>
+      <p class="kpi-sub" style="${sensorsCheck > 0 ? 'color:#f39124' : 'color:#459fd9'}">${sensorsCheck > 0 ? `${sensorsCheck} need check` : 'All verified'}</p>
     </div>
-    <div class="grid grid-cols-4" style="border-top:1px solid rgba(120,166,212,0.16);">
-      <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
-        <p class="text-2xl font-bold" style="color:#f39124">${sensorsReady}<span class="text-sm text-[#6C88A6] font-normal">/${sensorsTotal}</span></p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Ready</p>
-        ${sensorsCheck > 0 ? `<p class="text-[10px] mt-0.5" style="color:#f39124">${sensorsCheck} need check</p>` : '<p class="text-[10px] mt-0.5" style="color:#459fd9">All verified</p>'}
-      </div>
-      <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
-        <p class="text-2xl font-bold text-[#459fd9]">${allMachines.length}</p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Machines</p>
-      </div>
-      <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
-        <p class="text-2xl font-bold" style="color:#459fd9">${allEquipment.length}</p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Hardware Items</p>
-      </div>
-      <div class="px-4 py-4 text-center">
-        <p class="text-2xl font-bold" style="color:#f39124">${(preOpData.thrusters || []).length}</p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters</p>
-      </div>
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon" style="color:#459fd9"><i class="ti ti-server-2" style="font-size:20px;"></i></div>
+      <p class="kpi-label">Machines</p>
+      <p class="kpi-value">${allMachines.length}</p>
+    </div>
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon" style="color:#459fd9"><i class="ti ti-tool" style="font-size:20px;"></i></div>
+      <p class="kpi-label">Hardware Items</p>
+      <p class="kpi-value">${allEquipment.length}</p>
+    </div>
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-icon" style="color:#f39124"><i class="ti ti-propeller" style="font-size:20px;"></i></div>
+      <p class="kpi-label">Thrusters</p>
+      <p class="kpi-value">${(preOpData.thrusters || []).length}</p>
     </div>
   </div>`;
 
