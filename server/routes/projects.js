@@ -33,8 +33,21 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
   // The device saved against an older version than the one on file: refuse,
   // so its whole-project save cannot overwrite newer work or child rows.
   // Saves without a base version (older clients) are still accepted.
+  //
+  // Exempt when the LAST write to this row was from this same device. One
+  // browser tab writes through more than one path close together — the
+  // simulation autosave (scheduleSimSync, every edit, 2s debounce) and the
+  // Operations-crossing sync (syncSimulationIntoOperation) both save the
+  // same project row, and can race each other's base_updated_at. Without
+  // this exemption, whichever lands second gets refused as "stale" even
+  // though no other device touched the project — the device's own earlier
+  // write had simply already landed. That 409 also sets state.saveBlocked,
+  // which silently stops every further save for the rest of the session,
+  // so this exemption is what keeps a same-device race from doing that.
+  const deviceId = String(req.body?.device_id || '').slice(0, 100);
+  const sameDeviceWroteLast = !!deviceId && existing?.last_saved_device === deviceId;
   const baseMs = base_updated_at ? Date.parse(base_updated_at) : NaN;
-  if (existing && Number.isFinite(baseMs) && new Date(existing.updated_at).getTime() !== baseMs) {
+  if (existing && Number.isFinite(baseMs) && !sameDeviceWroteLast && new Date(existing.updated_at).getTime() !== baseMs) {
     return res.status(409).json({ success: false, stale: true, error: 'This project was changed on another device.' });
   }
 
@@ -70,7 +83,7 @@ router.post('/', requireAuth, asyncRoute(async (req, res) => {
         [row.id, req.userId, created_by || '']
       );
     }
-    await client.query('UPDATE projects SET last_saved_device = $1 WHERE id = $2', [String(req.body?.device_id || '').slice(0, 100), row.id]);
+    await client.query('UPDATE projects SET last_saved_device = $1 WHERE id = $2', [deviceId, row.id]);
     await client.query('COMMIT');
     res.json({ success: true, updated_at: row.updated_at });
   } catch (e) {
