@@ -182,7 +182,7 @@ export function renderPreOpTab() {
     <div class="flex items-center justify-end px-6 py-3">
       <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
     </div>
-    <div class="grid grid-cols-5" style="border-top:1px solid rgba(120,166,212,0.16);">
+    <div class="grid grid-cols-4" style="border-top:1px solid rgba(120,166,212,0.16);">
       <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
         <p class="text-2xl font-bold" style="color:#f39124">${sensorsReady}<span class="text-sm text-[#6C88A6] font-normal">/${sensorsTotal}</span></p>
         <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Ready</p>
@@ -196,13 +196,9 @@ export function renderPreOpTab() {
         <p class="text-2xl font-bold" style="color:#459fd9">${allEquipment.length}</p>
         <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Hardware Items</p>
       </div>
-      <div class="px-4 py-4 text-center" style="border-right:1px solid rgba(120,166,212,0.16);">
+      <div class="px-4 py-4 text-center">
         <p class="text-2xl font-bold" style="color:#f39124">${(preOpData.thrusters || []).length}</p>
         <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters</p>
-      </div>
-      <div class="px-4 py-4 text-center">
-        <p class="text-2xl font-bold" style="color:#459fd9">${(preOpData.systemIPs || []).length}</p>
-        <p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">System IPs</p>
       </div>
     </div>
   </div>`;
@@ -299,37 +295,6 @@ export function renderPreOpTab() {
        <p><span class="font-bold text-[#6C88A6] uppercase tracking-wider text-[10px]">Thrusters — Main:</span> ${thrusterList(auto.thrustersMain)}</p>
        <p class="mt-1"><span class="font-bold text-[#6C88A6] uppercase tracking-wider text-[10px]">Thrusters — Backup:</span> ${thrusterList(auto.thrustersBackup)}</p>
      </div>`);
-
-  const allSystemIPs = preOpData.systemIPs || [];
-  if (allSystemIPs.length > 0) {
-    let lastCat = null;
-    const rows = allSystemIPs.map((dev) => {
-      const hasIP = dev.hasIP !== false, hasPort = dev.hasPort !== false;
-      let catRow = '';
-      if (dev.category !== lastCat) { lastCat = dev.category; catRow = `<tr style="background:rgba(12,23,39,0.7);"><td colspan="3" class="px-4 pt-3 pb-1"><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#459fd9">${escapeHtml(dev.category)}</span></td></tr>`; }
-      return catRow + `<tr>
-        <td class="px-4 py-2 text-sm text-[#D3DAE3]">${escapeHtml(dev.name)}</td>
-        <td class="px-4 py-2 text-xs font-mono text-[#9AB0C8] text-center">${hasIP ? escapeHtml(dev.ip || '—') : '<span class="text-[#6C88A6]">—</span>'}</td>
-        <td class="px-4 py-2 text-xs font-mono text-[#9AB0C8] text-center">${hasPort ? escapeHtml(dev.port || '—') : '<span class="text-[#6C88A6]">—</span>'}</td>
-      </tr>`;
-    }).join('');
-    html += sectionWrap('#459fd9', 'System IPs', `${allSystemIPs.length} devices`,
-      `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL}">Device</th><th class="${thC}">IP</th><th class="${thC}">Port</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${rows}</tbody></table>`);
-  }
-
-  const allIssues = preOpData.issues || [];
-  if (allIssues.length > 0) {
-    const sevStyle = { high: 'bg-red-500/15 text-red-400 border-red-500/20', medium: 'bg-amber-500/15 text-amber-400 border-amber-500/20', low: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/20' };
-    const rows = allIssues.map((iss, i) => `<tr>
-      <td class="px-4 py-2.5 text-xs text-[#6C88A6] w-8">${i + 1}</td>
-      <td class="px-4 py-2.5 text-sm font-medium text-[#D3DAE3]">${escapeHtml(iss.title || '—')}</td>
-      <td class="px-4 py-2.5 text-xs text-[#9AB0C8]">${escapeHtml(iss.description || '—')}</td>
-      <td class="px-4 py-2.5 text-center"><span class="text-[10px] font-bold px-2.5 py-1 rounded-full border ${sevStyle[iss.severity] || sevStyle.medium}">${(iss.severity || 'medium').toUpperCase()}</span></td>
-      <td class="px-4 py-2.5 text-center"><span class="text-[10px] font-bold px-2.5 py-1 rounded-full ${iss.status === 'open' ? 'bg-red-500/15 text-red-400' : 'bg-green-500/15 text-green-400'}">${(iss.status || 'open').toUpperCase()}</span></td>
-    </tr>`).join('');
-    html += sectionWrap('#ef4444', 'Flagged Issues', `${allIssues.length} from simulation`,
-      `<table class="w-full"><thead><tr style="background:#16233A;"><th class="${thL} w-8">#</th><th class="${thL}">Issue</th><th class="${thL}">Description</th><th class="${thC}">Severity</th><th class="${thC}">Status</th></tr></thead><tbody class="divide-y divide-[rgba(120,166,212,0.16)]">${rows}</tbody></table>`);
-  }
 
   if (!isLocked) {
     html += `
