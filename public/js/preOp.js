@@ -186,26 +186,26 @@ export function renderPreOpTab() {
     <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
   </div>
   <div class="grid grid-cols-4 gap-4 mb-5">
-    <div class="kpi-card kpi-orange">
-      <div class="kpi-icon" style="color:#f39124"><i class="ti ti-box" style="font-size:20px;"></i></div>
+    <div class="kpi-card kpi-orange" style="padding:14px 16px;">
+      <div class="kpi-icon" style="color:#f39124;width:30px;height:30px;margin-bottom:8px;"><i class="ti ti-box" style="font-size:15px;"></i></div>
       <p class="kpi-label">Payloads Ready</p>
-      <p class="kpi-value">${sensorsReady}<span style="font-size:1rem;color:#6C88A6;font-weight:600;">/${sensorsTotal}</span></p>
+      <p class="kpi-value" style="font-size:1.6rem;margin:2px 0;">${sensorsReady}<span style="font-size:0.9rem;color:#6C88A6;font-weight:600;">/${sensorsTotal}</span></p>
       <p class="kpi-sub" style="${sensorsCheck > 0 ? 'color:#f39124' : 'color:#459fd9'}">${sensorsCheck > 0 ? `${sensorsCheck} need check` : 'All verified'}</p>
     </div>
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-icon" style="color:#459fd9"><i class="ti ti-server-2" style="font-size:20px;"></i></div>
+    <div class="kpi-card kpi-blue" style="padding:14px 16px;">
+      <div class="kpi-icon" style="color:#459fd9;width:30px;height:30px;margin-bottom:8px;"><i class="ti ti-server-2" style="font-size:15px;"></i></div>
       <p class="kpi-label">Machines</p>
-      <p class="kpi-value">${allMachines.length}</p>
+      <p class="kpi-value" style="font-size:1.6rem;margin:2px 0;">${allMachines.length}</p>
     </div>
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-icon" style="color:#459fd9"><i class="ti ti-tool" style="font-size:20px;"></i></div>
+    <div class="kpi-card kpi-blue" style="padding:14px 16px;">
+      <div class="kpi-icon" style="color:#459fd9;width:30px;height:30px;margin-bottom:8px;"><i class="ti ti-tool" style="font-size:15px;"></i></div>
       <p class="kpi-label">Hardware Items</p>
-      <p class="kpi-value">${allEquipment.length}</p>
+      <p class="kpi-value" style="font-size:1.6rem;margin:2px 0;">${allEquipment.length}</p>
     </div>
-    <div class="kpi-card kpi-orange">
-      <div class="kpi-icon" style="color:#f39124"><i class="ti ti-propeller" style="font-size:20px;"></i></div>
+    <div class="kpi-card kpi-orange" style="padding:14px 16px;">
+      <div class="kpi-icon" style="color:#f39124;width:30px;height:30px;margin-bottom:8px;"><i class="ti ti-propeller" style="font-size:15px;"></i></div>
       <p class="kpi-label">Thrusters</p>
-      <p class="kpi-value">${(preOpData.thrusters || []).length}</p>
+      <p class="kpi-value" style="font-size:1.6rem;margin:2px 0;">${(preOpData.thrusters || []).length}</p>
     </div>
   </div>`;
 
