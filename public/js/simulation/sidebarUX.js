@@ -4,6 +4,7 @@
 
 import { applyOperationVisualMode, applySimVisualMode } from '../auth.js';
 import { syncSimulationIntoOperation, canSyncToOperation } from '../preOp.js';
+import { confirmModal } from '../ui.js';
 
 const COLLAPSE_KEY = 'mcs_sim_sidebar_collapsed';
 const DRAWER_BREAKPOINT = 900;
@@ -194,7 +195,7 @@ function initCrossingGuard() {
     const currentSide = document.body.classList.contains('sim-mode') ? 'simulation' : 'operation';
     if (targetSide === currentSide) return;
 
-    // Checked before the confirm() prompt — no point asking "are you sure?"
+    // Checked before the confirmation popup — no point asking "are you sure?"
     // for a crossing that's just going to fail canSyncToOperation()'s own
     // check a moment later.
     if (targetSide === 'operation' && !canSyncToOperation()) {
@@ -203,21 +204,26 @@ function initCrossingGuard() {
       return;
     }
 
+    // confirmModal() is async (it's a styled popup, not the blocking browser
+    // confirm() this replaced) — the click is always suppressed here, since
+    // there's no way to decide synchronously. If the user says yes, the
+    // item's own click handler is invoked by hand below, the same inline
+    // onclick the browser would otherwise have run for a plain click.
+    e.preventDefault();
+    e.stopImmediatePropagation();
     const question = targetSide === 'operation'
       ? 'Are you sure you want to move to Operations?'
       : 'Are you sure you want to move to Simulation?';
-    if (!confirm(question)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      return;
-    }
-
-    if (targetSide === 'operation') {
-      applyOperationVisualMode();
-      syncSimulationIntoOperation();
-    } else {
-      applySimVisualMode();
-    }
+    confirmModal(question, { title: 'Switch mode' }).then((ok) => {
+      if (!ok) return;
+      if (targetSide === 'operation') {
+        applyOperationVisualMode();
+        syncSimulationIntoOperation();
+      } else {
+        applySimVisualMode();
+      }
+      item.onclick?.(e);
+    });
   }, true);
 }
 

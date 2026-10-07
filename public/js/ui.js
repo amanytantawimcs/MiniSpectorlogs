@@ -147,3 +147,40 @@ export function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// A styled replacement for window.confirm() — same yes/no question, but in
+// the app's own modal look instead of the browser's "<site> says" dialog
+// (see sidebarUX.js's crossing guard, the first caller). Resolves to true or
+// false; never rejects. confirm() is synchronous and this isn't, so a caller
+// written as `if (!confirm(...)) return;` needs to become
+// `if (!(await confirmModal(...))) return;` inside an async function.
+export function confirmModal(message, { title = 'Please confirm', okLabel = 'OK', cancelLabel = 'Cancel' } = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.cssText = 'display:flex;z-index:200;';
+    overlay.innerHTML = `
+      <div class="modal-container" style="max-width:420px;padding:24px;">
+        <h3 style="font-size:17px;font-weight:700;color:#fff;margin-bottom:10px;">${escapeHtml(title)}</h3>
+        <p style="font-size:13.5px;color:#B9C7D9;white-space:pre-line;margin-bottom:22px;">${escapeHtml(message)}</p>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="confirm-modal-cancel" style="padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;background:transparent;color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);cursor:pointer;">${escapeHtml(cancelLabel)}</button>
+          <button type="button" class="confirm-modal-ok" style="padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;background:#f39124;color:#0A111C;border:none;cursor:pointer;">${escapeHtml(okLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const close = (result) => {
+      overlay.remove();
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') close(false); };
+    document.addEventListener('keydown', onKey);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+    overlay.querySelector('.confirm-modal-cancel').addEventListener('click', () => close(false));
+    const okBtn = overlay.querySelector('.confirm-modal-ok');
+    okBtn.addEventListener('click', () => close(true));
+    okBtn.focus();
+  });
+}
