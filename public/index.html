@@ -398,6 +398,12 @@
            shared parent (#main-content-area) no longer provides any. */
         .tab-content { padding: 24px; }
         #tab-simulation { padding: 0; }
+        /* Safety net for the many fixed-column tables/rows (crew roster, shift
+           log, equipment and sensor tables, ...): on a narrow screen they
+           scroll horizontally within the page instead of forcing the whole
+           app shell wider. Most tables already wrap themselves (.log-table-
+           wrap); this catches everything else without touching each one. */
+        .tab-content, #sim-scroll-area { overflow-x: auto; }
         /* These two are context labels ("you're in Simulation"), not a style
            difference — stay gated to body.sim-mode regardless of the shared
            theme, so Operation tabs don't show a stray "Simulation" crumb. */
@@ -1400,7 +1406,7 @@
             <span class="rcard-title">Project Data Log</span>
         </div>
         <div class="p-5" style="background:rgba(17,24,39,0.45);">
-        <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div>
                 <label class="rfield-label">Job Start Date</label>
                 <input type="date" id="startDate" class="rfield w-full">
@@ -1421,7 +1427,7 @@
         </div>
 
         <p class="rfield-label">Weather Conditions</p>
-        <div class="grid grid-cols-4 gap-4 mb-5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
             <div>
                 <label class="rfield-label">High Temperature</label>
                 <input type="text" id="pdlWeatherHigh" class="rfield w-full">
@@ -1737,7 +1743,7 @@
                         <span class="rcard-bar"></span>
                         <span class="rcard-title">Project details</span>
                     </div>
-                    <div class="p-5 grid grid-cols-4 gap-4" style="background:rgba(17,24,39,0.45);">
+                    <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" style="background:rgba(17,24,39,0.45);">
                         <div>
                             <label class="rfield-label">Project Name</label>
                             <input id="sim-project-name" type="text" placeholder="e.g. ADNOC"
@@ -2096,7 +2102,7 @@
         </div>
         
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button onclick="triggerQuickStandby('Mechanical Fault')" class="p-6 bg-[#16233A]  border border-[rgba(120,166,212,0.16)] hover:border-blue-400 rounded-xl transition-all group">
                 <h4 class="text-lg font-bold text-white group-hover:text-white">Mechanical Fault</h4>
             </button>

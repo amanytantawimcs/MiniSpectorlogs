@@ -185,7 +185,7 @@ export function renderPreOpTab() {
     <p class="text-[11px] font-bold text-[#6C88A6] uppercase tracking-widest">Packing List Summary</p>
     <button type="button" onclick="exportWord('ProjectDataLog.docx')" style="padding:5px 14px;border-radius:8px;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(120,166,212,0.1);color:#9AB0C8;border:1px solid rgba(120,166,212,0.25);">Export Project Data Log</button>
   </div>
-  <div class="grid grid-cols-4 gap-4 mb-5">
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
     <div class="kpi-card kpi-orange" style="padding:14px 16px;">
       <div class="kpi-icon" style="color:#f39124;width:30px;height:30px;margin-bottom:8px;"><i class="ti ti-box" style="font-size:15px;"></i></div>
       <p class="kpi-label">Payloads Ready</p>
@@ -306,7 +306,7 @@ export function renderPreOpTab() {
     html += `
     <div class="rounded-2xl p-5 mt-1" style="border:1px dashed rgba(243,145,36,0.3);background:rgba(243,145,36,0.03);">
       <p class="text-[10px] font-bold text-[#f39124] uppercase tracking-widest mb-4">+ Operation-Time Additions</p>
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div>
           <label class="text-xs font-bold text-[#6C88A6] block mb-2">Add Payload</label>
           <div class="flex gap-2">

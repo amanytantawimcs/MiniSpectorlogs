@@ -138,9 +138,9 @@ export function renderFinalSetupTab() {
         ${headerButtonsHtml}
       </div>
     </div>
-    <div class="grid grid-cols-3" style="border-top:1px solid rgba(120,166,212,0.16);">
-      <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Confirmed</p></div>
-      <div class="px-4 py-3 text-center" style="border-right:1px solid rgba(120,166,212,0.16);"><p class="text-xl font-bold" style="color:#f39124">${confirmedThrusters}<span class="text-sm text-[#6C88A6] font-normal">/${totalThrusters}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters Confirmed</p></div>
+    <div class="grid grid-cols-1 sm:grid-cols-3" style="border-top:1px solid rgba(120,166,212,0.16);">
+      <div class="px-4 py-3 text-center sm:border-r sm:border-[rgba(120,166,212,0.16)]"><p class="text-xl font-bold" style="color:#f39124">${confirmedSensors}<span class="text-sm text-[#6C88A6] font-normal">/${totalSensors}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Payloads Confirmed</p></div>
+      <div class="px-4 py-3 text-center sm:border-r sm:border-[rgba(120,166,212,0.16)]"><p class="text-xl font-bold" style="color:#f39124">${confirmedThrusters}<span class="text-sm text-[#6C88A6] font-normal">/${totalThrusters}</span></p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Thrusters Confirmed</p></div>
       <div class="px-4 py-3 text-center"><p class="text-xl font-bold" style="color:${isLocked ? '#459fd9' : '#f39124'}">${isLocked ? '✓' : '—'}</p><p class="text-[10px] font-bold text-[#6C88A6] uppercase tracking-wider mt-0.5">Setup Status</p></div>
     </div>`;
   el.appendChild(header);

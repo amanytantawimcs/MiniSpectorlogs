@@ -402,7 +402,7 @@ function renderDeliverables(sa) {
   const del = sa.deliverables;
   const { el, body } = card('Deliverables', 'deliverables');
   const content = document.createElement('div');
-  content.className = 'p-5 grid grid-cols-2 gap-6';
+  content.className = 'p-5 grid grid-cols-1 sm:grid-cols-2 gap-6';
 
   const left = document.createElement('div'); left.className = 'space-y-3';
   const toField = document.createElement('div');
