@@ -206,7 +206,7 @@ export function renderChecklistsTab() {
                          data-item-id="${item.id}" class="cl-reading-input rounded-lg px-2.5 py-1 text-sm w-40 focus:outline-none" style="background:#0C1727;border:1px solid rgba(120,166,212,0.16);color:#D3DAE3">
               </div>` : ''}
           </div>
-          <div class="flex-shrink-0 min-w-[140px]">
+          <div class="flex-shrink-0 min-w-[280px]">
               <input type="text" value="${escapeHtml(st.obs || '')}" placeholder="Observation..." data-item-id="${item.id}" ${readOnly ? 'disabled' : ''}
                      class="cl-obs-input w-full text-xs py-0.5 transition-colors focus:outline-none" style="background:transparent;color:#9AB0C8;border:none;border-bottom:1px solid rgba(120,166,212,0.16)">
           </div>
