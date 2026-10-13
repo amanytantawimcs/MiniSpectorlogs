@@ -193,12 +193,13 @@ export function renderChecklistsTab() {
       const ckId = `cl_${type}_${diveKey}_${item.id}`;
       return `
       <div class="flex gap-3 items-start py-2.5 px-3 rounded-lg transition-colors hover:bg-white/[0.03] ${st.checked ? 'opacity-55' : ''}">
-          <div class="flex-shrink-0 mt-[3px]">
-              <input type="checkbox" id="${ckId}" data-item-id="${item.id}" ${st.checked ? 'checked' : ''} ${readOnly ? 'disabled' : ''} class="cl-check-input w-4 h-4 rounded cursor-pointer accent-[#f39124]">
-          </div>
+          <label for="${ckId}" class="relative flex items-center justify-center flex-shrink-0 mt-[1px]" style="width:22px;height:22px;border-radius:6px;cursor:pointer;border:1.5px solid ${st.checked ? '#f39124' : 'rgba(120,166,212,0.35)'};background:${st.checked ? '#f39124' : 'transparent'};">
+              <input type="checkbox" id="${ckId}" data-item-id="${item.id}" ${st.checked ? 'checked' : ''} ${readOnly ? 'disabled' : ''} class="cl-check-input" style="position:absolute;inset:0;margin:0;opacity:0;cursor:pointer;">
+              <span class="text-xs font-bold select-none" style="color:${st.checked ? '#0C1727' : '#6C88A6'}">${st.checked ? '✓' : idx + 1}</span>
+          </label>
           <div class="flex-1 min-w-0">
               <label for="${ckId}" class="block text-sm leading-relaxed cursor-pointer select-none" style="${st.checked ? 'text-decoration:line-through;color:#6C88A6' : 'color:#D3DAE3'}">
-                  <span class="text-xs mr-1" style="color:#6C88A6">${idx + 1}.</span>${escapeHtml(item.label)}
+                  ${escapeHtml(item.label)}
               </label>
               ${item.reading ? `<div class="mt-2 flex items-center gap-2 flex-wrap">
                   <span class="text-xs font-semibold text-[#f39124]">${escapeHtml(item.readingLabel)}:</span>
