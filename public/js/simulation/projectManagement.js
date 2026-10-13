@@ -120,7 +120,15 @@ async function renderHistoryCard(projectCode, projectName) {
   if (projectCode) {
     api.getSyncLog(projectCode).then(({ log }) => {
       if (!card.isConnected) return; // card was torn down before this resolved
-      fullLog = log || [];
+      // Entries from before change detail existed (no section, no changes —
+      // just a bare "made an update" with nothing else to say) carry zero
+      // information. The autosave that wrote them ran every 20s with no
+      // grouping, so a single editing session could leave dozens of these in
+      // a row. Create/join entries are always kept; they say something on
+      // their own. Drop only these, not entries that at least name a section.
+      fullLog = (log || []).filter(entry =>
+        entry.action === 'create' || entry.action === 'join' ||
+        !!entry.meta?.section || (Array.isArray(entry.meta?.changes) && entry.meta.changes.length > 0));
       userSelect.innerHTML = '<option value="">All people</option>' + filterOptionsHTML(fullLog.map(e => e.user_name), '');
       sectionSelect.innerHTML = '<option value="">All sections</option>' + filterOptionsHTML(fullLog.map(e => e.meta?.section), '');
       render();
