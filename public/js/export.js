@@ -61,11 +61,12 @@ const TEMPLATE_LOG_TYPE_FROM_FILENAME = {
   'IssueReport.docx': 'issue',
   'ProjectDataLog.docx': 'projectDataLog',
   'ReplacementDataLog.docx': 'replacementLog',
+  'DemobilizationChecklist.docx': 'demob',
 };
 
 export async function exportWord(arg) {
   const templateLogType = TEMPLATE_LOG_TYPE_FROM_FILENAME[arg];
-  const data = collectAllData();
+  const data = { ...collectAllData(), preparedBy: state.currentUserName };
   showToast('Generating Word report…', 'info');
   try {
     const res = templateLogType

@@ -5,6 +5,7 @@
 import { state } from './state.js';
 import { escapeHtml } from './ui.js';
 import { CHECKLISTS } from './checklistConfig.js';
+import { exportWord } from './export.js';
 
 // Pre-Op/Post-Op have no sidebar badge (plain nav items, no icon/count) —
 // only the four job-once checklist types show progress in the sidebar.
@@ -230,6 +231,7 @@ export function renderChecklistsTab() {
           <p class="text-xs mt-0.5" style="color:#6C88A6">${isPerDive ? 'Completed per dive — select dive number below' : 'Completed once per job/session'}</p>
       </div>
       <div class="flex items-center gap-4">
+          ${cl.exportFile ? `<button id="cl-export-btn" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors" style="border:1px solid rgba(243,145,36,0.35);color:#f39124">Export Word</button>` : ''}
           ${readOnly ? '' : `<button id="cl-reset-btn" type="button" class="px-3 py-1.5 text-xs rounded-lg hover:border-red-500/50 hover:text-red-400 transition-colors" style="border:1px solid rgba(120,166,212,0.16);color:#9AB0C8">Reset</button>`}
           <div class="text-right">
               <div class="text-sm font-bold" style="color:${allDone ? '#22c55e' : '#D3DAE3'}">${totalDone} / ${totalItems}</div>
@@ -254,6 +256,7 @@ export function renderChecklistsTab() {
   document.getElementById('cl-dive-select')?.addEventListener('change', (e) => switchChecklistDive(type, e.target.value));
   document.getElementById('cl-add-dive-btn')?.addEventListener('click', () => addChecklistDive(type));
   document.getElementById('cl-reset-btn')?.addEventListener('click', () => clResetChecklist(type, diveKey));
+  document.getElementById('cl-export-btn')?.addEventListener('click', () => exportWord(cl.exportFile));
 
   updateChecklistBadge();
 }

@@ -773,6 +773,15 @@ function deriveAutoEquipment(preOpData) {
   };
 }
 
+// Item ids for the Demobilization checklist's 5 sections — duplicated from
+// public/js/checklistConfig.js's `demob` entry (CommonJS route, can't import
+// that ES module; see the comment on TEMPLATE_CONFIGS.projectDataLog for the
+// same reasoning). Order and ids must match that file exactly, since both
+// drive the same {c_<id>}/{o_<id>} tags in DemobilizationChecklist.docx.
+const DEMOB_SECTION_COUNTS = { dm_tms: 11, dm_rov: 10, dm_ods: 8, dm_rent: 8, dm_final: 5 };
+const DEMOB_ITEM_IDS = Object.entries(DEMOB_SECTION_COUNTS)
+  .flatMap(([prefix, count]) => Array.from({ length: count }, (_, i) => `${prefix}_${i + 1}`));
+
 const TEMPLATE_CONFIGS = {
   standby: {
     file: 'Standby.docx',
@@ -905,6 +914,31 @@ const TEMPLATE_CONFIGS = {
         ...equipTags,
         mainThrusters: auto.thrustersMain.map((t) => ({ number: t.number || '', serial: t.serial || '' })),
         backupThrusters: auto.thrustersBackup.map((t) => ({ number: t.number || '', serial: t.serial || '' })),
+      };
+    },
+  },
+  demob: {
+    // Matches the client's QMS-P09-F18 "MiniSpector Demobilization Checklist"
+    // page exactly — built from the client's own .docx (see the comment on
+    // DEMOB_ITEM_IDS above). checked/obs come from the live checklist state
+    // (public/js/checklists.js), keyed by the same item ids.
+    file: 'DemobilizationChecklist.docx',
+    buildData: (data) => {
+      const items = data.checklists?.demob || {};
+      const tags = {};
+      DEMOB_ITEM_IDS.forEach((id) => {
+        const st = items[id] || {};
+        tags['c_' + id] = st.checked ? '☑' : '☐';
+        tags['o_' + id] = st.obs || '';
+      });
+      return {
+        projectName: data.projectName || '',
+        date: todayFormatted(),
+        vessel: data.Vessel || '',
+        system: data.projectCode || '',
+        preparedBy: data.preparedBy || '',
+        client: data.projectDataLog?.contractor || '',
+        ...tags,
       };
     },
   },
