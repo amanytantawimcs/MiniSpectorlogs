@@ -79,11 +79,22 @@ function signOut() {
   window.location.reload();
 }
 
+// Same reload-based reset as signOut(), minus clearing the session token —
+// tryRestoreSession() (auth.js) re-authenticates with the still-persisted
+// token, finds no remembered project, and lands on the New/Join project
+// screen instead of the login form. Lets someone move to a different
+// project without re-entering their User ID or passcode.
+function switchProject() {
+  forgetLastProjectCode();
+  window.location.reload();
+}
+
 export function installNavigationStubs() {
   window.showTab = showTab;
   window.openSupport = openSupport;
   window.closeSupport = closeSupport;
   window.signOut = signOut;
+  window.switchProject = switchProject;
   window.reviewerLogout = signOut; // previously dead — reviewer badge's ✕ never had a handler
   window.openPrivacyPolicy = openPrivacyPolicy;
   window.closePrivacyPolicy = closePrivacyPolicy;
