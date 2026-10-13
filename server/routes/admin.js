@@ -52,7 +52,7 @@ router.get('/login-log', requireAdminAuth, asyncRoute(async (req, res) => {
 // session — see requireAdminAuth).
 router.get('/projects', requireAdminAuth, asyncRoute(async (req, res) => {
   const { rows } = await pool.query(
-    `SELECT project_code, project_name, mode, created_by, updated_at, is_sim_locked
+    `SELECT project_code, project_name, mode, created_by, created_at, updated_at, is_sim_locked
      FROM projects ORDER BY updated_at DESC`
   );
   res.json({ success: true, projects: rows });

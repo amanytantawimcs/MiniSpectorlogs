@@ -302,7 +302,7 @@ async function renderAdminActivityTab() {
 }
 
 function projectsRowsHtml(list) {
-  if (list.length === 0) return `<tr><td colspan="6" class="text-center py-8 text-sm" style="color:#6C88A6">No projects found.</td></tr>`;
+  if (list.length === 0) return `<tr><td colspan="7" class="text-center py-8 text-sm" style="color:#6C88A6">No projects found.</td></tr>`;
   return list.map(p => `
       <tr style="border-bottom:1px solid rgba(120,166,212,0.16);">
           <td class="px-4 py-3 font-mono text-xs" style="color:#9AB0C8">${escapeHtml(p.project_code)}</td>
@@ -312,6 +312,7 @@ function projectsRowsHtml(list) {
               ${p.is_sim_locked ? '<span class="text-[10px] font-bold px-2 py-1 rounded ml-1" style="background:rgba(34,197,94,0.15);color:#22c55e;">PUSHED</span>' : ''}
           </td>
           <td class="px-4 py-3" style="color:#9AB0C8">${escapeHtml(p.created_by || '—')}</td>
+          <td class="px-4 py-3 text-xs whitespace-nowrap" style="color:#6C88A6">${p.created_at ? new Date(p.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td>
           <td class="px-4 py-3 text-xs whitespace-nowrap" style="color:#6C88A6">${p.updated_at ? new Date(p.updated_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</td>
           <td class="px-4 py-3 text-right whitespace-nowrap">
               <button onclick="adminDeleteProject('${escapeHtml(p.project_code)}')" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-red-900/20">Remove</button>
@@ -379,6 +380,7 @@ async function renderAdminProjectsTab() {
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Name</th>
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Status</th>
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Created By</th>
+                        <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Created Date</th>
                         <th class="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider">Last Updated</th>
                         <th class="px-4 py-3"></th>
                     </tr>
