@@ -123,3 +123,69 @@ export function diffFlat(prev, next) {
 
   return out;
 }
+
+// Re-groups an already-stored change list back into one line per item, the
+// same outcome diffFlat() produces directly. Entries written before item
+// grouping existed have one stored line per field of each added/removed
+// item — e.g. 6 lines for one new System IP row — because the database only
+// kept the rendered strings, not the structured paths/values diffFlat()
+// needs; those can't be re-diffed, only re-grouped from the text itself.
+// Also drops the same sync-bookkeeping noise newer saves never record.
+// A no-op on entries that are already grouped (verified against real data).
+const NOISE_LABEL_SUFFIXES = [' › pushed At', ' › report Date'];
+const NOISE_LABEL_EXACT = ['Pushed At', 'Report Date'];
+const ITEM_ROOT_RE = /^(.*#\d+) › ([^›]+)$/;
+
+function parseChangeLine(line) {
+  const idx = line.indexOf(': ');
+  if (idx === -1) return null;
+  const label = line.slice(0, idx);
+  const rest = line.slice(idx + 2);
+  if (rest === 'added') return { label, kind: 'added', value: '' };
+  if (rest.startsWith('added ')) return { label, kind: 'added', value: rest.slice(6) };
+  if (rest === 'removed') return { label, kind: 'removed', value: '' };
+  const arrow = rest.indexOf(' → ');
+  if (arrow !== -1) return { label, kind: 'changed', before: rest.slice(0, arrow), after: rest.slice(arrow + 3) };
+  return null;
+}
+
+export function cleanStoredChanges(lines) {
+  const filtered = lines.filter(line => {
+    const parsed = parseChangeLine(line);
+    const label = parsed ? parsed.label : line.split(':')[0];
+    return !NOISE_LABEL_SUFFIXES.some(s => label.endsWith(s)) && !NOISE_LABEL_EXACT.includes(label);
+  });
+
+  const out = [];
+  let i = 0;
+  while (i < filtered.length) {
+    const parsed = parseChangeLine(filtered[i]);
+    const m = parsed && parsed.label.match(ITEM_ROOT_RE);
+    if (!parsed || !m) { out.push(filtered[i]); i++; continue; }
+    const root = m[1];
+    const group = [parsed];
+    let j = i + 1;
+    while (j < filtered.length) {
+      const p2 = parseChangeLine(filtered[j]);
+      const m2 = p2 && p2.label.match(ITEM_ROOT_RE);
+      if (!p2 || !m2 || m2[1] !== root) break;
+      group.push(p2);
+      j++;
+    }
+    const allAdded = group.length > 1 && group.every(g => g.kind === 'added');
+    const allRemoved = group.length > 1 && group.every(g => g.kind === 'removed');
+    if (allAdded || allRemoved) {
+      let summary = '';
+      for (const f of SUMMARY_FIELDS) {
+        const hit = group.find(g => g.label.endsWith('› ' + f) && g.value);
+        if (hit) { summary = hit.value; break; }
+      }
+      if (!summary) { const hit = group.find(g => g.value); if (hit) summary = hit.value; }
+      out.push(`${root}: ${allAdded ? 'added' : 'removed'}${summary ? ` (${summary})` : ''}`);
+    } else {
+      for (let k = i; k < j; k++) out.push(filtered[k]);
+    }
+    i = j;
+  }
+  return out;
+}

@@ -15,6 +15,7 @@ import { simState } from './state.js';
 import { renderProjectTeam } from '../projectTeam.js';
 import { renderCrewEditor } from '../crewRoster.js';
 import { exportProjectHistory } from '../export.js';
+import { cleanStoredChanges } from '../historyDiff.js';
 
 function formatWhen(iso) {
   if (!iso) return '';
@@ -31,7 +32,7 @@ function historyRowData(entry) {
   const section = entry.meta?.section || '';
   const person = entry.user_name || 'Someone';
   const what = section ? `updated ${section}` : (entry.action === 'create' ? 'created the project' : entry.action === 'join' ? 'joined the project' : 'made an update');
-  const changes = Array.isArray(entry.meta?.changes) ? entry.meta.changes : [];
+  const changes = cleanStoredChanges(Array.isArray(entry.meta?.changes) ? entry.meta.changes : []);
   const more = Number(entry.meta?.more) || 0;
   const details = [...changes, ...(more ? [`+${more} more`] : [])].join('; ');
   return { person, section, what, when: formatWhen(entry.synced_at), changes, more, details };
